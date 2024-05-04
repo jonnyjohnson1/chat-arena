@@ -1,0 +1,49 @@
+name: chat
+description: "A new Flutter project."
+
+# Prevent accidental publishing to pub.dev.
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.6 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  plugin_platform_interface: ^2.1.6
+
+  # extra packages
+  flutter_spinkit: ^5.1.0
+  google_fonts: ^6.1.0
+  provider: ^6.0.2
+  intl: ^0.18.1
+  simple_progress_indicators: ^0.2.0
+  image_picker: ^1.0.1
+  file_picker: ^6.1.1
+  path_provider: ^2.1.1 # reads file path
+  url_launcher: ^6.1.14
+  system_resources_2: ^2.0.0 # to display memory usage
+  device_info_plus: ^9.1.1 # detect device type
+  shared_preferences: ^2.2.2
+  sqflite: ^2.3.0 # for local database
+  path: any
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Enable generation of localized Strings from arb files.
+  generate: true
+
+  assets:
+    # Add assets from the images directory to the application.
+    - assets/images/
+    - assets/app-config.json
