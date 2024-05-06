@@ -130,7 +130,7 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                               Padding(
                                 padding: const EdgeInsets.only(left: 5.0),
                                 child: Text(
-                                    "${widget._message.completionTime!.toStringAsFixed(widget._message.isGenerating ? 0 : 2)}s"),
+                                    "${widget._message.completionTime!.toStringAsFixed(widget._message.isGenerating ? 2 : 2)}s"),
                               ),
                             Padding(
                               padding: const EdgeInsets.only(left: 5.0),

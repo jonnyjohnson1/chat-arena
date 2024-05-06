@@ -17,7 +17,7 @@ class LocalLLMInterface {
         Uri.parse('$wsPrefix://$extractedDiAPI/$chat_message'));
   }
 
-  void newMessage(String message) {
+  void newMessage(String message, callbackFunction) {
     initChatWebsocket();
 
     if (webSocket == null) {
@@ -26,7 +26,7 @@ class LocalLLMInterface {
     }
 
     Map<String, dynamic> submitPkg = {
-      "model": 'llama3',
+      "model": 'solar',
       "message": message,
       "message_history": [],
       "temperature": 0.06
@@ -34,6 +34,11 @@ class LocalLLMInterface {
 
     webSocket!.sink.add(json.encode(submitPkg));
     print("submitted to sink");
+
+    double toksPerSec = 0;
+    List<String> toksStr = [];
+    bool isStarted = false;
+    DateTime? startTime;
 
     webSocket!.stream.listen(
       (data) {
@@ -47,21 +52,44 @@ class LocalLLMInterface {
           print(e);
         }
 
-        print(decoded['status']);
+        // print(decoded['status']);
         // decoded['status'] has 4 options
         // started, generating, completed, error
         switch (decoded['status']) {
           case 'started':
             break;
           case 'generating':
+            if (!isStarted) {
+              isStarted = true;
+              startTime = DateTime.now();
+            }
+
             // UPDATE MESSAGES
-            print(decoded['response']);
+            toksStr.add(decoded['response']);
+            int duration = DateTime.now().difference(startTime!).inMilliseconds;
+            double durInSeconds = duration / 1000;
+
+            if (duration != 0) {
+              toksPerSec = toksStr.length / durInSeconds;
+            }
+            decoded['completionTime'] =
+                durInSeconds; // completion time in seconds
+            decoded['toksPerSec'] = toksPerSec;
+            callbackFunction(decoded);
 
           case 'completed':
             // UPDATE MESSAGES
-            print(decoded['response']);
-          // !decoded['completed'];
-          // decoded['response'];
+            // print(decoded['response']);
+            toksStr.add(decoded['response']);
+            int duration = DateTime.now().difference(startTime!).inMilliseconds;
+            double durInSeconds = duration / 1000;
+
+            toksPerSec = toksStr.length / durInSeconds;
+
+            decoded['toksPerSec'] = toksPerSec;
+            decoded['completionTime'] =
+                durInSeconds; // completion time in seconds
+            callbackFunction(decoded);
 
           case 'error':
             print(decoded['error']);

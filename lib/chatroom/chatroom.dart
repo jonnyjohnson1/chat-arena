@@ -88,28 +88,28 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   double completionTime = 0.0;
   int currentIdx = 0;
 
-  generationCallback(Object? event) {
+  generationCallback(Map<String, dynamic>? event) {
+    print(event);
     if (event != null) {
       completionTime = 0.0;
       progress = 0.0;
-      // Convert Object? event to JSON string
-      String jsonString = jsonEncode(event);
-      // Decode JSON string into Map<String, dynamic>
-      Map<String, dynamic> eventMap = jsonDecode(jsonString);
 
-      EventGenerationResponse response =
-          EventGenerationResponse.fromMap(eventMap);
+      EventGenerationResponse response = EventGenerationResponse.fromMap(event);
 
       generatedChat = response.generation;
-      if (generatedChat == "<!!COMPLETE!!>") {
+      if (response.isCompleted) {
+        print("chat completed");
         // end token is received
         isGenerating.value = false;
         messages[currentIdx].isGenerating = false;
+        completionTime = response.completionTime;
+        messages[currentIdx].completionTime = completionTime;
         isGenerating.notifyListeners();
+
+        setState(() {});
         // add the final message to the database
         // ConversationDatabase.instance.createMessage(messages[currentIdx]);
       } else {
-        progress = response.progress;
         toksPerSec = response.toksPerSec;
         while (generatedChat.startsWith("\n")) {
           generatedChat = generatedChat.substring(2);
@@ -118,8 +118,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         try {
           messages[currentIdx].message = generatedChat;
           messages[currentIdx].completionTime = completionTime;
-          // messages[currentIdx].isGenerating = true;
-          // messages[currentIdx].toksPerSec = toksPerSec;
+          messages[currentIdx].isGenerating = true;
+          messages[currentIdx].toksPerSec = toksPerSec;
         } catch (e) {
           print(
               "Error updating message with the latest result: ${e.toString()}");
@@ -136,7 +136,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   void sendMessagetoModel(String text) async {
     print("Submitting: $text to chat model");
     currentIdx = messages.length;
-    LocalLLMInterface().newMessage(text);
     // await LocalLLMInterface().ollamaChat(text);
     // swiftFunctions.initGenerationStream(text, generationCallback);
     // if (text.isEmpty) return;
@@ -152,6 +151,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         timestamp: DateTime.now(),
         type: uiMessage.MessageType.text);
     messages.add(_message);
+    LocalLLMInterface().newMessage(text, generationCallback);
   }
 
   @override
