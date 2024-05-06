@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:chat/services/local_llm_interface.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,7 @@ import 'package:chat/models/conversation.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/messages.dart' as uiMessage;
 import 'package:chat/models/model_loaded_states.dart';
-import 'package:chat/services/conversation_database.dart';
+// import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/tools.dart';
 import 'package:provider/provider.dart';
 // import 'package:file_selector/file_selector.dart';
@@ -55,8 +56,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   Future<void> initData() async {
     if (widget.conversation != null) {
       try {
-        messages = await ConversationDatabase.instance
-            .readAllMessages(widget.conversation!.id);
+        // messages = await ConversationDatabase.instance
+        //     .readAllMessages(widget.conversation!.id);
       } catch (e) {
         print(e);
       }
@@ -106,7 +107,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         messages[currentIdx].isGenerating = false;
         isGenerating.notifyListeners();
         // add the final message to the database
-        ConversationDatabase.instance.createMessage(messages[currentIdx]);
+        // ConversationDatabase.instance.createMessage(messages[currentIdx]);
       } else {
         progress = response.progress;
         toksPerSec = response.toksPerSec;
@@ -117,8 +118,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         try {
           messages[currentIdx].message = generatedChat;
           messages[currentIdx].completionTime = completionTime;
-          messages[currentIdx].isGenerating = true;
-          messages[currentIdx].toksPerSec = toksPerSec;
+          // messages[currentIdx].isGenerating = true;
+          // messages[currentIdx].toksPerSec = toksPerSec;
         } catch (e) {
           print(
               "Error updating message with the latest result: ${e.toString()}");
@@ -135,9 +136,11 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   void sendMessagetoModel(String text) async {
     print("Submitting: $text to chat model");
     currentIdx = messages.length;
+    LocalLLMInterface().newMessage(text);
+    // await LocalLLMInterface().ollamaChat(text);
     // swiftFunctions.initGenerationStream(text, generationCallback);
-    if (text.isEmpty) return;
-    // Submit text to generator here
+    // if (text.isEmpty) return;
+    // // Submit text to generator here
     uiMessage.Message _message = uiMessage.Message(
         id: Tools().getRandomString(12),
         conversationID: widget.conversation!.id,
@@ -319,9 +322,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                       setState(() {
                                         messages.clear();
                                         // delete from the messages table
-                                        ConversationDatabase.instance
-                                            .deleteMessageByConvId(
-                                                widget.conversation!.id);
+                                        // ConversationDatabase.instance
+                                        //     .deleteMessageByConvId(
+                                        //         widget.conversation!.id);
                                         // update the lastMessage
                                         widget.conversation!.lastMessage =
                                             "Start a chat ->";
@@ -371,7 +374,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         primaryModel: "Llama 2",
                         title: "New Chat",
                       );
-                      widget.onCreateNewConversation(widget.conversation);
+                      // TODO FIX THE DATABASSE add to database
+                      // widget.onCreateNewConversation(widget.conversation);
                     }
                     if (text.trim() != "") {
                       uiMessage.Message message = uiMessage.Message(
@@ -385,8 +389,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                           timestamp: DateTime.now(),
                           type: uiMessage.MessageType.text);
                       messages.add(message);
-                      await ConversationDatabase.instance
-                          .createMessage(message);
+                      // TODO FIX THE DATABASSE add to database
+                      // await ConversationDatabase.instance
+                      //     .createMessage(message);
 
                       widget.conversation!.lastMessage = text;
                       widget.conversation!.time = DateTime.now();
@@ -395,10 +400,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                       setState(() {
                         isGenerating.value = true;
                       });
-                      if (widget.modelLoadedState!.value ==
-                          ModelLoadedState.isLoaded) {
-                        sendMessagetoModel(message.message!);
-                      }
+                      // if (widget.modelLoadedState!.value ==
+                      //     ModelLoadedState.isLoaded) {
+                      sendMessagetoModel(message.message!);
+                      // }
                       setState(() {});
                     }
                   },

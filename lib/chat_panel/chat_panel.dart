@@ -46,7 +46,7 @@ class _ConversationsListState extends State<ConversationsList> {
                     0,
                     newConversation,
                   );
-                  ConversationDatabase.instance.create(newConversation);
+                  // ConversationDatabase.instance.create(newConversation);
                   setState(() {
                     widget.onTap(widget.conversations.value[0]);
                   });
@@ -96,12 +96,12 @@ class _ConversationsListState extends State<ConversationsList> {
                                   print("ID: " +
                                       widget.conversations.value[index].id);
                                   // delete from the conversations table
-                                  await ConversationDatabase.instance.delete(
-                                      widget.conversations.value[index].id);
+                                  // await ConversationDatabase.instance.delete(
+                                  //     widget.conversations.value[index].id);
                                   // delete from the messages table
-                                  await ConversationDatabase.instance
-                                      .deleteMessageByConvId(
-                                          widget.conversations.value[index].id);
+                                  // await ConversationDatabase.instance
+                                  //     .deleteMessageByConvId(
+                                  //         widget.conversations.value[index].id);
                                   widget.conversations.value.removeAt(index);
                                   widget.conversations.notifyListeners();
                                   widget.onDelete(true);
