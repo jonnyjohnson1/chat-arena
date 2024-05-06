@@ -1,6 +1,5 @@
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,14 +14,23 @@ import 'package:chat/models/models.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/json_loader.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
-import 'model_widget/model_listview_card.dart';
 import 'models/model_loaded_states.dart';
 import 'models/sys_resources.dart';
-import 'services/ios_system_resources.dart';
 
-void main() =>
-    {WidgetsFlutterBinding.ensureInitialized(), runApp(const MyApp())};
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Initialize FFI
+  sqfliteFfiInit();
+  if (kIsWeb) {
+    // Change default factory on the web
+    databaseFactory = databaseFactoryFfiWeb;
+  }
+
+  return runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -82,102 +90,16 @@ class _MyHomePageState extends State<MyHomePage> {
       },
       modelLoadedState: modelLoaded,
     );
-    // isIphone = await SystemResources().isIphone();
-    // print("here1");
-    // deviceModel = await SystemResources().getModel();
-    deviceModel = "macOS";
-    print("here2");
     final jsonResult = await loadJson(); //latest Dart
     List<dynamic> modelList = jsonResult['model_list'];
     for (dynamic model in modelList) {
       models.value.add(ModelConfig.fromJson(model));
     }
     models.notifyListeners();
-    // sync with models on iOS
-    print("Sync initiated on load");
-    // sync with models on iOS
-    // Map<String, dynamic> result =
-    //     await swiftInterface.syncModelsListWithDevice(models.value);
-    // // Convert result into dict models w/ key = local_id
-    // Map<String, Map<String, dynamic>> resultDict = unpackModels(result);
-    // print(resultDict);
-    // Loop through the list from the valuenotifier and update all their values.
-    // List<ModelConfig> updatedConfigs = [];
-    // for (ModelConfig modelConfig in models.value) {
-    //   String modelID = modelConfig.localID!;
-    //   Map<String, dynamic> modelDict = resultDict[modelID]!;
-    //   resultDict.remove(modelID);
-    //   updatedConfigs.add(ModelConfig().fromMap(modelDict));
-    // }
 
-    // add any remaining models stored on device
-    // for (String key in resultDict.keys) {
-    //   Map<String, dynamic> modelDict = resultDict[key]!;
-    //   updatedConfigs.add(ModelConfig().fromMap(modelDict));
-    // }
-
-    // print(updatedConfigs);
-    // models.value = updatedConfigs;
-    models.notifyListeners();
     didInit = true;
     setState(() {});
-
-    // init the downloadModelState stream
-    // SwiftFunctionsInterface()
-    //     .subscribeToModelDownloadStream(modelDownloadStateCallback);
-
-    // // init system resources stream
-    SystemResources()
-        .subscribeToSystemResourcesStream(eventResourcesStreamCallback);
   }
-
-  modelDownloadStateCallback(Object? event) async {
-    if (event != null) {
-      // Convert Object? event to JSON string
-      String jsonString = jsonEncode(event);
-      // Decode JSON string into Map<String, dynamic>
-      Map<String, dynamic> eventMap = jsonDecode(jsonString);
-      // Convert result into dict models w/ key = local_id
-      Map<String, Map<String, dynamic>> resultDict = unpackModels(eventMap);
-      // Loop through the list from the valuenotifier and update all their values.
-      List<ModelConfig> updatedConfigs = [];
-      for (ModelConfig modelConfig in models.value) {
-        String modelID = modelConfig.localID!;
-        Map<String, dynamic> modelDict = resultDict[modelID]!;
-        resultDict.remove(modelID);
-        updatedConfigs.add(ModelConfig().fromMap(modelDict));
-      }
-
-      // add any remaining models stored on device
-      for (String key in resultDict.keys) {
-        Map<String, dynamic> modelDict = resultDict[key]!;
-        updatedConfigs.add(ModelConfig().fromMap(modelDict));
-      }
-
-      models.value = updatedConfigs;
-      models.notifyListeners();
-    } else {
-      // return null event generation
-      // return const EventGenerationResponse(generation: "", progress: 0.0);
-    }
-  }
-
-  eventResourcesStreamCallback(Object? event) async {
-    if (event != null) {
-      String jsonString = jsonEncode(event);
-      Map<String, dynamic> eventMap = jsonDecode(jsonString);
-      // Parse JSON using MemoryConfig
-      try {
-        MemoryConfig memoryConfig = MemoryConfig.fromJson(eventMap);
-        sysResources.value = memoryConfig;
-        sysResources.notifyListeners();
-      } catch (e) {
-        print("Error parsing sys resource data: $e");
-      }
-    } else {}
-  }
-
-  bool isIphone = false;
 
   @override
   void initState() {
@@ -185,7 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // sync the app config in flutter assets with the one on mobile device
     _loadModelListFromAppConfig;
     // load existing chats from device
-    // refreshConversationDatabase();
+    refreshConversationDatabase();
 
     // Future.delayed(const Duration(milliseconds: 0), () async => _localPath);
     llm = ValueNotifier(LLM(modelLoaded: modelLoaded.value));
@@ -462,6 +384,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
+    bool isMobile = width < 550;
     return MultiProvider(
       providers: [
         Provider.value(value: true)
@@ -477,7 +400,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Scaffold(
           appBar: AppBar(
             automaticallyImplyLeading: false,
-            leading: isIphone
+            leading: isMobile
                 ? null
                 : IconButton(
                     icon: const Icon(Icons.menu),
@@ -540,58 +463,12 @@ class _MyHomePageState extends State<MyHomePage> {
                         );
                       }),
                     ),
-                    if (!isIphone)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 5.0),
-                        child: ValueListenableBuilder(
-                            valueListenable: sysResources,
-                            builder: (ctx, mem, _) {
-                              if (mem.totalMemory != null &&
-                                  mem.usedMemory != null) {
-                                String usedMem = "0.0";
-                                try {
-                                  usedMem = getFileSizeString(
-                                      bytes: mem.usedMemory!.toInt(),
-                                      decimals: 0);
-                                } catch (e) {
-                                  print("Error getting fileSize String: $e");
-                                }
-                                String totMem = getFileSizeString(
-                                    bytes: mem.totalMemory!, decimals: 2);
-                                String perc =
-                                    (mem.usedMemory! / mem.totalMemory! * 100)
-                                        .toStringAsFixed(2);
-                                return Row(
-                                  mainAxisAlignment: isIphone
-                                      ? MainAxisAlignment.start
-                                      : MainAxisAlignment.end,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment: isIphone
-                                          ? CrossAxisAlignment.start
-                                          : CrossAxisAlignment.end,
-                                      children: [
-                                        // Text("$deviceModel ",
-                                        //     style: const TextStyle(fontSize: 14)),
-                                        Text(("$usedMem ($perc%)"),
-                                            style:
-                                                const TextStyle(fontSize: 14)),
-                                        Text(("of $totMem "),
-                                            style:
-                                                const TextStyle(fontSize: 14)),
-                                      ],
-                                    ),
-                                  ],
-                                );
-                              }
-                              return Container();
-                            }),
-                      ),
-                    if (isIphone)
+                    if (isMobile)
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           IconButton(
+                              tooltip: "Games",
                               onPressed: () {
                                 showModalBottomSheet<void>(
                                     context: context,
@@ -627,7 +504,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                                 modelLoaded: modelLoaded,
                                                 systemResources: sysResources,
                                                 llm: llm,
-                                                isIphone: isIphone,
+                                                isIphone: isMobile,
                                                 homePage: homePage)),
                                       );
                                     });
@@ -656,7 +533,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Center(
                       child: Row(
                         children: [
-                          if (!isIphone)
+                          if (!isMobile)
                             Row(
                               children: [
                                 AnimatedContainer(

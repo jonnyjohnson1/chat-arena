@@ -12,17 +12,18 @@ import '../models/messages.dart';
 class ConversationDatabase {
   static final ConversationDatabase instance = ConversationDatabase._init();
   static Database? _database;
+  static String dbPath = 'test1.db';
   ConversationDatabase._init();
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('conversations.db');
+    _database = await _initDB(dbPath);
     return _database!;
   }
 
   Future<Database> _initDB(String filePath) async {
     var databasesPath = await getDatabasesPath();
-    String path = p.join(databasesPath, 'conversations.db');
+    String path = p.join(databasesPath, dbPath);
     return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
@@ -56,7 +57,6 @@ CREATE TABLE $tableMessages (
   ${MessageFields.name} $textType,
   ${MessageFields.isGenerating} $boolType
 )
-
 ''');
   }
 

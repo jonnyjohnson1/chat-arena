@@ -17,7 +17,6 @@ import 'package:provider/provider.dart';
 // import 'package:file_selector/file_selector.dart';
 
 import '../services/ios_platform_interface.dart';
-import '../services/ios_system_resources.dart';
 
 class ChatRoomPage extends StatefulWidget {
   Conversation? conversation;
@@ -54,8 +53,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   bool isLoading = true;
 
   Future<void> initData() async {
-    isIphone = await SystemResources().isIphone();
-    // load all messages from database
     if (widget.conversation != null) {
       try {
         messages = await ConversationDatabase.instance

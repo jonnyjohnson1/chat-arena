@@ -25,10 +25,11 @@ dependencies:
   file_picker: ^6.1.1
   path_provider: ^2.1.1 # reads file path
   url_launcher: ^6.1.14
-  system_resources_2: ^2.0.0 # to display memory usage
   device_info_plus: ^9.1.1 # detect device type
   shared_preferences: ^2.2.2
-  sqflite: ^2.3.0 # for local database
+  sqflite: ^2.3.1 # for local database
+  sqflite_common_ffi: any
+  sqflite_common_ffi_web: ^0.4.2+3
   path: any
   
 dev_dependencies:
