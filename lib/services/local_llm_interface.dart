@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import '../models/messages.dart';
+
 class LocalLLMInterface {
   String chat_message = "chat";
 
@@ -17,7 +19,8 @@ class LocalLLMInterface {
         Uri.parse('$wsPrefix://$extractedDiAPI/$chat_message'));
   }
 
-  void newMessage(String message, callbackFunction) {
+  void newMessage(
+      String message, List<Message> messageHistory, callbackFunction) {
     initChatWebsocket();
 
     if (webSocket == null) {
@@ -25,10 +28,16 @@ class LocalLLMInterface {
       return null;
     }
 
+    // Format messageHistory for json
+    List<Map<String, String>> msgHist = [];
+    for (Message msg in messageHistory) {
+      msgHist.add({'role': msg.senderID!, 'content': msg.message!});
+    }
+
     Map<String, dynamic> submitPkg = {
       "model": 'solar',
       "message": message,
-      "message_history": [],
+      "message_history": msgHist,
       "temperature": 0.06
     };
 

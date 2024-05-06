@@ -140,6 +140,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     // swiftFunctions.initGenerationStream(text, generationCallback);
     // if (text.isEmpty) return;
     // // Submit text to generator here
+    LocalLLMInterface().newMessage(text, messages, generationCallback);
     uiMessage.Message _message = uiMessage.Message(
         id: Tools().getRandomString(12),
         conversationID: widget.conversation!.id,
@@ -151,7 +152,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         timestamp: DateTime.now(),
         type: uiMessage.MessageType.text);
     messages.add(_message);
-    LocalLLMInterface().newMessage(text, generationCallback);
   }
 
   @override
