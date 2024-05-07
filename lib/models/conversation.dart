@@ -30,6 +30,9 @@ class Conversation {
   String? primaryModel;
   String id;
   GameType? gameType;
+  dynamic gameModel;
+  Map<String, dynamic>? gameSettings;
+  Map<String, dynamic>? gameAnalytics;
 
   Conversation(
       {this.title,
@@ -38,6 +41,9 @@ class Conversation {
       this.primaryModel,
       this.time,
       this.gameType,
+      this.gameModel,
+      this.gameSettings,
+      this.gameAnalytics,
       required this.id});
 
   // Convert the Conversation instance to a Map

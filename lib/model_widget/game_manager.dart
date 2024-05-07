@@ -1,5 +1,6 @@
+import 'package:chat/models/games_config.dart';
 import 'package:flutter/material.dart';
-import 'package:chat/model_widget/model_listview_card.dart';
+import 'package:chat/model_widget/game_listview_card.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/models/model_loaded_states.dart';
 import 'package:chat/models/models.dart';
@@ -7,17 +8,17 @@ import 'package:chat/models/sys_resources.dart';
 import 'package:chat/services/ios_platform_interface.dart';
 import 'package:provider/provider.dart';
 
-class ModelManagerPage extends StatefulWidget {
+class GameManagerPage extends StatefulWidget {
   int duration;
-  ValueNotifier<List<ModelConfig>>? models;
+  ValueNotifier<List<GamesConfig>>? games;
   ValueNotifier<ModelLoadedState>? modelLoaded;
   ValueNotifier<LLM>? llm;
   ValueNotifier<MemoryConfig>? systemResources;
   ValueNotifier<Widget> homePage;
   bool isIphone;
-  ModelManagerPage(
+  GameManagerPage(
       {required this.duration,
-      required this.models,
+      required this.games,
       required this.modelLoaded,
       required this.llm,
       required this.systemResources,
@@ -26,10 +27,10 @@ class ModelManagerPage extends StatefulWidget {
       super.key});
 
   @override
-  State<ModelManagerPage> createState() => _ModelManagerPageState();
+  State<GameManagerPage> createState() => _GameManagerPageState();
 }
 
-class _ModelManagerPageState extends State<ModelManagerPage> {
+class _GameManagerPageState extends State<GameManagerPage> {
   TextEditingController newModelURLController = TextEditingController();
 
   bool didInit = false;
@@ -93,9 +94,9 @@ class _ModelManagerPageState extends State<ModelManagerPage> {
                   height: 18,
                 ),
                 Expanded(
-                  child: ValueListenableBuilder<List<ModelConfig>>(
-                      valueListenable: widget.models!,
-                      builder: (ctx, modelList, _) {
+                  child: ValueListenableBuilder<List<GamesConfig>>(
+                      valueListenable: widget.games!,
+                      builder: (ctx, gamesList, _) {
                         return Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: SingleChildScrollView(
@@ -104,11 +105,11 @@ class _ModelManagerPageState extends State<ModelManagerPage> {
                               spacing: 15,
                               runSpacing: 15,
                               children: [
-                                for (int idx = 0; idx < modelList.length; idx++)
-                                  ModelListViewCard(
-                                      modelConfig: modelList[idx],
+                                for (int idx = 0; idx < gamesList.length; idx++)
+                                  GameListViewCard(
+                                      gamesConfig: gamesList[idx],
                                       isLoaded: widget.llm!.value.modelName ==
-                                          modelList[idx].displayName,
+                                          gamesList[idx].name,
                                       // selects the model to use for chat
                                       onTap: (modelConfig) async {
                                         print("Tapped");

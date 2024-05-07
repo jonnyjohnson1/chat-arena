@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chat/models/game_models/debate.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:file_picker/file_picker.dart';
@@ -20,13 +21,10 @@ class ChatRoomPage extends StatefulWidget {
   Conversation? conversation;
   final onCreateNewConversation;
   final onNewText;
-  // final UserData userData;
-  final ValueNotifier<ModelLoadedState>? modelLoadedState;
 
   ChatRoomPage(
       {required this.conversation,
       this.onCreateNewConversation,
-      this.modelLoadedState,
       this.onNewText,
       Key? key})
       : super(key: key);
@@ -71,15 +69,18 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
     if (widget.conversation != null) {
       if (widget.conversation!.gameType == GameType.debate) {
-        Future.delayed(
-          const Duration(milliseconds: 1000),
-          () async {
-            if (true) // if the game doesn't have a topic yet
-            {
-              getGameSettings(context);
-            }
-          },
-        );
+        if (widget.conversation!.gameModel == null ||
+            widget.conversation!.gameModel.topic.isEmpty) {
+          Future.delayed(
+            const Duration(milliseconds: 1000),
+            () async {
+              if (true) // if the game doesn't have a topic yet
+              {
+                getGameSettings(context);
+              }
+            },
+          );
+        }
       }
     }
     initData();
@@ -138,9 +139,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   void sendMessagetoModel(String text) async {
     print("Submitting: $text to chat model");
     currentIdx = messages.length;
-    // await LocalLLMInterface().ollamaChat(text);
-    // swiftFunctions.initGenerationStream(text, generationCallback);
-    // if (text.isEmpty) return;
     // // Submit text to generator here
     LocalLLMInterface().newMessage(text, messages, generationCallback);
     uiMessage.Message _message = uiMessage.Message(
@@ -228,9 +226,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Say Something Contentious 😏"),
-          content: TextField(
-            controller: topicController,
-            decoration: const InputDecoration(hintText: "Enter topic"),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 580),
+            child: TextField(
+              maxLines: 6,
+              minLines: 1,
+              controller: topicController,
+              decoration: const InputDecoration(hintText: "Enter topic"),
+            ),
           ),
           actions: <Widget>[
             TextButton(
@@ -246,6 +249,16 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
     // Now you can use _topicController.text to get the entered topic
     debugPrint("Topic: ${topicController.text}");
+    if (widget.conversation!.gameModel == null) {
+      widget.conversation!.gameModel = DebateGame(topic: topicController.text);
+    } else {
+      widget.conversation!.gameModel.topic = topicController.text;
+    }
+
+    if (widget.conversation!.title!.isEmpty) {
+      widget.conversation!.title = topicController.text;
+    }
+
     return isCompleted;
   }
 
@@ -270,6 +283,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                               _listViewController,
                               messages,
                             ),
+
+                            // images container
                             if (selectedImages.isNotEmpty)
                               Container(
                                 height: 75,
@@ -331,6 +346,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                   ],
                                 ),
                               ),
+
+                            // reset chat button
                             Positioned(
                               right: 10,
                               bottom: 0,
@@ -366,13 +383,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                         widget.onNewText(widget
                                             .conversation); // pass back to main to update states
                                       });
-                                      if (widget.modelLoadedState!.value ==
-                                          ModelLoadedState.isLoaded) {
-                                        setState(() {
-                                          print("TODO here");
-                                          // swiftFunctions.resetChat();
-                                        });
-                                      }
                                     }
                                   },
                                   child: const Text("Reset Chat")),
@@ -407,7 +417,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         primaryModel: "Llama 2",
                         title: "New Chat",
                       );
-                      // TODO FIX THE DATABASSE add to database
                       widget.onCreateNewConversation(widget.conversation);
                     }
                     if (text.trim() != "") {
@@ -422,7 +431,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                           timestamp: DateTime.now(),
                           type: uiMessage.MessageType.text);
                       messages.add(message);
-                      // TODO FIX THE DATABASSE add to database
                       await ConversationDatabase.instance
                           .createMessage(message);
 
@@ -433,10 +441,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                       setState(() {
                         isGenerating.value = true;
                       });
-                      // if (widget.modelLoadedState!.value ==
-                      //     ModelLoadedState.isLoaded) {
                       sendMessagetoModel(message.message!);
-                      // }
                       setState(() {});
                     }
                   },
@@ -454,6 +459,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                   },
                 ),
               ),
+              // bottom padding
+              const SizedBox(
+                height: 7,
+              )
             ],
           );
   }

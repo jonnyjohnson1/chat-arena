@@ -29,7 +29,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
             ),
             InkWell(
                 onTap: () {
-                  widget.onTap("modelmanager");
+                  widget.onTap("gamemanager");
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(left: 18.0),
@@ -41,7 +41,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                         const SizedBox(
                           width: 5,
                         ),
-                        Text("Model Manager",
+                        Text("Game Manager",
                             style: Theme.of(context).textTheme.titleMedium),
                       ],
                     ),

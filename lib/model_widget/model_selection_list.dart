@@ -1,3 +1,4 @@
+import 'package:chat/models/games_config.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/model_widget/model_dropdown_listview_item.dart';
 import 'package:chat/models/llm.dart';
@@ -7,14 +8,14 @@ import 'package:provider/provider.dart';
 
 class ModelSelectionList extends StatefulWidget {
   int duration;
-  ValueNotifier<List<ModelConfig>>? models;
+  ValueNotifier<List<GamesConfig>>? games;
   ValueNotifier<ModelLoadedState>? modelLoaded;
   ValueNotifier<LLM>? llm;
   bool isIphone;
   final onModelTap;
   ModelSelectionList(
       {required this.duration,
-      required this.models,
+      required this.games,
       required this.modelLoaded,
       required this.llm,
       this.onModelTap,
@@ -44,16 +45,14 @@ class _ModelSelectionListState extends State<ModelSelectionList> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ValueListenableBuilder<List<ModelConfig>>(
-            valueListenable: widget.models!,
-            builder: (ctx, modelList, _) {
+        ValueListenableBuilder<List<GamesConfig>>(
+            valueListenable: widget.games!,
+            builder: (ctx, gamesList, _) {
               return ListView.builder(
                   shrinkWrap: true,
-                  itemCount: modelList.length,
+                  itemCount: gamesList.length,
                   itemBuilder: (contextx, idx) {
-                    ModelConfig model = modelList[idx];
-                    bool isLoaded =
-                        widget.llm!.value.modelName == model.displayName;
+                    GamesConfig game = gamesList[idx];
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10.0,
@@ -61,9 +60,9 @@ class _ModelSelectionListState extends State<ModelSelectionList> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          ModelDropdownListViewItem(
-                            modelConfig: model,
-                            isLoaded: isLoaded,
+                          GameDropdownListViewItem(
+                            gameConfig: game,
+                            isLoaded: false,
                             // selects the model to use for chat
                             onTap: (modelConfig) async {
                               if (true) {

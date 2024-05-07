@@ -1,3 +1,4 @@
+import 'package:chat/models/games_config.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:chat/chat_panel/chat_panel.dart';
 import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/drawer/drawer.dart';
-import 'package:chat/model_widget/model_manager.dart';
+import 'package:chat/model_widget/game_manager.dart';
 import 'package:chat/model_widget/model_selection_list.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/llm.dart';
@@ -61,7 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late ValueNotifier<LLM> llm;
   ValueNotifier<String> title = ValueNotifier("Chat Arena");
   late String directoryPath;
-  ValueNotifier<List<ModelConfig>> models = ValueNotifier([]);
+  ValueNotifier<List<GamesConfig>> games = ValueNotifier([]);
   ValueNotifier<MemoryConfig> sysResources =
       ValueNotifier(MemoryConfig(totalMemory: 17, usedMemory: 0.0));
   ValueNotifier<Widget> homePage = ValueNotifier(Container());
@@ -88,14 +89,13 @@ class _MyHomePageState extends State<MyHomePage> {
         conversations.value[idx] = lastMessageUpdate;
         conversations.notifyListeners();
       },
-      modelLoadedState: modelLoaded,
     );
     final jsonResult = await loadJson(); //latest Dart
-    List<dynamic> modelList = jsonResult['model_list'];
-    for (dynamic model in modelList) {
-      models.value.add(ModelConfig.fromJson(model));
+    List<dynamic> gamesList = jsonResult['games_list'];
+    for (dynamic game in gamesList) {
+      games.value.add(GamesConfig.fromJson(game));
     }
-    models.notifyListeners();
+    games.notifyListeners();
 
     didInit = true;
     setState(() {});
@@ -229,7 +229,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       width: childWidgetWidth,
                       child: ModelSelectionList(
                           duration: 90,
-                          models: models,
+                          games: games,
                           modelLoaded: modelLoaded,
                           llm: llm,
                           onModelTap: (ModelConfig modelConfig) {
@@ -262,12 +262,12 @@ class _MyHomePageState extends State<MyHomePage> {
         Column(
           children: [
             SettingsDrawer(onTap: (String page) {
-              if (page == "modelmanager") {
-                title.value = "Model Manager";
+              if (page == "gamemanager") {
+                title.value = "Game Manager";
                 title.notifyListeners();
-                homePage.value = ModelManagerPage(
+                homePage.value = GameManagerPage(
                   duration: 90,
-                  models: models,
+                  games: games,
                   modelLoaded: modelLoaded,
                   systemResources: sysResources,
                   llm: llm,
@@ -297,7 +297,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 conversations.value[idx] = lastMessageUpdate;
                 conversations.notifyListeners();
               },
-              modelLoadedState: modelLoaded,
             );
             homePage.notifyListeners();
           },
@@ -311,7 +310,6 @@ class _MyHomePageState extends State<MyHomePage> {
             homePage.value = ChatRoomPage(
               key: Key(chatSelected.id),
               conversation: chatSelected,
-              modelLoadedState: modelLoaded,
               onNewText: (Conversation lastMessageUpdate) async {
                 // update the lastMessage sent
                 await ConversationDatabase.instance.update(lastMessageUpdate);
@@ -490,9 +488,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                                     .size
                                                     .height -
                                                 85,
-                                            child: ModelManagerPage(
+                                            child: GameManagerPage(
                                                 duration: 90,
-                                                models: models,
+                                                games: games,
                                                 modelLoaded: modelLoaded,
                                                 systemResources: sysResources,
                                                 llm: llm,
