@@ -1,10 +1,7 @@
 import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -13,7 +10,7 @@ import '../models/messages.dart';
 class ConversationDatabase {
   static final ConversationDatabase instance = ConversationDatabase._init();
   static Database? _database;
-  static String dbPath = 'test10.db';
+  static String dbPath = 'test11.db';
   ConversationDatabase._init();
 
   Future<Database> get database async {
@@ -26,7 +23,6 @@ class ConversationDatabase {
     var databasesPath = await getDatabasesPath();
     String path = p.join(databasesPath, dbPath);
     //
-    print(path);
     if (kIsWeb) {
       sqfliteFfiInit();
       // Change default factory on the web
@@ -51,6 +47,7 @@ class ConversationDatabase {
 CREATE TABLE IF NOT EXISTS $tableConversations (
   ${ConversationFields.id} $idType,
   ${ConversationFields.title} $textType,
+  ${ConversationFields.gameType} $textType,
   ${ConversationFields.lastMessage} $textType,
   ${ConversationFields.image} $textType,
   ${ConversationFields.primaryModel} $textType,
@@ -187,12 +184,8 @@ CREATE TABLE $tableMessages (
   Future<Message> createMessage(Message message) async {
     final db = await instance.database;
     try {
-      print('her111');
-      print(message.toMap());
       final id = await db.insert(tableMessages, message.toMap());
-      print('her222');
     } catch (e) {
-      print(e);
       // if table doesn't exist, make the table and try again
       await makeMessagesTable(db);
       final id = await db.insert(tableMessages, message.toMap());

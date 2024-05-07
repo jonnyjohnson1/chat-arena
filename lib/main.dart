@@ -386,13 +386,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return MultiProvider(
       providers: [
         Provider.value(value: true)
-        // Provider<SwiftFunctionsInterface>.value(
-        //   value: swiftInterface,
-        // ),
         // ValueListenableProvider<MemoryConfig>.value(value: sysResources),
-        // ValueListenableProvider<List<ModelConfig>>.value(value: models),
-        // ValueListenableProvider<ModelLoadedState>.value(value: modelLoaded),
-        // ValueListenableProvider<LLM>.value(value: llm)
       ],
       child: SelectionArea(
         child: Scaffold(

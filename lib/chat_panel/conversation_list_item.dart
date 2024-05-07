@@ -7,11 +7,13 @@ class ConversationListItem extends StatefulWidget {
   Conversation conversation;
   bool isMessageRead;
   final onSettingsTap;
+  final onDeleteTap;
   final onSelected;
   ConversationListItem(
       {super.key,
       required this.conversation,
       required this.isMessageRead,
+      this.onDeleteTap,
       this.onSelected,
       this.onSettingsTap});
   @override
@@ -26,12 +28,17 @@ class _ConversationListItemState extends State<ConversationListItem> {
   DateTime now = DateTime.now();
   DateTime? today;
 
-  bool isHoverAttributes = false;
+  bool isHover = false;
 
   _updateLocation(_) {
     setState(() {
-      isHoverAttributes = !isHoverAttributes;
+      isHover = !isHover;
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -43,106 +50,127 @@ class _ConversationListItemState extends State<ConversationListItem> {
     } else {
       lastUsed = dateformat.format(msgDate);
     }
-    return InkWell(
-      onTap: () {
-        widget.onSelected();
-      },
-      child: Container(
-        padding: const EdgeInsets.only(left: 6, right: 6, top: 10, bottom: 10),
-        child: Row(
-          children: <Widget>[
-            SizedBox(
-              width: 12,
-              child: widget.isMessageRead
-                  ? Container()
-                  : Icon(
-                      Icons.circle,
-                      color: Colors.blue[600],
-                      size: 12,
-                    ),
-            ),
-            const SizedBox(
-              width: 6,
-            ),
-            Expanded(
-              child: Row(
-                children: <Widget>[
-                  // CircleAvatar(
-                  //   backgroundImage: NetworkImage(widget.imageUrl),
-                  //   maxRadius: 18,
-                  // ),
-                  // const SizedBox(
-                  //   width: 10,
-                  // ),
-                  Expanded(
-                    child: Container(
-                      color: Colors.transparent,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                    widget.conversation.title ?? "Llama 2",
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium),
+    return MouseRegion(
+      onEnter: _updateLocation,
+      onExit: _updateLocation,
+      child: InkWell(
+        onTap: () {
+          widget.onSelected();
+        },
+        child: Container(
+          padding:
+              const EdgeInsets.only(left: 6, right: 6, top: 10, bottom: 10),
+          child: Row(
+            children: <Widget>[
+              SizedBox(
+                width: 12,
+                child: widget.isMessageRead
+                    ? Container()
+                    : Icon(
+                        Icons.circle,
+                        color: Colors.blue[600],
+                        size: 12,
+                      ),
+              ),
+              const SizedBox(
+                width: 6,
+              ),
+              Expanded(
+                child: Row(
+                  children: <Widget>[
+                    // CircleAvatar(
+                    //   backgroundImage: NetworkImage(widget.imageUrl),
+                    //   maxRadius: 18,
+                    // ),
+                    // const SizedBox(
+                    //   width: 10,
+                    // ),
+                    Expanded(
+                      child: Container(
+                        color: Colors.transparent,
+                        child: Row(
+                          children: [
+                            if (widget.conversation.gameType == GameType.chat)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 10.0),
+                                child: Icon(CupertinoIcons.chat_bubble_fill,
+                                    color: Colors.blue[200], size: 26),
                               ),
-                              GestureDetector(
-                                onTap: () {
-                                  widget.onSettingsTap();
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: Icon(
-                                    Icons.more_vert,
-                                    size: 24,
-                                    color: Colors.grey.shade600,
+                            if (widget.conversation.gameType == GameType.debate)
+                              const Padding(
+                                padding: EdgeInsets.only(right: 10.0),
+                                child: Icon(CupertinoIcons.group_solid,
+                                    color: Color.fromARGB(255, 188, 144, 249),
+                                    size: 26),
+                              ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                            widget.conversation.title ??
+                                                "Llama 2",
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium),
+                                      ),
+                                      isHover
+                                          ? Tooltip(
+                                              message: "Delete",
+                                              waitDuration: const Duration(
+                                                  milliseconds: 800),
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  widget.onDeleteTap();
+                                                },
+                                                child: const Padding(
+                                                  padding: EdgeInsets.all(3.0),
+                                                  child: Icon(
+                                                    Icons.close,
+                                                    size: 18,
+                                                    color: Color.fromARGB(
+                                                        255, 149, 146, 146),
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                          : const Padding(
+                                              padding: EdgeInsets.all(3.0),
+                                              child: Icon(
+                                                Icons.delete,
+                                                size: 18,
+                                                color: Color.fromARGB(
+                                                    0, 235, 55, 55),
+                                              ),
+                                            ),
+                                    ],
                                   ),
-                                ),
+                                  const SizedBox(
+                                    height: 0,
+                                  ),
+                                  Text(
+                                    widget.conversation.lastMessage ?? "",
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey.shade600,
+                                        fontWeight: FontWeight.normal),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 0,
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  widget.conversation.lastMessage ?? "",
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey.shade600,
-                                      fontWeight: FontWeight.normal),
-                                ),
-                              ),
-                              if (widget.conversation.gameType == GameType.chat)
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 10.0),
-                                  child: Icon(CupertinoIcons.chat_bubble_fill,
-                                      color: Colors.blue[200], size: 12),
-                                ),
-                              if (widget.conversation.gameType ==
-                                  GameType.debate)
-                                const Padding(
-                                  padding: EdgeInsets.only(right: 10.0),
-                                  child: Icon(CupertinoIcons.group_solid,
-                                      color: Color.fromARGB(255, 188, 144, 249),
-                                      size: 12),
-                                )
-                            ],
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

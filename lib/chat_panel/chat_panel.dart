@@ -127,6 +127,20 @@ class _ConversationsListState extends State<ConversationsList> {
                               onSelected: () {
                                 widget.onTap(widget.conversations.value[index]);
                               },
+                              onDeleteTap: () async {
+                                print("ID: " +
+                                    widget.conversations.value[index].id);
+                                // delete from the conversations table
+                                // await ConversationDatabase.instance.delete(
+                                //     widget.conversations.value[index].id);
+                                // delete from the messages table
+                                // await ConversationDatabase.instance
+                                //     .deleteMessageByConvId(
+                                //         widget.conversations.value[index].id);
+                                widget.conversations.value.removeAt(index);
+                                widget.conversations.notifyListeners();
+                                widget.onDelete(true);
+                              },
                               onSettingsTap: () async {
                                 // show alert dialog to clarify delete/clear
                                 bool? deleteConfirmation =

@@ -67,9 +67,21 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   @override
   void initState() {
     super.initState();
-    // swiftFunctions =
-    //     Provider.of<SwiftFunctionsInterface>(context, listen: false);
-    // DialogFlowtter.fromFile().then((instance) => dialogFlowtter = instance);
+    // load the chat game settings based on the game type
+
+    if (widget.conversation != null) {
+      if (widget.conversation!.gameType == GameType.debate) {
+        Future.delayed(
+          const Duration(milliseconds: 1000),
+          () async {
+            if (true) // if the game doesn't have a topic yet
+            {
+              getGameSettings(context);
+            }
+          },
+        );
+      }
+    }
     initData();
   }
 
@@ -206,12 +218,43 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return _chatroomPageUI();
+  Future<bool> getGameSettings(BuildContext context) async {
+    bool isCompleted = false;
+    TextEditingController topicController = TextEditingController();
+    debugPrint("get game settings");
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Say Something Contentious 😏"),
+          content: TextField(
+            controller: topicController,
+            decoration: const InputDecoration(hintText: "Enter topic"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    // Now you can use _topicController.text to get the entered topic
+    debugPrint("Topic: ${topicController.text}");
+    return isCompleted;
   }
 
-  Widget _chatroomPageUI() {
+  @override
+  Widget build(BuildContext context) {
+    return _chatroomPageUI(context);
+  }
+
+  Widget _chatroomPageUI(BuildContext context) {
     return isLoading
         ? Container()
         : Column(
