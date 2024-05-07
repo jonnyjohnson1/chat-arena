@@ -1,6 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -14,10 +14,7 @@ import 'package:chat/models/messages.dart' as uiMessage;
 import 'package:chat/models/model_loaded_states.dart';
 // import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/tools.dart';
-import 'package:provider/provider.dart';
 // import 'package:file_selector/file_selector.dart';
-
-import '../services/ios_platform_interface.dart';
 
 class ChatRoomPage extends StatefulWidget {
   Conversation? conversation;
@@ -56,16 +53,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   Future<void> initData() async {
     if (widget.conversation != null) {
       try {
-        // messages = await ConversationDatabase.instance
-        //     .readAllMessages(widget.conversation!.id);
+        messages = await ConversationDatabase.instance
+            .readAllMessages(widget.conversation!.id);
       } catch (e) {
         print(e);
-      }
-      try {
-        print("TODO here");
-        // var result = await swiftFunctions.loadMessagesIntoModel(messages);
-      } catch (e) {
-        print("error loading messages: ${e.toString()}");
       }
     }
     setState(() {
@@ -89,7 +80,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   int currentIdx = 0;
 
   generationCallback(Map<String, dynamic>? event) {
-    print(event);
     if (event != null) {
       completionTime = 0.0;
       progress = 0.0;
@@ -108,7 +98,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
         setState(() {});
         // add the final message to the database
-        // ConversationDatabase.instance.createMessage(messages[currentIdx]);
+        ConversationDatabase.instance.createMessage(messages[currentIdx]);
       } else {
         toksPerSec = response.toksPerSec;
         while (generatedChat.startsWith("\n")) {
@@ -322,9 +312,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                       setState(() {
                                         messages.clear();
                                         // delete from the messages table
-                                        // ConversationDatabase.instance
-                                        //     .deleteMessageByConvId(
-                                        //         widget.conversation!.id);
+                                        ConversationDatabase.instance
+                                            .deleteMessageByConvId(
+                                                widget.conversation!.id);
                                         // update the lastMessage
                                         widget.conversation!.lastMessage =
                                             "Start a chat ->";
@@ -375,7 +365,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         title: "New Chat",
                       );
                       // TODO FIX THE DATABASSE add to database
-                      // widget.onCreateNewConversation(widget.conversation);
+                      widget.onCreateNewConversation(widget.conversation);
                     }
                     if (text.trim() != "") {
                       uiMessage.Message message = uiMessage.Message(
@@ -390,8 +380,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                           type: uiMessage.MessageType.text);
                       messages.add(message);
                       // TODO FIX THE DATABASSE add to database
-                      // await ConversationDatabase.instance
-                      //     .createMessage(message);
+                      await ConversationDatabase.instance
+                          .createMessage(message);
 
                       widget.conversation!.lastMessage = text;
                       widget.conversation!.time = DateTime.now();

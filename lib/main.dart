@@ -76,17 +76,17 @@ class _MyHomePageState extends State<MyHomePage> {
     homePage.value = ChatRoomPage(
       conversation: null,
       onCreateNewConversation: (Conversation conv) async {
-        // await ConversationDatabase.instance.create(conv);
+        await ConversationDatabase.instance.create(conv);
         conversations.value.insert(0, conv);
         conversations.notifyListeners();
       },
       onNewText: (Conversation lastMessageUpdate) async {
         // update the lastMessage sent
-        // await ConversationDatabase.instance.update(lastMessageUpdate);
-        // int idx = conversations.value
-        //     .indexWhere((element) => element.id == lastMessageUpdate.id);
-        // conversations.value[idx] = lastMessageUpdate;
-        // conversations.notifyListeners();
+        await ConversationDatabase.instance.update(lastMessageUpdate);
+        int idx = conversations.value
+            .indexWhere((element) => element.id == lastMessageUpdate.id);
+        conversations.value[idx] = lastMessageUpdate;
+        conversations.notifyListeners();
       },
       modelLoadedState: modelLoaded,
     );
@@ -115,7 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    // ConversationDatabase.instance.close();
+    ConversationDatabase.instance.close();
     super.dispose();
   }
 
@@ -124,8 +124,8 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       isLoadingConversations = true;
     });
-    // conversations.value =
-    //     await ConversationDatabase.instance.readAllConversations();
+    conversations.value =
+        await ConversationDatabase.instance.readAllConversations();
     setState(() {
       isLoadingConversations = false;
     });
@@ -202,8 +202,6 @@ class _MyHomePageState extends State<MyHomePage> {
             providers: [
               Provider.value(
                 value: true,
-                // Provider<SwiftFunctionsInterface>.value(
-                //   value: swiftInterface,
               ),
             ],
             child: Row(
@@ -287,17 +285,17 @@ class _MyHomePageState extends State<MyHomePage> {
               key: UniqueKey(),
               conversation: null,
               onCreateNewConversation: (Conversation conv) async {
-                // await ConversationDatabase.instance.create(conv);
+                await ConversationDatabase.instance.create(conv);
                 conversations.value.insert(0, conv);
                 conversations.notifyListeners();
               },
               onNewText: (Conversation lastMessageUpdate) async {
                 // update the lastMessage sent
-                // await ConversationDatabase.instance.update(lastMessageUpdate);
-                // int idx = conversations.value.indexWhere(
-                //     (element) => element.id == lastMessageUpdate.id);
-                // conversations.value[idx] = lastMessageUpdate;
-                // conversations.notifyListeners();
+                await ConversationDatabase.instance.update(lastMessageUpdate);
+                int idx = conversations.value.indexWhere(
+                    (element) => element.id == lastMessageUpdate.id);
+                conversations.value[idx] = lastMessageUpdate;
+                conversations.notifyListeners();
               },
               modelLoadedState: modelLoaded,
             );
@@ -316,7 +314,7 @@ class _MyHomePageState extends State<MyHomePage> {
               modelLoadedState: modelLoaded,
               onNewText: (Conversation lastMessageUpdate) async {
                 // update the lastMessage sent
-                // await ConversationDatabase.instance.update(lastMessageUpdate);
+                await ConversationDatabase.instance.update(lastMessageUpdate);
                 int idx = conversations.value.indexWhere(
                     (element) => element.id == lastMessageUpdate.id);
                 conversations.value[idx] = lastMessageUpdate;
