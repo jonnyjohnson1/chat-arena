@@ -1,3 +1,5 @@
+import 'package:aligned_dialog/aligned_dialog.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/chat_panel/conversation_list_item.dart';
 import 'package:chat/models/conversation.dart';
@@ -18,13 +20,33 @@ class ConversationsList extends StatefulWidget {
 class _ConversationsListState extends State<ConversationsList> {
   bool didInit = false;
   ScrollController controller = ScrollController();
+  final chatALertDialogLink = LayerLink();
 
   @override
   void initState() {
     Future.delayed(const Duration(milliseconds: 90),
-        () => setState((() => didInit = true)));
+        () => mounted ? setState((() => didInit = true)) : null);
 
     super.initState();
+  }
+
+  addConversation(String gameType) {
+    Conversation newConversation = Conversation(
+        id: Tools().getRandomString(10),
+        title: "Untitled",
+        lastMessage: "",
+        image: "images/userImage1.jpeg",
+        time: DateTime.now(),
+        gameType: gameType == 'chat' ? GameType.chat : GameType.debate,
+        primaryModel: 'Llama 2');
+    widget.conversations.value.insert(
+      0,
+      newConversation,
+    );
+    // ConversationDatabase.instance.create(newConversation);
+    setState(() {
+      widget.onTap(widget.conversations.value[0]);
+    });
   }
 
   @override
@@ -35,28 +57,14 @@ class _ConversationsListState extends State<ConversationsList> {
             children: [
               InkWell(
                 onTap: () {
-                  Conversation newConversation = Conversation(
-                      id: Tools().getRandomString(10),
-                      title: "Untitled",
-                      lastMessage: "",
-                      image: "images/userImage1.jpeg",
-                      time: DateTime.now(),
-                      primaryModel: 'Llama 2');
-                  widget.conversations.value.insert(
-                    0,
-                    newConversation,
-                  );
-                  // ConversationDatabase.instance.create(newConversation);
-                  setState(() {
-                    widget.onTap(widget.conversations.value[0]);
-                  });
+                  addConversation('chat');
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 18.0, vertical: 10),
+                  padding: const EdgeInsets.only(
+                      left: 18, right: 3, top: 10, bottom: 10),
                   child:
                       Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                    Text("New Chat",
+                    Text("New Game",
                         style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(
                       width: 5,
@@ -66,6 +74,37 @@ class _ConversationsListState extends State<ConversationsList> {
                       width: 20,
                       height: 20,
                     ),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    Builder(builder: (more_ctx) {
+                      return CompositedTransformTarget(
+                        link: chatALertDialogLink,
+                        child: GestureDetector(
+                          onTap: () async {
+                            print("create dropdown");
+                            String? gameType = await showGameOptions(
+                                more_ctx, chatALertDialogLink);
+                            print(gameType);
+                            if (gameType != null) {
+                              if (gameType == 'chat') {
+                                addConversation('chat');
+                              } else if (gameType == 'debate') {
+                                addConversation('debate');
+                              }
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(3.0),
+                            child: Icon(
+                              Icons.more_vert,
+                              size: 24,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
                   ]),
                 ),
               ),
@@ -116,6 +155,86 @@ class _ConversationsListState extends State<ConversationsList> {
               ),
             ],
           );
+  }
+
+  Future<String?> showGameOptions(
+      BuildContext context, LayerLink layerLink) async {
+    final offset = Offset(0, -22);
+    return await showAlignedDialog(
+        context: context,
+        avoidOverflow: true,
+        isGlobal: false,
+        followerAnchor: Alignment.bottomLeft,
+        targetAnchor: Alignment.topLeft,
+        barrierColor: Colors.transparent,
+        duration: const Duration(milliseconds: 100),
+        builder: (context) {
+          return CompositedTransformFollower(
+              offset: offset,
+              link: layerLink,
+              child: Material(
+                color: Colors.transparent,
+                child: SizedBox(
+                  width: 240,
+                  height: 190,
+                  child: AlertDialog(
+                    contentPadding: EdgeInsets.zero,
+                    content: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Row(
+                          children: [
+                            const SizedBox(
+                              width: 15,
+                            ),
+                            Text(
+                              "Pick a game:",
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                        ListTile(
+                          title: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 10.0),
+                                child: Icon(CupertinoIcons.chat_bubble_fill,
+                                    color: Colors.blue[200], size: 16),
+                              ),
+                              const Text('Chat'),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.pop(context, 'chat');
+                          },
+                        ),
+                        ListTile(
+                          title: const Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.only(right: 10.0),
+                                child: Icon(CupertinoIcons.group_solid,
+                                    color: Color.fromARGB(255, 188, 144, 249),
+                                    size: 20),
+                              ),
+                              Text('Debate')
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.pop(context, 'debate');
+                          },
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ));
+        });
   }
 }
 

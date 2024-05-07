@@ -14,7 +14,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
   @override
   void initState() {
     Future.delayed(const Duration(milliseconds: 90),
-        () => setState((() => didInit = true)));
+        () => mounted ? setState((() => didInit = true)) : null);
 
     super.initState();
   }

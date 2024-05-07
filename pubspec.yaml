@@ -33,6 +33,7 @@ dependencies:
   sqflite_common_ffi_web: ^0.4.2+3
   web_socket_channel: ^2.1.0
   path: any
+  aligned_dialog: ^0.0.6
   
 dev_dependencies:
   flutter_test:

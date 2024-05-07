@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:chat/models/conversation.dart';
@@ -96,7 +97,7 @@ class _ConversationListItemState extends State<ConversationListItem> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(3.0),
                                   child: Icon(
-                                    Icons.more_horiz,
+                                    Icons.more_vert,
                                     size: 24,
                                     color: Colors.grey.shade600,
                                   ),
@@ -107,32 +108,33 @@ class _ConversationListItemState extends State<ConversationListItem> {
                           const SizedBox(
                             height: 0,
                           ),
-                          Text(
-                            widget.conversation.lastMessage ?? "",
-                            style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.normal),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  widget.conversation.lastMessage ?? "",
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade600,
+                                      fontWeight: FontWeight.normal),
+                                ),
+                              ),
+                              if (widget.conversation.gameType == GameType.chat)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 10.0),
+                                  child: Icon(CupertinoIcons.chat_bubble_fill,
+                                      color: Colors.blue[200], size: 12),
+                                ),
+                              if (widget.conversation.gameType ==
+                                  GameType.debate)
+                                const Padding(
+                                  padding: EdgeInsets.only(right: 10.0),
+                                  child: Icon(CupertinoIcons.group_solid,
+                                      color: Color.fromARGB(255, 188, 144, 249),
+                                      size: 12),
+                                )
+                            ],
                           ),
-                          // Row(
-                          //   children: [
-                          //     Text(
-                          //       lastUsed,
-                          //       style: TextStyle(
-                          //           color: Colors.grey.shade600,
-                          //           fontSize: 12,
-                          //           fontWeight: FontWeight.normal),
-                          //     ),
-                          //     const SizedBox(
-                          //       width: 4,
-                          //     ),
-                          //     Icon(
-                          //       Icons.chevron_right,
-                          //       size: 14,
-                          //       color: Colors.grey.shade600,
-                          //     )
-                          //   ],
-                          // )
                         ],
                       ),
                     ),
