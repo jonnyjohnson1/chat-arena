@@ -96,8 +96,8 @@ class Message {
       timestamp: map[MessageFields.timestamp] != null
           ? DateTime.parse(map[MessageFields.timestamp])
           : null,
-      toksPerSec: map[MessageFields.toksPerSec],
-      completionTime: map[MessageFields.completionTime],
+      toksPerSec: map[MessageFields.toksPerSec].toDouble(),
+      completionTime: map[MessageFields.completionTime].toDouble(),
       type: MessageType.values[map[MessageFields.type]],
       status: map[MessageFields.status],
       name: map[MessageFields.name],

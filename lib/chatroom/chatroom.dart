@@ -364,7 +364,13 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                       AsyncSnapshot snapshot) {
                                     return snapshot.hasData
                                         ? Material(
-                                            child: SizedBox(
+                                            color: Colors.transparent,
+                                            child: Container(
+                                              decoration: const BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(10)),
+                                              ),
                                               width: 135,
                                               height: 35,
                                               child:
