@@ -31,7 +31,7 @@ class LocalLLMInterface {
     // Format messageHistory for json
     List<Map<String, String>> msgHist = [];
     for (Message msg in messageHistory) {
-      msgHist.add({'role': msg.senderID!, 'content': msg.message!});
+      msgHist.add({'role': msg.senderID!, 'content': msg.message!.value});
     }
 
     Map<String, dynamic> submitPkg = {

@@ -111,8 +111,7 @@ class _ConversationListItemState extends State<ConversationListItem> {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                            widget.conversation.title ??
-                                                "Llama 2",
+                                            widget.conversation.title ?? "Chat",
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme

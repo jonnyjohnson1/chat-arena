@@ -38,7 +38,7 @@ class _ConversationsListState extends State<ConversationsList> {
         image: "images/userImage1.jpeg",
         time: DateTime.now(),
         gameType: gameType == 'chat' ? GameType.chat : GameType.debate,
-        primaryModel: 'Llama 2');
+        primaryModel: 'Chat');
     widget.conversations.value.insert(
       0,
       newConversation,
@@ -196,10 +196,10 @@ class _ConversationsListState extends State<ConversationsList> {
                     content: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Row(
+                        const Row(
                           children: [
-                            const SizedBox(
-                              width: 15,
+                            SizedBox(
+                              width: 17,
                             ),
                             Text(
                               "Pick a game:",

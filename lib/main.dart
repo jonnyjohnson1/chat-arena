@@ -528,7 +528,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               children: [
                                 AnimatedContainer(
                                     duration: const Duration(milliseconds: 150),
-                                    curve: Curves.bounceOut,
+                                    curve: Curves.fastOutSlowIn,
                                     width: drawerIsOpen ? 320 : 0,
                                     child: drawerIsOpen
                                         ? Column(

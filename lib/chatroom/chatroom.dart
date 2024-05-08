@@ -12,7 +12,6 @@ import 'package:chat/chatroom/widgets/message_list_view.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/messages.dart' as uiMessage;
-import 'package:chat/models/model_loaded_states.dart';
 // import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/tools.dart';
 // import 'package:file_selector/file_selector.dart';
@@ -66,13 +65,12 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   void initState() {
     super.initState();
     // load the chat game settings based on the game type
-
     if (widget.conversation != null) {
       if (widget.conversation!.gameType == GameType.debate) {
         if (widget.conversation!.gameModel == null ||
             widget.conversation!.gameModel.topic.isEmpty) {
           Future.delayed(
-            const Duration(milliseconds: 1000),
+            const Duration(milliseconds: 400),
             () async {
               if (true) // if the game doesn't have a topic yet
               {
@@ -119,16 +117,19 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         }
         completionTime = response.completionTime;
         try {
-          messages[currentIdx].message = generatedChat;
+          messages[currentIdx].message!.value = generatedChat;
           messages[currentIdx].completionTime = completionTime;
           messages[currentIdx].isGenerating = true;
           messages[currentIdx].toksPerSec = toksPerSec;
+
+          // Notify the value listeners
+          messages[currentIdx].message!.notifyListeners();
         } catch (e) {
           print(
               "Error updating message with the latest result: ${e.toString()}");
           print("The generation was: $generatedChat");
         }
-        setState(() {});
+        // setState(() {});
       }
     } else {
       // return null event generation
@@ -144,7 +145,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     uiMessage.Message _message = uiMessage.Message(
         id: Tools().getRandomString(12),
         conversationID: widget.conversation!.id,
-        message: "",
+        message: ValueNotifier(""),
         documentID: '',
         name: 'ChatBot',
         senderID: 'bot13451234',
@@ -209,8 +210,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         () {},
       );
     } else {
-      // If no image is selected it will show a
-      // snackbar saying nothing is selected
+      // If no image is selected it will show a snackbar saying nothing is selected
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Nothing is selected')));
     }
@@ -409,10 +409,13 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                   onSubmit: (String text) async {
                     print("onSubmit");
                     if (widget.conversation == null) {
+                      // This is the quickstart path, where the chat box is open on start up
+                      // we direct people directly into a Chat game
                       // create an official conversation ID and add to the conversations list
                       widget.conversation = Conversation(
                         id: Tools().getRandomString(12),
                         lastMessage: text,
+                        gameType: GameType.chat,
                         time: DateTime.now(),
                         primaryModel: "Llama 2",
                         title: "New Chat",
@@ -423,7 +426,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                       uiMessage.Message message = uiMessage.Message(
                           id: Tools().getRandomString(12),
                           conversationID: widget.conversation!.id,
-                          message: text,
+                          message: ValueNotifier(text),
                           documentID: '',
                           name: 'User',
                           senderID: '',
@@ -441,7 +444,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                       setState(() {
                         isGenerating.value = true;
                       });
-                      sendMessagetoModel(message.message!);
+                      sendMessagetoModel(message.message!.value);
                       setState(() {});
                     }
                   },

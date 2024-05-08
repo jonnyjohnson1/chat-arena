@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 const String tableMessages = 'messages';
 
 enum MessageType {
@@ -42,7 +44,7 @@ class Message {
   final String? documentID;
   final String? senderID;
   final String? conversationID;
-  String? message;
+  ValueNotifier<String>? message;
   final DateTime? timestamp;
   double toksPerSec;
   double? completionTime;
@@ -72,7 +74,7 @@ class Message {
       MessageFields.documentID: documentID,
       MessageFields.senderID: senderID,
       MessageFields.conversationID: conversationID,
-      MessageFields.message: message,
+      MessageFields.message: message!.value,
       MessageFields.timestamp: timestamp?.toIso8601String(),
       MessageFields.toksPerSec: toksPerSec,
       MessageFields.completionTime: completionTime,
@@ -90,7 +92,7 @@ class Message {
       documentID: map[MessageFields.documentID],
       senderID: map[MessageFields.senderID],
       conversationID: map[MessageFields.conversationID],
-      message: map[MessageFields.message],
+      message: ValueNotifier(map[MessageFields.message]),
       timestamp: map[MessageFields.timestamp] != null
           ? DateTime.parse(map[MessageFields.timestamp])
           : null,
