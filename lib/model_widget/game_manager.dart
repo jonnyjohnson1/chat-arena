@@ -3,16 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:chat/model_widget/game_listview_card.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/models/model_loaded_states.dart';
-import 'package:chat/models/models.dart';
 import 'package:chat/models/sys_resources.dart';
-import 'package:chat/services/ios_platform_interface.dart';
-import 'package:provider/provider.dart';
 
 class GameManagerPage extends StatefulWidget {
   int duration;
   ValueNotifier<List<GamesConfig>>? games;
   ValueNotifier<ModelLoadedState>? modelLoaded;
-  ValueNotifier<LLM>? llm;
   ValueNotifier<MemoryConfig>? systemResources;
   ValueNotifier<Widget> homePage;
   bool isIphone;
@@ -20,7 +16,6 @@ class GameManagerPage extends StatefulWidget {
       {required this.duration,
       required this.games,
       required this.modelLoaded,
-      required this.llm,
       required this.systemResources,
       this.isIphone = false,
       required this.homePage,
@@ -57,39 +52,6 @@ class _GameManagerPageState extends State<GameManagerPage> {
                 const SizedBox(
                   height: 3,
                 ),
-                if (widget.isIphone)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 5.0),
-                    child: ValueListenableBuilder(
-                        valueListenable: widget.systemResources!,
-                        builder: (ctx, mem, _) {
-                          if (mem.totalMemory != null &&
-                              mem.usedMemory != null) {
-                            String usedMem = "0.0";
-                            try {
-                              usedMem = getFileSizeString(
-                                  bytes: mem.usedMemory!.toInt(), decimals: 0);
-                            } catch (e) {
-                              print("Error getting fileSize String: $e");
-                            }
-                            String totMem = getFileSizeString(
-                                bytes: mem.totalMemory!, decimals: 2);
-                            String perc =
-                                (mem.usedMemory! / mem.totalMemory! * 100)
-                                    .toStringAsFixed(2);
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(("$usedMem ($perc%) "),
-                                    style: const TextStyle(fontSize: 14)),
-                                Text(("of $totMem "),
-                                    style: const TextStyle(fontSize: 14)),
-                              ],
-                            );
-                          }
-                          return Container();
-                        }),
-                  ),
                 const SizedBox(
                   height: 18,
                 ),
@@ -108,8 +70,7 @@ class _GameManagerPageState extends State<GameManagerPage> {
                                 for (int idx = 0; idx < gamesList.length; idx++)
                                   GameListViewCard(
                                       gamesConfig: gamesList[idx],
-                                      isLoaded: widget.llm!.value.modelName ==
-                                          gamesList[idx].name,
+                                      isLoaded: true,
                                       // selects the model to use for chat
                                       onTap: (modelConfig) async {
                                         print("Tapped");
@@ -126,6 +87,8 @@ class _GameManagerPageState extends State<GameManagerPage> {
                 const SizedBox(
                   height: 5,
                 ),
+                // expand the column to fill the space
+                Row(),
               ],
             ),
           );
