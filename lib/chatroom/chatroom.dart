@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:chat/models/game_models/debate.dart';
+import 'package:chat/models/llm.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/local_llm_interface.dart';
+import 'package:chat/services/static_queries.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -141,7 +143,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     print("Submitting: $text to chat model");
     currentIdx = messages.length;
     // // Submit text to generator here
-    LocalLLMInterface().newMessage(text, messages, generationCallback);
+    LocalLLMInterface()
+        .newMessage(text, messages, selectedModel, generationCallback);
     uiMessage.Message _message = uiMessage.Message(
         id: Tools().getRandomString(12),
         conversationID: widget.conversation!.id,
@@ -262,6 +265,11 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     return isCompleted;
   }
 
+  ModelConfig selectedModel = ModelConfig(
+      model: LanguageModel(model: 'llama3', name: "llama3", size: 21314),
+      temperature: 0.06,
+      numGenerations: 1);
+
   @override
   Widget build(BuildContext context) {
     return _chatroomPageUI(context);
@@ -346,6 +354,97 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                   ],
                                 ),
                               ),
+                            // model selector button
+                            Positioned(
+                              bottom: 0,
+                              left: 10,
+                              child: FutureBuilder(
+                                  future: getModels(),
+                                  builder: (BuildContext context,
+                                      AsyncSnapshot snapshot) {
+                                    return snapshot.hasData
+                                        ? Material(
+                                            child: SizedBox(
+                                              width: 135,
+                                              height: 35,
+                                              child:
+                                                  DropdownButton<LanguageModel>(
+                                                hint: Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 5.0),
+                                                  child: Center(
+                                                    child: Text(
+                                                        selectedModel
+                                                                .model.name ??
+                                                            'make a selection',
+                                                        overflow: TextOverflow
+                                                            .ellipsis),
+                                                  ),
+                                                ),
+                                                borderRadius:
+                                                    const BorderRadius.all(
+                                                        Radius.circular(10)),
+                                                alignment: Alignment.center,
+                                                underline: Container(),
+                                                isDense: true,
+                                                elevation: 4,
+                                                padding: EdgeInsets.zero,
+                                                itemHeight: null,
+                                                isExpanded: true,
+                                                items: snapshot.data.map<
+                                                    DropdownMenuItem<
+                                                        LanguageModel>>((item) {
+                                                  return DropdownMenuItem<
+                                                      LanguageModel>(
+                                                    value: item,
+                                                    alignment:
+                                                        Alignment.centerLeft,
+                                                    child: Container(
+                                                      width: 170,
+                                                      child: Row(
+                                                        children: [
+                                                          Expanded(
+                                                              child: Text(
+                                                            item.name,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            // style: TextStyle(
+                                                            //     fontSize:
+                                                            //         16)),
+                                                          )),
+                                                          if (item.size != null)
+                                                            Text(
+                                                                " (${sizeToGB(item.size)})",
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        12)),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  );
+                                                }).toList(),
+                                                onChanged:
+                                                    (LanguageModel? newValue) {
+                                                  setState(() {
+                                                    selectedModel.model =
+                                                        newValue!;
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                          )
+                                        : Container(
+                                            child: Center(
+                                              child: Text('Loading...'),
+                                            ),
+                                          );
+                                  }),
+                            ),
 
                             // reset chat button
                             Positioned(

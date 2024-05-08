@@ -1,23 +1,18 @@
 import 'package:chat/models/games_config.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/model_widget/model_dropdown_listview_item.dart';
-import 'package:chat/models/llm.dart';
 import 'package:chat/models/model_loaded_states.dart';
-import 'package:chat/models/models.dart';
-import 'package:provider/provider.dart';
 
 class ModelSelectionList extends StatefulWidget {
   int duration;
   ValueNotifier<List<GamesConfig>>? games;
   ValueNotifier<ModelLoadedState>? modelLoaded;
-  ValueNotifier<LLM>? llm;
   bool isIphone;
   final onModelTap;
   ModelSelectionList(
       {required this.duration,
       required this.games,
       required this.modelLoaded,
-      required this.llm,
       this.onModelTap,
       this.isIphone = false,
       super.key});
