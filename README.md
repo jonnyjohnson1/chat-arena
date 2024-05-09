@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/PageDAO/raffler_web_app/blob/main/ui_screenshot.png" height="350" alt="UI Chat debates" />
+  <img src="https://github.com/jonnyjohnson1/chat-arena/blob/main/ui_screenshot.png" height="350" alt="UI Chat debates" />
 </p>
 <p align="center">
   <em>An App to Host Dialogues' Games</em>
