@@ -1,9 +1,6 @@
 import 'package:chat/analytics_drawer/graph_anal_drawer.dart';
 import 'package:chat/analytics_drawer/base_anal_drawer.dart';
-import 'package:chat/chat_panel/chat_panel.dart';
-import 'package:chat/drawer/drawer.dart';
 import 'package:chat/models/conversation.dart';
-import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

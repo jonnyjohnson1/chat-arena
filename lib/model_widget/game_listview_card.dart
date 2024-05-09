@@ -1,28 +1,13 @@
 import 'dart:math';
 
 import 'package:chat/models/games_config.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:chat/models/models.dart';
-import 'package:simple_progress_indicators/simple_progress_indicators.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class GameListViewCard extends StatefulWidget {
-  GamesConfig gamesConfig;
-  final Function(ModelConfig)? onDownload;
-  final onStop;
-  final Function(ModelConfig)? onTap;
-  final Function(ModelConfig)? onClear;
-  bool isLoaded;
-  GameListViewCard(
-      {required this.gamesConfig,
-      this.onDownload,
-      this.onStop,
-      this.onTap,
-      this.onClear,
-      this.isLoaded = false,
-      super.key});
+  final GamesConfig gamesConfig;
+  final bool isLoaded;
+  const GameListViewCard(
+      {required this.gamesConfig, this.isLoaded = false, super.key});
 
   @override
   State<GameListViewCard> createState() => _GameListViewCardState();
@@ -36,11 +21,38 @@ String getFileSizeString({required int bytes, int decimals = 0}) {
 }
 
 class _GameListViewCardState extends State<GameListViewCard> {
+  late double width;
+  late double height;
+
+  setSize(CardSize size) {
+    switch (size) {
+      case CardSize.small:
+        width = 135;
+        height = 180;
+        break;
+      case CardSize.medium:
+        width = 285;
+        height = 150;
+        break;
+      case CardSize.large:
+        width = 285;
+        height = 360;
+        break;
+      default:
+    }
+  }
+
+  @override
+  void initState() {
+    setSize(widget.gamesConfig.size!);
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 250,
-      width: 214,
+      height: height,
+      width: width,
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(width: 1, color: Colors.grey[200]!),
@@ -65,17 +77,11 @@ class _GameListViewCardState extends State<GameListViewCard> {
               Text(widget.gamesConfig.name!,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.bold)),
+                      fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(
                 height: 14,
               ),
-              // const Text("Description:",
-              //     style: const TextStyle(
-              //         fontSize: 12, fontWeight: FontWeight.w400)),
-              // const SizedBox(
-              //   height: 8,
-              // ),
-              Text(widget.gamesConfig.description!,
+              Text(widget.gamesConfig.slogan!,
                   style: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.w400)),
               Expanded(

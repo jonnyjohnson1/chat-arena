@@ -1,39 +1,40 @@
 import 'package:chat/models/games_config.dart';
+import 'package:chat/services/json_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/model_widget/game_listview_card.dart';
-import 'package:chat/models/llm.dart';
-import 'package:chat/models/model_loaded_states.dart';
-import 'package:chat/models/sys_resources.dart';
 
-class GameManagerPage extends StatefulWidget {
+class GamesListPage extends StatefulWidget {
   int duration;
-  ValueNotifier<List<GamesConfig>>? games;
-  ValueNotifier<ModelLoadedState>? modelLoaded;
-  ValueNotifier<MemoryConfig>? systemResources;
-  ValueNotifier<Widget> homePage;
   bool isIphone;
-  GameManagerPage(
+  Function selectedGame;
+  GamesListPage(
       {required this.duration,
-      required this.games,
-      required this.modelLoaded,
-      required this.systemResources,
+      required this.selectedGame,
       this.isIphone = false,
-      required this.homePage,
       super.key});
 
   @override
-  State<GameManagerPage> createState() => _GameManagerPageState();
+  State<GamesListPage> createState() => _GamesListPageState();
 }
 
-class _GameManagerPageState extends State<GameManagerPage> {
+class _GamesListPageState extends State<GamesListPage> {
   TextEditingController newModelURLController = TextEditingController();
-
+  List<GamesConfig> games = [];
   bool didInit = false;
+
+  Future<void> get _loadModelListFromAppConfig async {
+    final jsonResult = await loadJson();
+    Future.delayed(Duration(milliseconds: widget.duration),
+        () => setState((() => didInit = true)));
+    List<dynamic> gamesList = jsonResult['games_list'];
+    for (dynamic game in gamesList) {
+      games.add(GamesConfig.fromJson(game));
+    }
+  }
 
   @override
   void initState() {
-    Future.delayed(Duration(milliseconds: widget.duration),
-        () => setState((() => didInit = true)));
+    _loadModelListFromAppConfig;
 
     super.initState();
   }
@@ -56,34 +57,31 @@ class _GameManagerPageState extends State<GameManagerPage> {
                   height: 18,
                 ),
                 Expanded(
-                  child: ValueListenableBuilder<List<GamesConfig>>(
-                      valueListenable: widget.games!,
-                      builder: (ctx, gamesList, _) {
-                        return Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: Wrap(
-                              spacing: 15,
-                              runSpacing: 15,
-                              children: [
-                                for (int idx = 0; idx < gamesList.length; idx++)
-                                  GameListViewCard(
-                                      gamesConfig: gamesList[idx],
-                                      isLoaded: true,
-                                      // selects the model to use for chat
-                                      onTap: (modelConfig) async {
-                                        print("Tapped");
-                                      },
-                                      onDownload: (modelConfig) async {},
-                                      onStop: (modelConfig) async {},
-                                      onClear: (modelConfig) async {}),
-                              ],
+                    child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: Wrap(
+                      spacing: 15,
+                      runSpacing: 15,
+                      children: [
+                        for (int idx = 0; idx < games.length; idx++)
+                          InkWell(
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(8)),
+                            onTap: () {
+                              widget.selectedGame(games[idx]);
+                            },
+                            child: GameListViewCard(
+                              gamesConfig: games[idx],
+                              isLoaded: true,
+                              // selects the model to use for chat
                             ),
                           ),
-                        );
-                      }),
-                ),
+                      ],
+                    ),
+                  ),
+                )),
                 const SizedBox(
                   height: 5,
                 ),

@@ -1,8 +1,10 @@
 import 'package:chat/chat_panel/chat_panel.dart';
-import 'package:chat/drawer/drawer.dart';
+import 'package:chat/drawer/games_list_drawer.dart';
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/games_config.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:chat/pages/home_scaffold/games/debate/DebateGamePage.dart';
+import 'package:chat/pages/home_scaffold/games/info_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,12 +35,13 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
     keepPage: true,
   );
 
+  // page changed sets the drawer screen and sets the title
   void pageChanged(int index) {
     setState(() {
       bottomSelectedIndex = index;
     });
     if (index == 0) {
-      widget.title.value = "Settings";
+      widget.title.value = "Chat Arena";
     }
     if (index == 1) {
       widget.title.value = "Chat Arena";
@@ -55,15 +58,13 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
         // FirebaseAnalytics.instance.logEvent(name: getScreenName(index));
       },
       children: <Widget>[
-        Column(
-          children: [
-            SettingsDrawer(onTap: (String page) {
-              if (widget.onSettingsDrawerTap != null) {
-                widget.onSettingsDrawerTap!(page);
-              }
-            })
-          ],
-        ),
+        GamesListDrawer(onGameCardTap: (GamesConfig selectedGame) {
+          widget.body.value = GamesInfoPage(game: selectedGame);
+        }, onTap: (String page) {
+          if (widget.onSettingsDrawerTap != null) {
+            widget.onSettingsDrawerTap!(page);
+          }
+        }),
         ConversationsList(
           conversations: widget.conversations,
           onDelete: (bool deleted) {

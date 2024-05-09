@@ -68,7 +68,7 @@ class _GameDropdownListViewItemState extends State<GameDropdownListViewItem> {
                       ],
                     ),
                     Text(
-                      widget.gameConfig.description!,
+                      widget.gameConfig.slogan!,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                           color: Colors.black87,

@@ -13,12 +13,10 @@ class HomePageLayoutManager extends StatefulWidget {
   final ValueNotifier<Widget> body;
   final ValueNotifier<String> title;
   final ValueNotifier<List<Conversation>> conversations;
-  final ValueNotifier<List<GamesConfig>> games;
   const HomePageLayoutManager(
       {required this.body,
       required this.title,
       required this.conversations,
-      required this.games,
       super.key});
   @override
   State<HomePageLayoutManager> createState() => _HomePageLayoutManagerState();
@@ -81,13 +79,13 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                     MediaQuery.of(context).viewInsets.bottom),
                             constraints: const BoxConstraints(maxHeight: 700),
                             height: MediaQuery.of(context).size.height - 85,
-                            child: GameManagerPage(
-                                duration: 90,
-                                games: widget.games,
-                                modelLoaded: modelLoaded,
-                                systemResources: sysResources,
-                                isIphone: isMobile,
-                                homePage: widget.body)),
+                            child: GamesListPage(
+                              duration: 90,
+                              isIphone: isMobile,
+                              selectedGame: (GamesConfig selected) {
+                                // TODO Update hoem page to game viewer page
+                              },
+                            )),
                       );
                     });
           }, onAnalyticsTap: () {
@@ -126,12 +124,12 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                             if (page == "gamemanager") {
                               widget.title.value = "Game Manager";
                               widget.title.notifyListeners();
-                              widget.body.value = GameManagerPage(
+                              widget.body.value = GamesListPage(
                                 duration: 90,
-                                games: widget.games,
-                                modelLoaded: modelLoaded,
-                                systemResources: sysResources,
-                                homePage: widget.body,
+                                selectedGame: (GamesConfig selected) {
+                                  // TODO Update hoem page to game viewer page
+                                },
+                                // homePage: widget.body,
                               );
                               widget.body.notifyListeners();
                             }
@@ -168,12 +166,13 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                         if (page == "gamemanager") {
                                           widget.title.value = "Game Manager";
                                           widget.title.notifyListeners();
-                                          widget.body.value = GameManagerPage(
+                                          widget.body.value = GamesListPage(
                                             duration: 90,
-                                            games: widget.games,
-                                            modelLoaded: modelLoaded,
-                                            systemResources: sysResources,
-                                            homePage: widget.body,
+                                            selectedGame:
+                                                (GamesConfig selected) {
+                                              // TODO Update hoem page to game viewer page
+                                            },
+                                            // homePage: widget.body,
                                           );
                                           widget.body.notifyListeners();
                                         }
@@ -218,12 +217,11 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                       if (page == "gamemanager") {
                                         widget.title.value = "Game Manager";
                                         widget.title.notifyListeners();
-                                        widget.body.value = GameManagerPage(
+                                        widget.body.value = GamesListPage(
                                           duration: 90,
-                                          games: widget.games,
-                                          modelLoaded: modelLoaded,
-                                          systemResources: sysResources,
-                                          homePage: widget.body,
+                                          selectedGame: (GamesConfig selected) {
+                                            // TODO Update hoem page to game viewer page
+                                          },
                                         );
                                         widget.body.notifyListeners();
                                       }

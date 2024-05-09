@@ -3,12 +3,16 @@
     {
       "game": "chat",
       "name": "Chat",
-      "description": "Have a usual chat conversation with your Language Models"
+      "size": "medium",
+      "slogan": "Have a usual chat conversation with your Language Models",
+      "long-description": "Have a usual chat conversation with your Language Models"
     },
     {
       "game": "debate",
       "name": "Debate",
-      "description": "Practice your debate skills and see how well you do!"
+      "size": "medium",
+      "slogan": "Practice your debate skills and see how well you do!",
+      "long-description": "Practice your debate skills and see how well you do!"
     }
   ]
 }
