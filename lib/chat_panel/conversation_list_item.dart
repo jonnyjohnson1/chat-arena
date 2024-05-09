@@ -1,3 +1,4 @@
+import 'package:chat/models/game_models/debate.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -41,6 +42,40 @@ class _ConversationListItemState extends State<ConversationListItem> {
     super.dispose();
   }
 
+  Widget getGameIcon(GameType type) {
+    switch (type) {
+      case GameType.chat:
+        return Icon(CupertinoIcons.chat_bubble_fill,
+            color: Colors.blue[200], size: 26);
+      case GameType.debate:
+        return const Icon(CupertinoIcons.group_solid,
+            color: Color.fromARGB(255, 188, 144, 249), size: 26);
+      default:
+        return Icon(CupertinoIcons.chat_bubble_fill,
+            color: Colors.blue[200], size: 26);
+    }
+  }
+
+  String getTitle(GameType type) {
+    switch (type) {
+      case GameType.chat:
+        return widget.conversation.title!;
+      case GameType.debate:
+        if (widget.conversation.gameModel != null) {
+          DebateGame game = widget.conversation.gameModel;
+          if (game.topic != null) {
+            if (game.topic!.isNotEmpty) {
+              return game.topic!;
+            }
+          }
+          return "Chat";
+        }
+        return widget.conversation.title!;
+      default:
+        return "Chat";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     today = DateTime(now.year, now.month, now.day);
@@ -78,31 +113,15 @@ class _ConversationListItemState extends State<ConversationListItem> {
               Expanded(
                 child: Row(
                   children: <Widget>[
-                    // CircleAvatar(
-                    //   backgroundImage: NetworkImage(widget.imageUrl),
-                    //   maxRadius: 18,
-                    // ),
-                    // const SizedBox(
-                    //   width: 10,
-                    // ),
                     Expanded(
                       child: Container(
                         color: Colors.transparent,
                         child: Row(
                           children: [
-                            if (widget.conversation.gameType == GameType.chat)
-                              Padding(
+                            Padding(
                                 padding: const EdgeInsets.only(right: 10.0),
-                                child: Icon(CupertinoIcons.chat_bubble_fill,
-                                    color: Colors.blue[200], size: 26),
-                              ),
-                            if (widget.conversation.gameType == GameType.debate)
-                              const Padding(
-                                padding: EdgeInsets.only(right: 10.0),
-                                child: Icon(CupertinoIcons.group_solid,
-                                    color: Color.fromARGB(255, 188, 144, 249),
-                                    size: 26),
-                              ),
+                                child:
+                                    getGameIcon(widget.conversation.gameType!)),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,7 +130,8 @@ class _ConversationListItemState extends State<ConversationListItem> {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                            widget.conversation.title ?? "Chat",
+                                            getTitle(
+                                                widget.conversation.gameType!),
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme

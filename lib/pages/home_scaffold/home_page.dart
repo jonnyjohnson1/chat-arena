@@ -2,6 +2,7 @@ import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/games_config.dart';
 import 'package:chat/models/sys_resources.dart';
+import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:chat/pages/home_scaffold/home_page_layout_manager.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/json_loader.dart';
@@ -48,21 +49,9 @@ class _HomePageState extends State<HomePage> {
   // 1. load from the app-config.json
   bool didInit = false;
   Future<void> get _loadModelListFromAppConfig async {
-    homePage.value = ChatRoomPage(
+    homePage.value = ChatGamePage(
       conversation: null,
-      onCreateNewConversation: (Conversation conv) async {
-        await ConversationDatabase.instance.create(conv);
-        conversations.value.insert(0, conv);
-        conversations.notifyListeners();
-      },
-      onNewText: (Conversation lastMessageUpdate) async {
-        // update the lastMessage sent
-        await ConversationDatabase.instance.update(lastMessageUpdate);
-        int idx = conversations.value
-            .indexWhere((element) => element.id == lastMessageUpdate.id);
-        conversations.value[idx] = lastMessageUpdate;
-        conversations.notifyListeners();
-      },
+      conversations: conversations,
     );
     final jsonResult = await loadJson(); //latest Dart
     List<dynamic> gamesList = jsonResult['games_list'];

@@ -1,8 +1,8 @@
 import 'package:chat/chat_panel/chat_panel.dart';
-import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/drawer/drawer.dart';
 import 'package:chat/models/conversation.dart';
-import 'package:chat/services/conversation_database.dart';
+import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
+import 'package:chat/pages/home_scaffold/games/debate/DebateGamePage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -67,52 +67,74 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
         ConversationsList(
           conversations: widget.conversations,
           onDelete: (bool deleted) {
-            widget.body.value = ChatRoomPage(
+            widget.body.value = ChatGamePage(
               key: UniqueKey(),
               conversation: null,
-              onCreateNewConversation: (Conversation conv) async {
-                await ConversationDatabase.instance.create(conv);
-                widget.conversations.value.insert(0, conv);
-                widget.conversations.notifyListeners();
-              },
-              onNewText: (Conversation lastMessageUpdate) async {
-                // update the lastMessage sent
-                await ConversationDatabase.instance.update(lastMessageUpdate);
-                int idx = widget.conversations.value.indexWhere(
-                    (element) => element.id == lastMessageUpdate.id);
-                widget.conversations.value[idx] = lastMessageUpdate;
-                widget.conversations.notifyListeners();
-              },
+              conversations: widget.conversations,
             );
+
             widget.body.notifyListeners();
           },
           onTap: (Conversation chatSelected) {
             print("Conv: " + chatSelected.id);
             // set title
-            widget.title.value = chatSelected.primaryModel ?? "Llama 2";
-
+            String title = setTitle(chatSelected);
+            widget.title.value = title;
             widget.title.notifyListeners();
+
             // set homepage
-            widget.body.value = ChatRoomPage(
-              key: Key(chatSelected.id),
-              conversation: chatSelected,
-              onNewText: (Conversation lastMessageUpdate) async {
-                // update the lastMessage sent
-                await ConversationDatabase.instance.update(lastMessageUpdate);
-                int idx = widget.conversations.value.indexWhere(
-                    (element) => element.id == lastMessageUpdate.id);
-                widget.conversations.value[idx] = lastMessageUpdate;
-                widget.conversations.value.sort((a, b) {
-                  return b.time!.compareTo(a.time!);
-                });
-                widget.conversations.notifyListeners();
-              },
-            );
+            widget.body.value = buildGamePage(chatSelected);
             widget.body.notifyListeners();
           },
         )
       ],
     );
+  }
+
+  String setTitle(Conversation? conversation) {
+    if (conversation != null) {
+      switch (conversation.gameType) {
+        case GameType.chat:
+          return "Chat"; //conversation.title! ??
+        case GameType.debate:
+          return "Debate";
+        default:
+          return "Chat";
+      }
+    } else {
+      return "Chat";
+    }
+  }
+
+  Widget buildGamePage(Conversation? conversation) {
+    if (conversation != null) {
+      switch (conversation.gameType) {
+        case GameType.chat:
+          return ChatGamePage(
+            key: Key("${conversation.id}-home"),
+            conversation: conversation,
+            conversations: widget.conversations,
+          );
+        case GameType.debate:
+          return DebateGamePage(
+            key: Key("${conversation.id}-home"),
+            conversation: conversation,
+            conversations: widget.conversations,
+          );
+        default:
+          return ChatGamePage(
+            key: Key("${conversation.id}-home"),
+            conversation: conversation,
+            conversations: widget.conversations,
+          );
+      }
+    } else {
+      return ChatGamePage(
+        key: UniqueKey(),
+        conversation: conversation,
+        conversations: widget.conversations,
+      );
+    }
   }
 
   void bottomTapped(int index) {

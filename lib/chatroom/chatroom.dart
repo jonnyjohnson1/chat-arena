@@ -22,11 +22,19 @@ class ChatRoomPage extends StatefulWidget {
   Conversation? conversation;
   final onCreateNewConversation;
   final onNewText;
+  bool showModelSelectButton;
+  bool showTopTitle;
+  String topTitleHeading;
+  String topTitleText;
 
   ChatRoomPage(
       {required this.conversation,
       this.onCreateNewConversation,
       this.onNewText,
+      this.showModelSelectButton = true,
+      this.showTopTitle = true,
+      this.topTitleHeading = "Topic:",
+      this.topTitleText = "",
       Key? key})
       : super(key: key);
 
@@ -65,25 +73,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   @override
   void initState() {
-    super.initState();
     // load the chat game settings based on the game type
-    if (widget.conversation != null) {
-      if (widget.conversation!.gameType == GameType.debate) {
-        if (widget.conversation!.gameModel == null ||
-            widget.conversation!.gameModel.topic.isEmpty) {
-          Future.delayed(
-            const Duration(milliseconds: 400),
-            () async {
-              if (true) // if the game doesn't have a topic yet
-              {
-                getGameSettings(context);
-              }
-            },
-          );
-        }
-      }
-    }
+
     initData();
+    super.initState();
   }
 
   String generatedChat = "";
@@ -91,6 +84,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   double toksPerSec = 0.0;
   double completionTime = 0.0;
   int currentIdx = 0;
+
+  // TODO Move this out of the chatroom, and into the game page
+// Will need to handle specific api calls per game type
 
   generationCallback(Map<String, dynamic>? event) {
     if (event != null) {
@@ -139,6 +135,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     }
   }
 
+// TODO Move this out of the chatroom, and into the game page
+// Will need to handle specific api calls per game type
   void sendMessagetoModel(String text) async {
     print("Submitting: $text to chat model");
     currentIdx = messages.length;
@@ -219,54 +217,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     }
   }
 
-  Future<bool> getGameSettings(BuildContext context) async {
-    bool isCompleted = false;
-    TextEditingController topicController = TextEditingController();
-    debugPrint("get game settings");
-
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Say Something Contentious 😏"),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 580),
-            child: TextField(
-              maxLines: 6,
-              minLines: 1,
-              controller: topicController,
-              decoration: const InputDecoration(hintText: "Enter topic"),
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text("OK"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-
-    // Now you can use _topicController.text to get the entered topic
-    debugPrint("Topic: ${topicController.text}");
-    if (widget.conversation!.gameModel == null) {
-      widget.conversation!.gameModel = DebateGame(topic: topicController.text);
-    } else {
-      widget.conversation!.gameModel.topic = topicController.text;
-    }
-
-    if (widget.conversation!.title!.isEmpty) {
-      widget.conversation!.title = topicController.text;
-    }
-
-    return isCompleted;
-  }
-
   ModelConfig selectedModel = ModelConfig(
-      model: LanguageModel(model: 'llama3', name: "llama3", size: 21314),
+      model: const LanguageModel(
+          model: 'dolphin-llama3', name: "dolphin-llama3", size: 21314),
       temperature: 0.06,
       numGenerations: 1);
 
@@ -281,6 +234,19 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         : Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
+              if (widget.showTopTitle)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0, bottom: 3, top: 3),
+                  child: Row(
+                    children: [
+                      Text(widget.topTitleHeading),
+                      const SizedBox(
+                        width: 4,
+                      ),
+                      Text(widget.topTitleText)
+                    ],
+                  ),
+                ),
               Expanded(
                   child: isLoading
                       ? Container()
@@ -355,102 +321,104 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                 ),
                               ),
                             // model selector button
-                            Positioned(
-                              bottom: 0,
-                              left: 10,
-                              child: FutureBuilder(
-                                  future: getModels(),
-                                  builder: (BuildContext context,
-                                      AsyncSnapshot snapshot) {
-                                    return snapshot.hasData
-                                        ? Material(
-                                            color: Colors.transparent,
-                                            child: Container(
-                                              decoration: const BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(10)),
-                                              ),
-                                              width: 135,
-                                              height: 35,
-                                              child:
-                                                  DropdownButton<LanguageModel>(
-                                                hint: Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 5.0),
-                                                  child: Center(
-                                                    child: Text(
-                                                        selectedModel
-                                                                .model.name ??
-                                                            'make a selection',
-                                                        overflow: TextOverflow
-                                                            .ellipsis),
-                                                  ),
+                            if (widget.showModelSelectButton)
+                              Positioned(
+                                bottom: 0,
+                                left: 10,
+                                child: FutureBuilder(
+                                    future: getModels(),
+                                    builder: (BuildContext context,
+                                        AsyncSnapshot snapshot) {
+                                      return snapshot.hasData
+                                          ? Material(
+                                              color: Colors.white,
+                                              child: Container(
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(10)),
                                                 ),
-                                                borderRadius:
-                                                    const BorderRadius.all(
-                                                        Radius.circular(10)),
-                                                alignment: Alignment.center,
-                                                underline: Container(),
-                                                isDense: true,
-                                                elevation: 4,
-                                                padding: EdgeInsets.zero,
-                                                itemHeight: null,
-                                                isExpanded: true,
-                                                items: snapshot.data.map<
-                                                    DropdownMenuItem<
-                                                        LanguageModel>>((item) {
-                                                  return DropdownMenuItem<
-                                                      LanguageModel>(
-                                                    value: item,
-                                                    alignment:
-                                                        Alignment.centerLeft,
-                                                    child: Container(
-                                                      width: 170,
-                                                      child: Row(
-                                                        children: [
-                                                          Expanded(
-                                                              child: Text(
-                                                            item.name,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            // style: TextStyle(
-                                                            //     fontSize:
-                                                            //         16)),
-                                                          )),
-                                                          if (item.size != null)
-                                                            Text(
-                                                                " (${sizeToGB(item.size)})",
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                                style: TextStyle(
-                                                                    fontSize:
-                                                                        12)),
-                                                        ],
-                                                      ),
+                                                width: 135,
+                                                height: 35,
+                                                child: DropdownButton<
+                                                    LanguageModel>(
+                                                  hint: Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 5.0),
+                                                    child: Center(
+                                                      child: Text(
+                                                          selectedModel
+                                                                  .model.name ??
+                                                              'make a selection',
+                                                          overflow: TextOverflow
+                                                              .ellipsis),
                                                     ),
-                                                  );
-                                                }).toList(),
-                                                onChanged:
-                                                    (LanguageModel? newValue) {
-                                                  setState(() {
-                                                    selectedModel.model =
-                                                        newValue!;
-                                                  });
-                                                },
+                                                  ),
+                                                  borderRadius:
+                                                      const BorderRadius.all(
+                                                          Radius.circular(10)),
+                                                  alignment: Alignment.center,
+                                                  underline: Container(),
+                                                  isDense: true,
+                                                  elevation: 4,
+                                                  padding: EdgeInsets.zero,
+                                                  itemHeight: null,
+                                                  isExpanded: true,
+                                                  items: snapshot.data.map<
+                                                          DropdownMenuItem<
+                                                              LanguageModel>>(
+                                                      (item) {
+                                                    return DropdownMenuItem<
+                                                        LanguageModel>(
+                                                      value: item,
+                                                      alignment:
+                                                          Alignment.centerLeft,
+                                                      child: Container(
+                                                        width: 170,
+                                                        child: Row(
+                                                          children: [
+                                                            Expanded(
+                                                                child: Text(
+                                                              item.name,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                              // style: TextStyle(
+                                                              //     fontSize:
+                                                              //         16)),
+                                                            )),
+                                                            if (item.size !=
+                                                                null)
+                                                              Text(
+                                                                  " (${sizeToGB(item.size)})",
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                  style: TextStyle(
+                                                                      fontSize:
+                                                                          12)),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                                  onChanged: (LanguageModel?
+                                                      newValue) {
+                                                    setState(() {
+                                                      selectedModel.model =
+                                                          newValue!;
+                                                    });
+                                                  },
+                                                ),
                                               ),
-                                            ),
-                                          )
-                                        : Container(
-                                            child: Center(
+                                            )
+                                          : const Center(
                                               child: Text('Loading...'),
-                                            ),
-                                          );
-                                  }),
-                            ),
+                                            );
+                                    }),
+                              ),
 
                             // reset chat button
                             Positioned(
@@ -525,7 +493,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         primaryModel: "Llama 2",
                         title: "New Chat",
                       );
-                      widget.onCreateNewConversation(widget.conversation);
+                      if (widget.onCreateNewConversation != null)
+                        widget.onCreateNewConversation(widget.conversation);
                     }
                     if (text.trim() != "") {
                       uiMessage.Message message = uiMessage.Message(
