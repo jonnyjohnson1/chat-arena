@@ -1,7 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
-    {required Function onMenuTap}) {
+    {required Function onMenuTap,
+    required Function onAnalyticsTap,
+    required Function onChatsTap}) {
   return AppBar(
     automaticallyImplyLeading: false,
     leading: isMobile
@@ -66,16 +69,34 @@ buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
                 );
               }),
             ),
+            if (!isMobile)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                      tooltip: "Analytics",
+                      onPressed: () {
+                        onAnalyticsTap();
+                      },
+                      icon: const Icon(Icons.show_chart))
+                ],
+              ),
             if (isMobile)
               Row(
-                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
                       tooltip: "Games",
                       onPressed: () {
                         onMenuTap();
                       },
-                      icon: const Icon(Icons.menu))
+                      icon: const Icon(Icons.menu)),
+                  IconButton(
+                      tooltip: "Chats",
+                      onPressed: () {
+                        onChatsTap();
+                      },
+                      icon: const Icon(CupertinoIcons.chat_bubble_2))
                 ],
               )
           ],

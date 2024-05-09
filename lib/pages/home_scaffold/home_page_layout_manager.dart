@@ -3,6 +3,7 @@ import 'package:chat/models/conversation.dart';
 import 'package:chat/models/games_config.dart';
 import 'package:chat/models/model_loaded_states.dart';
 import 'package:chat/models/sys_resources.dart';
+import 'package:chat/pages/home_scaffold/analytics_drawer.dart';
 import 'package:chat/pages/home_scaffold/app_bar.dart';
 import 'package:chat/pages/home_scaffold/drawer.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +38,8 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
 
   bool drawerIsOpen = true;
   int bottomSelectedIndex = 1;
+
+  bool analyticsDrawerIsOpen = false;
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +90,58 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                 homePage: widget.body)),
                       );
                     });
+          }, onAnalyticsTap: () {
+            debugPrint("Tapped");
+            !isMobile
+                ? setState(() {
+                    analyticsDrawerIsOpen = !analyticsDrawerIsOpen;
+                  })
+                : null;
+          }, onChatsTap: () {
+            debugPrint("Chats");
+            showModalBottomSheet<void>(
+                context: context,
+                enableDrag: true,
+                isScrollControlled: true,
+                shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        topRight: Radius.circular(10))),
+                builder: (BuildContext context) {
+                  return MultiProvider(
+                    providers: [
+                      Provider.value(value: true)
+                      // Provider<
+                      //     SwiftFunctionsInterface>.value(
+                      //   value: swiftInterface,
+                      // ),
+                    ],
+                    child: Container(
+                        padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).viewInsets.bottom),
+                        constraints: const BoxConstraints(maxHeight: 700),
+                        height: MediaQuery.of(context).size.height * .5,
+                        child: PageViewDrawer(
+                          onSettingsDrawerTap: (String page) {
+                            if (page == "gamemanager") {
+                              widget.title.value = "Game Manager";
+                              widget.title.notifyListeners();
+                              widget.body.value = GameManagerPage(
+                                duration: 90,
+                                games: widget.games,
+                                modelLoaded: modelLoaded,
+                                systemResources: sysResources,
+                                homePage: widget.body,
+                              );
+                              widget.body.notifyListeners();
+                            }
+                          },
+                          body: widget.body,
+                          conversations: widget.conversations,
+                          title: widget.title,
+                        )),
+                  );
+                });
           }),
           body: SafeArea(
             child: GestureDetector(
@@ -145,6 +200,40 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                           },
                         ),
                       ),
+                    ),
+                    Row(
+                      children: [
+                        if (analyticsDrawerIsOpen)
+                          Container(
+                            width: 1,
+                            color: Colors.grey,
+                          ),
+                        AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.fastOutSlowIn,
+                            width: analyticsDrawerIsOpen ? 320 : 0,
+                            child: analyticsDrawerIsOpen
+                                ? AnalyticsViewDrawer(
+                                    onSettingsDrawerTap: (String page) {
+                                      if (page == "gamemanager") {
+                                        widget.title.value = "Game Manager";
+                                        widget.title.notifyListeners();
+                                        widget.body.value = GameManagerPage(
+                                          duration: 90,
+                                          games: widget.games,
+                                          modelLoaded: modelLoaded,
+                                          systemResources: sysResources,
+                                          homePage: widget.body,
+                                        );
+                                        widget.body.notifyListeners();
+                                      }
+                                    },
+                                    body: widget.body,
+                                    conversations: widget.conversations,
+                                    title: widget.title,
+                                  )
+                                : Container()),
+                      ],
                     ),
                   ],
                 ),
