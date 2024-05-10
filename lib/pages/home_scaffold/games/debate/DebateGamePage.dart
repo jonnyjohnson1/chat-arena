@@ -164,7 +164,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
     currentIdx = messages.length;
     // // Submit text to generator here
     LocalLLMInterface()
-        .newMessage(text, messages, selectedModel, generationCallback);
+        .newChatMessage(text, messages, selectedModel, generationCallback);
     uiMessage.Message _message = uiMessage.Message(
         id: Tools().getRandomString(12),
         conversationID: widget.conversation!.id,
@@ -219,7 +219,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
                     message: ValueNotifier(text),
                     documentID: '',
                     name: 'User',
-                    senderID: '',
+                    senderID: 'user',
                     status: '',
                     timestamp: DateTime.now(),
                     type: uiMessage.MessageType.text);

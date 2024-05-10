@@ -10,7 +10,7 @@ import '../models/messages.dart';
 class ConversationDatabase {
   static final ConversationDatabase instance = ConversationDatabase._init();
   static Database? _database;
-  static String dbPath = 'test11.db';
+  static String dbPath = 'test15.db';
   ConversationDatabase._init();
 
   Future<Database> get database async {
@@ -68,7 +68,8 @@ CREATE TABLE IF NOT EXISTS $tableMessages (
   ${MessageFields.type} $intType,
   ${MessageFields.status} $textType,
   ${MessageFields.name} $textType,
-  ${MessageFields.isGenerating} $boolType
+  ${MessageFields.isGenerating} $boolType,
+  ${MessageFields.images} $textType
 )
 ''');
   }
@@ -175,7 +176,8 @@ CREATE TABLE $tableMessages (
   ${MessageFields.type} $intType,
   ${MessageFields.status} $textType,
   ${MessageFields.name} $textType,
-  ${MessageFields.isGenerating} $boolType
+  ${MessageFields.isGenerating} $boolType,
+  ${MessageFields.images} $textType
 )
 
 ''');

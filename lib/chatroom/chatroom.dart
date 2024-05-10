@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/services/static_queries.dart';
 import 'package:file_picker/file_picker.dart';
@@ -9,11 +9,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:chat/chatroom/widgets/message_field/message_field.dart';
 import 'package:chat/chatroom/widgets/message_list_view.dart';
 import 'package:chat/models/conversation.dart';
-import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/messages.dart' as uiMessage;
+import 'package:path_provider/path_provider.dart';
 // import 'package:chat/services/conversation_database.dart';
-import 'package:chat/services/tools.dart';
 // import 'package:file_selector/file_selector.dart';
+
+import 'package:chat/services/web_specific_queries.dart';
 
 class ChatRoomPage extends StatefulWidget {
   Conversation? conversation;
@@ -68,7 +69,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     super.dispose();
   }
 
-  List<File> selectedImages = []; // List of selected image
+  List<ImageFile> selectedImages = []; // List of selected image
   final picker = ImagePicker(); // Instance of Image picker
 
   Future removeImage(int index) async {
@@ -79,54 +80,27 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     });
   }
 
-  Future getImages() async {
-    List<XFile> files = [];
-    if (Platform.isAndroid || Platform.isIOS) {
-      print("Platform is mobile platform");
-      // Android-specific code
-      files = await picker.pickMultiImage(
-          imageQuality: 100, // To set quality of images
-          maxHeight:
-              1000, // To set maxheight of images that you want in your app
-          maxWidth:
-              1000); // To set maxheight of images that you want in your app
-    } else if (Platform.isMacOS) {
-      print("Platform is macOS");
-      // // iOS-specific code
-      // const XTypeGroup jpgsTypeGroup = XTypeGroup(
-      //   label: 'JPEGs',
-      //   extensions: <String>['jpg', 'jpeg'],
-      // );
-      // const XTypeGroup pngTypeGroup = XTypeGroup(
-      //   label: 'PNGs',
-      //   extensions: <String>['png'],
-      // );
-      // files = await openFiles(acceptedTypeGroups: <XTypeGroup>[
-      //   jpgsTypeGroup,
-      //   pngTypeGroup,
-      // ]);
-    }
-
-    // if atleast 1 images is selected it will add
-    // all images in selectedImages
-    // variable so that we can easily show them in UI
-    if (files.isNotEmpty) {
-      for (var i = 0; i < files.length; i++) {
-        selectedImages.add(File(files[i].path));
-      }
-      setState(
-        () {},
-      );
-    } else {
-      // If no image is selected it will show a snackbar saying nothing is selected
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Nothing is selected')));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return _chatroomPageUI(context);
+  }
+
+  bool hasImage = false;
+  File? image;
+
+  Future<void> getImageWeb() async {
+    if (kIsWeb) {
+      print("file path");
+      try {
+        List<ImageFile>? images = await getLocalFilePaths();
+        if (images == null) return;
+        setState(() {
+          selectedImages.addAll(images);
+        });
+      } catch (e) {
+        print(e);
+      }
+    }
   }
 
   Widget _chatroomPageUI(BuildContext context) {
@@ -155,138 +129,152 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
               widget.messages,
             ),
 
-            // images container
-            if (selectedImages.isNotEmpty)
-              Container(
-                height: 75,
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.all(0),
-                        itemCount: selectedImages.length,
-                        shrinkWrap: true,
-                        itemBuilder: (BuildContext context, int index) {
-                          // TO show selected file
-                          return Stack(
-                            alignment: Alignment.topRight,
-                            children: [
-                              Container(
-                                padding:
-                                    const EdgeInsets.only(top: 15, right: 12),
-                                child: Center(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    child: kIsWeb
-                                        ? Image.network(
-                                            selectedImages[index].path)
-                                        : Image.file(selectedImages[index]),
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                splashRadius: 11,
-                                constraints: const BoxConstraints(),
-                                padding: const EdgeInsets.all(0),
-                                icon: const Icon(Icons.close),
-                                iconSize: 21,
-                                onPressed: () async {
-                                  await removeImage(index);
-                                },
-                              ),
-                            ],
-                          );
-                          // If you are making the web app then you have to
-                          // use image provider as network image or in
-                          // android or iOS it will as file only
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             // model selector button
             if (widget.showModelSelectButton)
               Positioned(
                 bottom: 0,
                 left: 10,
-                child: FutureBuilder(
-                    future: getModels(),
-                    builder: (BuildContext context, AsyncSnapshot snapshot) {
-                      return snapshot.hasData
-                          ? Material(
-                              color: Colors.white,
-                              child: Container(
-                                decoration: const BoxDecoration(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    FutureBuilder(
+                        future: getModels(),
+                        builder:
+                            (BuildContext context, AsyncSnapshot snapshot) {
+                          return snapshot.hasData
+                              ? Material(
                                   color: Colors.white,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10)),
-                                ),
-                                width: 135,
-                                height: 35,
-                                child: DropdownButton<LanguageModel>(
-                                  hint: Padding(
-                                    padding: const EdgeInsets.only(top: 5.0),
-                                    child: Center(
-                                      child: Text(
-                                          selectedModel!.model.name ??
-                                              'make a selection',
-                                          overflow: TextOverflow.ellipsis),
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(10)),
                                     ),
-                                  ),
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(10)),
-                                  alignment: Alignment.center,
-                                  underline: Container(),
-                                  isDense: true,
-                                  elevation: 4,
-                                  padding: EdgeInsets.zero,
-                                  itemHeight: null,
-                                  isExpanded: true,
-                                  items: snapshot.data
-                                      .map<DropdownMenuItem<LanguageModel>>(
-                                          (item) {
-                                    return DropdownMenuItem<LanguageModel>(
-                                      value: item,
-                                      alignment: Alignment.centerLeft,
-                                      child: Container(
-                                        width: 170,
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                                child: Text(
-                                              item.name,
-                                              overflow: TextOverflow.ellipsis,
-                                              // style: TextStyle(
-                                              //     fontSize:
-                                              //         16)),
-                                            )),
-                                            if (item.size != null)
-                                              Text(" (${sizeToGB(item.size)})",
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style:
-                                                      TextStyle(fontSize: 12)),
-                                          ],
+                                    width: 135,
+                                    height: 35,
+                                    child: DropdownButton<LanguageModel>(
+                                      hint: Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 5.0),
+                                        child: Center(
+                                          child: Text(
+                                              selectedModel!.model.name ??
+                                                  'make a selection',
+                                              overflow: TextOverflow.ellipsis),
                                         ),
                                       ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (LanguageModel? newValue) {
-                                    setState(() {
-                                      selectedModel!.model = newValue!;
-                                    });
-                                    widget.onSelectedModelChange!(newValue);
-                                  },
-                                ),
-                              ),
-                            )
-                          : const Center(
-                              child: Text('Loading...'),
-                            );
-                    }),
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(10)),
+                                      alignment: Alignment.center,
+                                      underline: Container(),
+                                      isDense: true,
+                                      elevation: 4,
+                                      padding: EdgeInsets.zero,
+                                      itemHeight: null,
+                                      isExpanded: true,
+                                      items: snapshot.data
+                                          .map<DropdownMenuItem<LanguageModel>>(
+                                              (item) {
+                                        return DropdownMenuItem<LanguageModel>(
+                                          value: item,
+                                          alignment: Alignment.centerLeft,
+                                          child: Container(
+                                            width: 170,
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                    child: Text(
+                                                  item.name,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  // style: TextStyle(
+                                                  //     fontSize:
+                                                  //         16)),
+                                                )),
+                                                if (item.size != null)
+                                                  Text(
+                                                      " (${sizeToGB(item.size)})",
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                          fontSize: 12)),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (LanguageModel? newValue) {
+                                        setState(() {
+                                          selectedModel!.model = newValue!;
+                                        });
+                                        widget.onSelectedModelChange!(newValue);
+                                      },
+                                    ),
+                                  ),
+                                )
+                              : const Center(
+                                  child: Text('Loading...'),
+                                );
+                        }),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Container(
+                      height: 75,
+                      constraints: const BoxConstraints(maxWidth: 800),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.all(0),
+                              itemCount: selectedImages.length,
+                              shrinkWrap: true,
+                              itemBuilder: (BuildContext context, int index) {
+                                // TO show selected file
+                                return Stack(
+                                  alignment: Alignment.topRight,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.only(
+                                          top: 15, right: 12),
+                                      child: Center(
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(8.0),
+                                          child: kIsWeb
+                                              ? Image.network(
+                                                  selectedImages[index]
+                                                      .webFile!
+                                                      .path)
+                                              : Image.file(selectedImages[index]
+                                                  .localFile!),
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      splashRadius: 11,
+                                      constraints: const BoxConstraints(),
+                                      padding: const EdgeInsets.all(0),
+                                      icon: const Icon(Icons.close),
+                                      iconSize: 21,
+                                      onPressed: () async {
+                                        await removeImage(index);
+                                      },
+                                    ),
+                                  ],
+                                );
+                                // If you are making the web app then you have to
+                                // use image provider as network image or in
+                                // android or iOS it will as file only
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
             // reset chat button
@@ -348,18 +336,26 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
               widget.isGenerating!.value = false;
             },
             onSubmit: (String text) async {
-              widget.onNewMessage(widget.conversation,
-                  text); // pass back to main to update states
+              widget.onNewMessage(widget.conversation, text,
+                  selectedImages); // pass back to main to update states
             },
             onLoadImage: () async {
-              // await getImages();
-              FilePickerResult? result = await FilePicker.platform.pickFiles();
-              print(result!.files.single.path!);
-
-              if (result != null) {
-                File file = File(result.files.single.path!);
+              if (kIsWeb) {
+                await getImageWeb();
               } else {
-                // User canceled the picker
+                FilePickerResult? result = await FilePicker.platform
+                    .pickFiles(type: FileType.image, allowMultiple: true);
+
+                if (result != null) {
+                  result.files.forEach((PlatformFile element) {
+                    File file = File(element.path!);
+                    selectedImages.add(ImageFile(
+                        bytes: file.readAsBytesSync(), localFile: file));
+                  });
+                  setState(() {});
+                } else {
+                  // User canceled the picker
+                }
               }
             },
           ),

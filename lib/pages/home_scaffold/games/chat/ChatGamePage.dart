@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/services/conversation_database.dart';
@@ -103,21 +106,23 @@ class _ChatGamePageState extends State<ChatGamePage> {
 
   void sendMessagetoModel(String text) async {
     print("Submitting: $text to chat model");
+
+    LocalLLMInterface()
+        .newChatMessage(text, messages, selectedModel, generationCallback);
+
     currentIdx = messages.length;
     // // Submit text to generator here
-    LocalLLMInterface()
-        .newMessage(text, messages, selectedModel, generationCallback);
-    uiMessage.Message _message = uiMessage.Message(
+    uiMessage.Message message = uiMessage.Message(
         id: Tools().getRandomString(12),
         conversationID: widget.conversation!.id,
         message: ValueNotifier(""),
         documentID: '',
         name: 'ChatBot',
-        senderID: 'bot13451234',
+        senderID: 'assistant',
         status: '',
         timestamp: DateTime.now(),
         type: uiMessage.MessageType.text);
-    messages.add(_message);
+    messages.add(message);
   }
 
   @override
@@ -137,7 +142,9 @@ class _ChatGamePageState extends State<ChatGamePage> {
             },
             showTopTitle: false,
             isGenerating: isGenerating,
-            onNewMessage: (Conversation lastMessageUpdate, String text) async {
+            onNewMessage: (Conversation? conv, String text,
+                List<ImageFile> images) async {
+              print("cnew message");
               if (widget.conversation == null) {
                 // CREATES A NEW CONVERSATION
                 // This is the quickstart path, where the chat box is open on start up
@@ -151,16 +158,19 @@ class _ChatGamePageState extends State<ChatGamePage> {
                   primaryModel: selectedModel.model.name,
                   title: "Chat",
                 );
+                print("create convo");
                 await ConversationDatabase.instance
                     .create(widget.conversation!);
                 widget.conversations.value.insert(0, widget.conversation!);
                 widget.conversations.notifyListeners();
               }
+              print("next 1");
               if (text.trim() != "") {
                 uiMessage.Message message = uiMessage.Message(
                     id: Tools().getRandomString(12),
                     conversationID: widget.conversation!.id,
                     message: ValueNotifier(text),
+                    images: images,
                     documentID: '',
                     name: 'User',
                     senderID: '',
@@ -168,6 +178,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
                     timestamp: DateTime.now(),
                     type: uiMessage.MessageType.text);
                 messages.add(message);
+                print("create message w/ images in database");
                 await ConversationDatabase.instance.createMessage(message);
 
                 widget.conversation!.lastMessage = text;
@@ -179,11 +190,12 @@ class _ChatGamePageState extends State<ChatGamePage> {
                 sendMessagetoModel(message.message!.value);
                 setState(() {});
               }
+
               // update the lastMessage sent
-              await ConversationDatabase.instance.update(lastMessageUpdate);
-              int idx = widget.conversations.value
-                  .indexWhere((element) => element.id == lastMessageUpdate.id);
-              widget.conversations.value[idx] = lastMessageUpdate;
+              await ConversationDatabase.instance.update(widget.conversation!);
+              int idx = widget.conversations.value.indexWhere(
+                  (element) => element.id == widget.conversation!.id);
+              widget.conversations.value[idx] = widget.conversation!;
               widget.conversations.value.sort((a, b) {
                 return b.time!.compareTo(a.time!);
               });

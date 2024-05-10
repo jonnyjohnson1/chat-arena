@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:chat/models/custom_file.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 const String tableMessages = 'messages';
@@ -22,7 +26,8 @@ class MessageFields {
     type,
     status,
     name,
-    isGenerating
+    isGenerating,
+    images
   ];
 
   static const String id = '_id';
@@ -37,6 +42,7 @@ class MessageFields {
   static const String status = 'status';
   static const String name = 'name';
   static const String isGenerating = 'isGenerating';
+  static const String images = 'images';
 }
 
 class Message {
@@ -52,6 +58,7 @@ class Message {
   final String? status;
   final String? name;
   bool isGenerating;
+  List<ImageFile>? images;
 
   Message(
       {required this.id,
@@ -65,10 +72,24 @@ class Message {
       this.type,
       this.status,
       this.name,
-      this.isGenerating = false});
+      this.isGenerating = false,
+      this.images});
 
   // Convert the Message instance to a Map
   Map<String, dynamic> toMap() {
+    // convert img files to list
+    String imgSep = "#&%*";
+    List<String> imgStrings = [];
+    if (images != null) {
+      images!.forEach((element) {
+        if (kIsWeb) {
+          imgStrings.add(element.webFile!.path);
+        } else {
+          imgStrings.add(element.localFile!.path);
+        }
+      });
+    }
+
     return {
       MessageFields.id: id,
       MessageFields.documentID: documentID,
@@ -82,11 +103,23 @@ class Message {
       MessageFields.status: status,
       MessageFields.name: name,
       MessageFields.isGenerating: isGenerating ? 1 : 0,
+      MessageFields.images: imgStrings.join(imgSep)
     };
   }
 
   // Create a Message instance from a Map
   factory Message.fromMap(Map<String, dynamic> map) {
+    String imgSep = "#&%*";
+    List<ImageFile>? images = [];
+    if (map.containsKey(MessageFields.images)) {
+      map[MessageFields.images].split(imgSep).forEach((String filepath) {
+        if (kIsWeb) {
+          images.add(ImageFile(webFile: File(filepath)));
+        } else {
+          images.add(ImageFile(localFile: File(filepath)));
+        }
+      });
+    }
     return Message(
       id: map[MessageFields.id],
       documentID: map[MessageFields.documentID],
@@ -102,6 +135,7 @@ class Message {
       status: map[MessageFields.status],
       name: map[MessageFields.name],
       isGenerating: map[MessageFields.isGenerating] == 1 ? true : false,
+      images: images,
     );
   }
 

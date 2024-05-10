@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:chat/models/llm.dart';
+import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../models/messages.dart';
@@ -20,7 +22,7 @@ class LocalLLMInterface {
         Uri.parse('$wsPrefix://$extractedDiAPI/$chat_message'));
   }
 
-  void newMessage(String message, List<Message> messageHistory,
+  void newChatMessage(String message, List<Message> messageHistory,
       ModelConfig model, callbackFunction) {
     initChatWebsocket();
 
@@ -30,9 +32,38 @@ class LocalLLMInterface {
     }
 
     // Format messageHistory for json
-    List<Map<String, String>> msgHist = [];
+    List<Map<String, dynamic>> msgHist = [];
+
     for (Message msg in messageHistory) {
-      msgHist.add({'role': msg.senderID!, 'content': msg.message!.value});
+      if (msg.images != null) {
+        if (msg.images!.isNotEmpty) {
+          List<String> images = [];
+          for (var file in msg.images!) {
+            // if we have used the web, the local path should still exist
+            // the web path is used to render the web image
+            String path = file.localFile!.path;
+            // if (file.path.startsWith("blob:")) {
+            //   path = path.substring(5);
+            // }
+            images.add(path);
+          }
+          msgHist.add({
+            'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+            'content': msg.message!.value,
+            'images': images,
+          });
+        } else {
+          msgHist.add({
+            'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+            'content': msg.message!.value
+          });
+        }
+      } else {
+        msgHist.add({
+          'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+          'content': msg.message!.value
+        });
+      }
     }
 
     Map<String, dynamic> submitPkg = {
