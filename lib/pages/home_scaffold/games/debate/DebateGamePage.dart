@@ -165,7 +165,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
     // // Submit text to generator here
     LocalLLMInterface()
         .newChatMessage(text, messages, selectedModel, generationCallback);
-    uiMessage.Message _message = uiMessage.Message(
+    uiMessage.Message message = uiMessage.Message(
         id: Tools().getRandomString(12),
         conversationID: widget.conversation!.id,
         message: ValueNotifier(""),
@@ -175,7 +175,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
         status: '',
         timestamp: DateTime.now(),
         type: uiMessage.MessageType.text);
-    messages.add(_message);
+    messages.add(message);
   }
 
   @override
