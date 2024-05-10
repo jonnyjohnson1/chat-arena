@@ -1,9 +1,6 @@
 import 'dart:io';
 
-import 'package:chat/models/game_models/debate.dart';
 import 'package:chat/models/llm.dart';
-import 'package:chat/services/conversation_database.dart';
-import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/static_queries.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -20,17 +17,23 @@ import 'package:chat/services/tools.dart';
 
 class ChatRoomPage extends StatefulWidget {
   Conversation? conversation;
-  final onCreateNewConversation;
-  final onNewText;
+  final onNewMessage;
   bool showModelSelectButton;
   bool showTopTitle;
+  ModelConfig? selectedModelConfig;
+  final Function? onSelectedModelChange;
   String topTitleHeading;
   String topTitleText;
+  ValueNotifier<bool>? isGenerating;
+  List<uiMessage.Message> messages;
 
   ChatRoomPage(
       {required this.conversation,
-      this.onCreateNewConversation,
-      this.onNewText,
+      required this.messages,
+      this.selectedModelConfig,
+      this.onSelectedModelChange,
+      this.isGenerating,
+      this.onNewMessage,
       this.showModelSelectButton = true,
       this.showTopTitle = true,
       this.topTitleHeading = "Topic:",
@@ -43,117 +46,21 @@ class ChatRoomPage extends StatefulWidget {
 }
 
 class _ChatRoomPageState extends State<ChatRoomPage> {
-  // late DialogFlowtter dialogFlowtter;
-
   final ScrollController _listViewController = ScrollController();
-
-  late List<uiMessage.Message> messages = [];
-
   List<Map<String, dynamic>> dialogFlowMessages = [];
-  // late SwiftFunctionsInterface swiftFunctions;
-  ValueNotifier<bool> isGenerating = ValueNotifier(false);
 
   bool isIphone = false;
-
-  bool isLoading = true;
-
-  Future<void> initData() async {
-    if (widget.conversation != null) {
-      try {
-        messages = await ConversationDatabase.instance
-            .readAllMessages(widget.conversation!.id);
-      } catch (e) {
-        print(e);
-      }
-    }
-    setState(() {
-      isLoading = false;
-    });
-  }
+  ModelConfig? selectedModel;
 
   @override
   void initState() {
-    // load the chat game settings based on the game type
-
-    initData();
-    super.initState();
-  }
-
-  String generatedChat = "";
-  double progress = 0.0;
-  double toksPerSec = 0.0;
-  double completionTime = 0.0;
-  int currentIdx = 0;
-
-  // TODO Move this out of the chatroom, and into the game page
-// Will need to handle specific api calls per game type
-
-  generationCallback(Map<String, dynamic>? event) {
-    if (event != null) {
-      completionTime = 0.0;
-      progress = 0.0;
-
-      EventGenerationResponse response = EventGenerationResponse.fromMap(event);
-
-      generatedChat = response.generation;
-      if (response.isCompleted) {
-        print("chat completed");
-        // end token is received
-        isGenerating.value = false;
-        messages[currentIdx].isGenerating = false;
-        completionTime = response.completionTime;
-        messages[currentIdx].completionTime = completionTime;
-        isGenerating.notifyListeners();
-
-        setState(() {});
-        // add the final message to the database
-        ConversationDatabase.instance.createMessage(messages[currentIdx]);
-      } else {
-        toksPerSec = response.toksPerSec;
-        while (generatedChat.startsWith("\n")) {
-          generatedChat = generatedChat.substring(2);
-        }
-        completionTime = response.completionTime;
-        try {
-          messages[currentIdx].message!.value = generatedChat;
-          messages[currentIdx].completionTime = completionTime;
-          messages[currentIdx].isGenerating = true;
-          messages[currentIdx].toksPerSec = toksPerSec;
-
-          // Notify the value listeners
-          messages[currentIdx].message!.notifyListeners();
-        } catch (e) {
-          print(
-              "Error updating message with the latest result: ${e.toString()}");
-          print("The generation was: $generatedChat");
-        }
-        // setState(() {});
-      }
-    } else {
-      // return null event generation
-      // return const EventGenerationResponse(generation: "", progress: 0.0);
+    if (widget.showModelSelectButton) {
+      assert(widget.selectedModelConfig != null &&
+          widget.onSelectedModelChange != null);
+      selectedModel = widget.selectedModelConfig;
     }
-  }
 
-// TODO Move this out of the chatroom, and into the game page
-// Will need to handle specific api calls per game type
-  void sendMessagetoModel(String text) async {
-    print("Submitting: $text to chat model");
-    currentIdx = messages.length;
-    // // Submit text to generator here
-    LocalLLMInterface()
-        .newMessage(text, messages, selectedModel, generationCallback);
-    uiMessage.Message _message = uiMessage.Message(
-        id: Tools().getRandomString(12),
-        conversationID: widget.conversation!.id,
-        message: ValueNotifier(""),
-        documentID: '',
-        name: 'ChatBot',
-        senderID: 'bot13451234',
-        status: '',
-        timestamp: DateTime.now(),
-        type: uiMessage.MessageType.text);
-    messages.add(_message);
+    super.initState();
   }
 
   @override
@@ -184,7 +91,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
           maxWidth:
               1000); // To set maxheight of images that you want in your app
     } else if (Platform.isMacOS) {
-      // print("Platform is macOS");
+      print("Platform is macOS");
       // // iOS-specific code
       // const XTypeGroup jpgsTypeGroup = XTypeGroup(
       //   label: 'JPEGs',
@@ -217,330 +124,251 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     }
   }
 
-  ModelConfig selectedModel = ModelConfig(
-      model: const LanguageModel(
-          model: 'dolphin-llama3', name: "dolphin-llama3", size: 21314),
-      temperature: 0.06,
-      numGenerations: 1);
-
   @override
   Widget build(BuildContext context) {
     return _chatroomPageUI(context);
   }
 
   Widget _chatroomPageUI(BuildContext context) {
-    return isLoading
-        ? Container()
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              if (widget.showTopTitle)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0, bottom: 3, top: 3),
-                  child: Row(
-                    children: [
-                      Text(widget.topTitleHeading),
-                      const SizedBox(
-                        width: 4,
-                      ),
-                      Text(widget.topTitleText)
-                    ],
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        if (widget.showTopTitle)
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0, bottom: 3, top: 3),
+            child: Row(
+              children: [
+                Text(widget.topTitleHeading),
+                const SizedBox(
+                  width: 4,
                 ),
-              Expanded(
-                  child: isLoading
-                      ? Container()
-                      : Stack(
-                          children: [
-                            MessageListView(
-                              this,
-                              _listViewController,
-                              messages,
-                            ),
+                Text(widget.topTitleText)
+              ],
+            ),
+          ),
+        Expanded(
+            child: Stack(
+          children: [
+            MessageListView(
+              this,
+              _listViewController,
+              widget.messages,
+            ),
 
-                            // images container
-                            if (selectedImages.isNotEmpty)
+            // images container
+            if (selectedImages.isNotEmpty)
+              Container(
+                height: 75,
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.all(0),
+                        itemCount: selectedImages.length,
+                        shrinkWrap: true,
+                        itemBuilder: (BuildContext context, int index) {
+                          // TO show selected file
+                          return Stack(
+                            alignment: Alignment.topRight,
+                            children: [
                               Container(
-                                height: 75,
-                                constraints:
-                                    const BoxConstraints(maxWidth: 800),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: ListView.builder(
-                                        scrollDirection: Axis.horizontal,
-                                        padding: const EdgeInsets.all(0),
-                                        itemCount: selectedImages.length,
-                                        shrinkWrap: true,
-                                        itemBuilder:
-                                            (BuildContext context, int index) {
-                                          // TO show selected file
-                                          return Stack(
-                                            alignment: Alignment.topRight,
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.only(
-                                                    top: 15, right: 12),
-                                                child: Center(
-                                                  child: ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8.0),
-                                                    child: kIsWeb
-                                                        ? Image.network(
-                                                            selectedImages[
-                                                                    index]
-                                                                .path)
-                                                        : Image.file(
-                                                            selectedImages[
-                                                                index]),
-                                                  ),
-                                                ),
-                                              ),
-                                              IconButton(
-                                                splashRadius: 11,
-                                                constraints:
-                                                    const BoxConstraints(),
-                                                padding:
-                                                    const EdgeInsets.all(0),
-                                                icon: const Icon(Icons.close),
-                                                iconSize: 21,
-                                                onPressed: () async {
-                                                  await removeImage(index);
-                                                },
-                                              ),
-                                            ],
-                                          );
-                                          // If you are making the web app then you have to
-                                          // use image provider as network image or in
-                                          // android or iOS it will as file only
-                                        },
-                                      ),
-                                    ),
-                                  ],
+                                padding:
+                                    const EdgeInsets.only(top: 15, right: 12),
+                                child: Center(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    child: kIsWeb
+                                        ? Image.network(
+                                            selectedImages[index].path)
+                                        : Image.file(selectedImages[index]),
+                                  ),
                                 ),
                               ),
-                            // model selector button
-                            if (widget.showModelSelectButton)
-                              Positioned(
-                                bottom: 0,
-                                left: 10,
-                                child: FutureBuilder(
-                                    future: getModels(),
-                                    builder: (BuildContext context,
-                                        AsyncSnapshot snapshot) {
-                                      return snapshot.hasData
-                                          ? Material(
-                                              color: Colors.white,
-                                              child: Container(
-                                                decoration: const BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                          Radius.circular(10)),
-                                                ),
-                                                width: 135,
-                                                height: 35,
-                                                child: DropdownButton<
-                                                    LanguageModel>(
-                                                  hint: Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            top: 5.0),
-                                                    child: Center(
-                                                      child: Text(
-                                                          selectedModel
-                                                                  .model.name ??
-                                                              'make a selection',
-                                                          overflow: TextOverflow
-                                                              .ellipsis),
-                                                    ),
-                                                  ),
-                                                  borderRadius:
-                                                      const BorderRadius.all(
-                                                          Radius.circular(10)),
-                                                  alignment: Alignment.center,
-                                                  underline: Container(),
-                                                  isDense: true,
-                                                  elevation: 4,
-                                                  padding: EdgeInsets.zero,
-                                                  itemHeight: null,
-                                                  isExpanded: true,
-                                                  items: snapshot.data.map<
-                                                          DropdownMenuItem<
-                                                              LanguageModel>>(
-                                                      (item) {
-                                                    return DropdownMenuItem<
-                                                        LanguageModel>(
-                                                      value: item,
-                                                      alignment:
-                                                          Alignment.centerLeft,
-                                                      child: Container(
-                                                        width: 170,
-                                                        child: Row(
-                                                          children: [
-                                                            Expanded(
-                                                                child: Text(
-                                                              item.name,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                              // style: TextStyle(
-                                                              //     fontSize:
-                                                              //         16)),
-                                                            )),
-                                                            if (item.size !=
-                                                                null)
-                                                              Text(
-                                                                  " (${sizeToGB(item.size)})",
-                                                                  overflow:
-                                                                      TextOverflow
-                                                                          .ellipsis,
-                                                                  style: TextStyle(
-                                                                      fontSize:
-                                                                          12)),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }).toList(),
-                                                  onChanged: (LanguageModel?
-                                                      newValue) {
-                                                    setState(() {
-                                                      selectedModel.model =
-                                                          newValue!;
-                                                    });
-                                                  },
-                                                ),
-                                              ),
-                                            )
-                                          : const Center(
-                                              child: Text('Loading...'),
-                                            );
-                                    }),
+                              IconButton(
+                                splashRadius: 11,
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(0),
+                                icon: const Icon(Icons.close),
+                                iconSize: 21,
+                                onPressed: () async {
+                                  await removeImage(index);
+                                },
                               ),
-
-                            // reset chat button
-                            Positioned(
-                              right: 10,
-                              bottom: 0,
-                              child: ElevatedButton(
-                                  style: ButtonStyle(
-                                    minimumSize:
-                                        MaterialStateProperty.resolveWith(
-                                      (states) {
-                                        return Size.zero;
-                                      },
-                                    ),
-                                    padding: MaterialStateProperty.resolveWith<
-                                        EdgeInsetsGeometry>(
-                                      (Set<MaterialState> states) {
-                                        return const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 3);
-                                      },
+                            ],
+                          );
+                          // If you are making the web app then you have to
+                          // use image provider as network image or in
+                          // android or iOS it will as file only
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            // model selector button
+            if (widget.showModelSelectButton)
+              Positioned(
+                bottom: 0,
+                left: 10,
+                child: FutureBuilder(
+                    future: getModels(),
+                    builder: (BuildContext context, AsyncSnapshot snapshot) {
+                      return snapshot.hasData
+                          ? Material(
+                              color: Colors.white,
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10)),
+                                ),
+                                width: 135,
+                                height: 35,
+                                child: DropdownButton<LanguageModel>(
+                                  hint: Padding(
+                                    padding: const EdgeInsets.only(top: 5.0),
+                                    child: Center(
+                                      child: Text(
+                                          selectedModel!.model.name ??
+                                              'make a selection',
+                                          overflow: TextOverflow.ellipsis),
                                     ),
                                   ),
-                                  onPressed: () async {
-                                    if (messages.isNotEmpty) {
-                                      setState(() {
-                                        messages.clear();
-                                        // delete from the messages table
-                                        ConversationDatabase.instance
-                                            .deleteMessageByConvId(
-                                                widget.conversation!.id);
-                                        // update the lastMessage
-                                        widget.conversation!.lastMessage =
-                                            "Start a chat ->";
-                                        widget.conversation!.time =
-                                            DateTime.now();
-                                        widget.onNewText(widget
-                                            .conversation); // pass back to main to update states
-                                      });
-                                    }
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10)),
+                                  alignment: Alignment.center,
+                                  underline: Container(),
+                                  isDense: true,
+                                  elevation: 4,
+                                  padding: EdgeInsets.zero,
+                                  itemHeight: null,
+                                  isExpanded: true,
+                                  items: snapshot.data
+                                      .map<DropdownMenuItem<LanguageModel>>(
+                                          (item) {
+                                    return DropdownMenuItem<LanguageModel>(
+                                      value: item,
+                                      alignment: Alignment.centerLeft,
+                                      child: Container(
+                                        width: 170,
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                                child: Text(
+                                              item.name,
+                                              overflow: TextOverflow.ellipsis,
+                                              // style: TextStyle(
+                                              //     fontSize:
+                                              //         16)),
+                                            )),
+                                            if (item.size != null)
+                                              Text(" (${sizeToGB(item.size)})",
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style:
+                                                      TextStyle(fontSize: 12)),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (LanguageModel? newValue) {
+                                    setState(() {
+                                      selectedModel!.model = newValue!;
+                                    });
+                                    widget.onSelectedModelChange!(newValue);
                                   },
-                                  child: const Text("Reset Chat")),
+                                ),
+                              ),
                             )
-                          ],
-                        )),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3),
-                child: Container(
-                  height: 1,
-                  color: Colors.grey[200],
-                ),
+                          : const Center(
+                              child: Text('Loading...'),
+                            );
+                    }),
               ),
-              Container(
-                color: Colors.white,
-                child: MessageField(
-                  isGenerating: isGenerating,
-                  onPause: () async {
-                    // the pause doesn't work in the current way it is implemented
-                    // swiftFunctions.stopStream();
-                    isGenerating.value = false;
-                  },
-                  onSubmit: (String text) async {
-                    print("onSubmit");
-                    if (widget.conversation == null) {
-                      // This is the quickstart path, where the chat box is open on start up
-                      // we direct people directly into a Chat game
-                      // create an official conversation ID and add to the conversations list
-                      widget.conversation = Conversation(
-                        id: Tools().getRandomString(12),
-                        lastMessage: text,
-                        gameType: GameType.chat,
-                        time: DateTime.now(),
-                        primaryModel: "Llama 2",
-                        title: "New Chat",
-                      );
-                      if (widget.onCreateNewConversation != null)
-                        widget.onCreateNewConversation(widget.conversation);
-                    }
-                    if (text.trim() != "") {
-                      uiMessage.Message message = uiMessage.Message(
-                          id: Tools().getRandomString(12),
-                          conversationID: widget.conversation!.id,
-                          message: ValueNotifier(text),
-                          documentID: '',
-                          name: 'User',
-                          senderID: '',
-                          status: '',
-                          timestamp: DateTime.now(),
-                          type: uiMessage.MessageType.text);
-                      messages.add(message);
-                      await ConversationDatabase.instance
-                          .createMessage(message);
 
-                      widget.conversation!.lastMessage = text;
-                      widget.conversation!.time = DateTime.now();
-                      widget.onNewText(widget
-                          .conversation); // pass back to main to update states
-                      setState(() {
-                        isGenerating.value = true;
-                      });
-                      sendMessagetoModel(message.message!.value);
-                      setState(() {});
-                    }
-                  },
-                  onLoadImage: () async {
-                    // await getImages();
-                    FilePickerResult? result =
-                        await FilePicker.platform.pickFiles();
-                    print(result!.files.single.path!);
+            // reset chat button
+            // Positioned(
+            //   right: 10,
+            //   bottom: 0,
+            //   child: ElevatedButton(
+            //       style: ButtonStyle(
+            //         minimumSize:
+            //             MaterialStateProperty.resolveWith(
+            //           (states) {
+            //             return Size.zero;
+            //           },
+            //         ),
+            //         padding: MaterialStateProperty.resolveWith<
+            //             EdgeInsetsGeometry>(
+            //           (Set<MaterialState> states) {
+            //             return const EdgeInsets.symmetric(
+            //                 horizontal: 6, vertical: 3);
+            //           },
+            //         ),
+            //       ),
+            //       onPressed: () async {
+            //         if (messages.isNotEmpty) {
+            //           setState(() {
+            //             messages.clear();
+            //             // delete from the messages table
+            //             ConversationDatabase.instance
+            //                 .deleteMessageByConvId(
+            //                     widget.conversation!.id);
+            //             // update the lastMessage
+            //             widget.conversation!.lastMessage =
+            //                 "Start a chat ->";
+            //             widget.conversation!.time =
+            //                 DateTime.now();
+            //             widget.onNewText(widget
+            //                 .conversation); // pass back to main to update states
+            //           });
+            //         }
+            //       },
+            //       child: const Text("Reset Chat")),
+            // )
+          ],
+        )),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3),
+          child: Container(
+            height: 1,
+            color: Colors.grey[200],
+          ),
+        ),
+        Container(
+          color: Colors.white,
+          child: MessageField(
+            isGenerating: widget.isGenerating,
+            onPause: () async {
+              // the pause doesn't work in the current way it is implemented
+              // swiftFunctions.stopStream();
+              widget.isGenerating!.value = false;
+            },
+            onSubmit: (String text) async {
+              widget.onNewMessage(widget.conversation,
+                  text); // pass back to main to update states
+            },
+            onLoadImage: () async {
+              // await getImages();
+              FilePickerResult? result = await FilePicker.platform.pickFiles();
+              print(result!.files.single.path!);
 
-                    if (result != null) {
-                      File file = File(result.files.single.path!);
-                    } else {
-                      // User canceled the picker
-                    }
-                  },
-                ),
-              ),
-              // bottom padding
-              const SizedBox(
-                height: 7,
-              )
-            ],
-          );
+              if (result != null) {
+                File file = File(result.files.single.path!);
+              } else {
+                // User canceled the picker
+              }
+            },
+          ),
+        ),
+        // bottom padding
+        const SizedBox(
+          height: 7,
+        )
+      ],
+    );
   }
 }
