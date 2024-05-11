@@ -1,9 +1,12 @@
+import 'package:chat/models/custom_file.dart';
+import 'package:chat/models/messages.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/chatroom/widgets/text_type_message/text_message_bubble.dart';
 
 class MessageTypeBubble extends StatelessWidget {
   final _isOurMessage;
-  final _message;
+  final Message _message;
 
   const MessageTypeBubble(this._isOurMessage, this._message, {Key? key})
       : super(key: key);

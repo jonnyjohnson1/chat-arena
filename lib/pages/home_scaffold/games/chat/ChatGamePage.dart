@@ -144,7 +144,6 @@ class _ChatGamePageState extends State<ChatGamePage> {
             isGenerating: isGenerating,
             onNewMessage: (Conversation? conv, String text,
                 List<ImageFile> images) async {
-              print("cnew message");
               if (widget.conversation == null) {
                 // CREATES A NEW CONVERSATION
                 // This is the quickstart path, where the chat box is open on start up
@@ -158,13 +157,11 @@ class _ChatGamePageState extends State<ChatGamePage> {
                   primaryModel: selectedModel.model.name,
                   title: "Chat",
                 );
-                print("create convo");
                 await ConversationDatabase.instance
                     .create(widget.conversation!);
                 widget.conversations.value.insert(0, widget.conversation!);
                 widget.conversations.notifyListeners();
               }
-              print("next 1");
               if (text.trim() != "") {
                 uiMessage.Message message = uiMessage.Message(
                     id: Tools().getRandomString(12),

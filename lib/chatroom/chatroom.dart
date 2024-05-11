@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/services/static_queries.dart';
+import 'package:chat/shared/image_viewer.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -232,37 +233,47 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                               shrinkWrap: true,
                               itemBuilder: (BuildContext context, int index) {
                                 // TO show selected file
-                                return Stack(
-                                  alignment: Alignment.topRight,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.only(
-                                          top: 15, right: 12),
-                                      child: Center(
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                          child: kIsWeb
-                                              ? Image.network(
-                                                  selectedImages[index]
-                                                      .webFile!
-                                                      .path)
-                                              : Image.file(selectedImages[index]
-                                                  .localFile!),
+                                return InkWell(
+                                  onTap: () async {
+                                    await launchImageViewer(
+                                        context,
+                                        kIsWeb
+                                            ? selectedImages[index].webFile
+                                            : selectedImages[index].localFile);
+                                  },
+                                  child: Stack(
+                                    alignment: Alignment.topRight,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.only(
+                                            top: 15, right: 12),
+                                        child: Center(
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(8.0),
+                                            child: kIsWeb
+                                                ? Image.network(
+                                                    selectedImages[index]
+                                                        .webFile!
+                                                        .path)
+                                                : Image.file(
+                                                    selectedImages[index]
+                                                        .localFile!),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    IconButton(
-                                      splashRadius: 11,
-                                      constraints: const BoxConstraints(),
-                                      padding: const EdgeInsets.all(0),
-                                      icon: const Icon(Icons.close),
-                                      iconSize: 21,
-                                      onPressed: () async {
-                                        await removeImage(index);
-                                      },
-                                    ),
-                                  ],
+                                      IconButton(
+                                        splashRadius: 11,
+                                        constraints: const BoxConstraints(),
+                                        padding: const EdgeInsets.all(0),
+                                        icon: const Icon(Icons.close),
+                                        iconSize: 21,
+                                        onPressed: () async {
+                                          await removeImage(index);
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 );
                                 // If you are making the web app then you have to
                                 // use image provider as network image or in
@@ -336,8 +347,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
               widget.isGenerating!.value = false;
             },
             onSubmit: (String text) async {
-              widget.onNewMessage(widget.conversation, text,
+              await widget.onNewMessage(widget.conversation, text,
                   selectedImages); // pass back to main to update states
+              selectedImages.clear();
             },
             onLoadImage: () async {
               if (kIsWeb) {

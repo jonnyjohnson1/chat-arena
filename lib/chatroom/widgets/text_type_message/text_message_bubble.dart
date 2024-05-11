@@ -1,4 +1,9 @@
+import 'dart:io';
+
+import 'package:chat/models/custom_file.dart';
+import 'package:chat/shared/image_viewer.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/models/messages.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +25,93 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
   int index = 0;
   double maxMesageWidth = 800 * .92;
   double msgContainerBorderRadius = 12;
+  late List<ImageFile>? images;
+
+  @override
+  void initState() {
+    images = widget._message.images;
+    super.initState();
+  }
+
+  Widget buildImagesRow() {
+    if (images!.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800, maxHeight: 36),
+          child: Row(
+            children: [
+              if (widget._isOurMessage)
+                Expanded(
+                  child: Container(),
+                ),
+              for (int index = 0; index < images!.length; index++)
+                Builder(builder: (context) {
+                  Widget? image;
+                  String resourcePath = kIsWeb
+                      ? images![index].webFile!.path
+                      : images![index].localFile!.path;
+                  try {
+                    if (kIsWeb) {
+                      image = Image.network(
+                        images![index].webFile!.path,
+                        errorBuilder: (context, error, stackTrace) {
+                          print("Error loading image from network: $error");
+                          return const Icon(Icons
+                              .attachment_outlined); // Return an empty container in case of error
+                        },
+                      );
+                    } else {
+                      image = Image.file(
+                        images![index].localFile!,
+                        errorBuilder: (context, error, stackTrace) {
+                          print("Error loading image from file: $error");
+                          return const Icon(Icons
+                              .attachment_outlined); // Return an empty container in case of error
+                        },
+                      );
+                    }
+                  } catch (e) {
+                    print("Error loading image: $e");
+                    image =
+                        const SizedBox(); // Return an empty container in case of error
+                  }
+
+                  if (image != null) {
+                    // Your code for using the image
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                      child: Tooltip(
+                        message: resourcePath,
+                        preferBelow: false,
+                        child: InkWell(
+                            onTap: () {
+                              launchImageViewer(
+                                  context,
+                                  kIsWeb
+                                      ? images![index].webFile!
+                                      : images![index].localFile!);
+                            },
+                            child: ClipRRect(
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(5)),
+                                child: image)),
+                      ),
+                    );
+                  }
+                  return Container();
+                }),
+              if (!widget._isOurMessage)
+                Expanded(
+                  child: Container(),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+    return Container();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +167,7 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                               Container(
                                 height: 2,
                               ),
+                              if (images != null) buildImagesRow(),
                               Text(
                                 DateFormat('jm')
                                     .format(widget._message.timestamp!),
@@ -128,6 +221,7 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                               Container(
                                 height: 2,
                               ),
+                              if (images != null) buildImagesRow(),
                               Row(
                                 children: [
                                   // Text(
