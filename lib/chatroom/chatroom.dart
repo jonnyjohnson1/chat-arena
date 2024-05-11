@@ -1,9 +1,10 @@
+// chatroom.dart
+
 import 'dart:io';
 
 import 'package:chat/models/game_models/debate.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/services/conversation_database.dart';
-import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/static_queries.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -18,6 +19,10 @@ import 'package:chat/models/messages.dart' as uiMessage;
 import 'package:chat/services/tools.dart';
 // import 'package:file_selector/file_selector.dart';
 
+import 'package:chat/services/local_llm_interface.dart';
+import 'package:chat/services/debate_llm_interface.dart';
+
+
 class ChatRoomPage extends StatefulWidget {
   Conversation? conversation;
   final onCreateNewConversation;
@@ -27,8 +32,12 @@ class ChatRoomPage extends StatefulWidget {
   String topTitleHeading;
   String topTitleText;
 
-  ChatRoomPage(
-      {required this.conversation,
+  final GameType gameType;
+
+  ChatRoomPage({
+      required
+      this.gameType,
+      this.conversation,
       this.onCreateNewConversation,
       this.onNewText,
       this.showModelSelectButton = true,
@@ -44,6 +53,8 @@ class ChatRoomPage extends StatefulWidget {
 
 class _ChatRoomPageState extends State<ChatRoomPage> {
   // late DialogFlowtter dialogFlowtter;
+
+  late final dynamic llmInterface;  // Can be LocalLLMInterface or DebateLLMInterface
 
   final ScrollController _listViewController = ScrollController();
 
@@ -76,6 +87,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     // load the chat game settings based on the game type
 
     initData();
+    llmInterface = widget.gameType == GameType.debate ? DebateLLMInterface() : LocalLLMInterface();
+
     super.initState();
   }
 
@@ -97,7 +110,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
       generatedChat = response.generation;
       if (response.isCompleted) {
-        print("chat completed");
+        debugPrint("\t\t[ chat completed ]");
         // end token is received
         isGenerating.value = false;
         messages[currentIdx].isGenerating = false;
@@ -135,26 +148,69 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     }
   }
 
-// TODO Move this out of the chatroom, and into the game page
-// Will need to handle specific api calls per game type
-  void sendMessagetoModel(String text) async {
-    print("Submitting: $text to chat model");
+  void sendMessage(String text) {
+    debugPrint("[ Submitting: $text ]");  // General debug print
     currentIdx = messages.length;
-    // // Submit text to generator here
-    LocalLLMInterface()
-        .newMessage(text, messages, selectedModel, generationCallback);
+
     uiMessage.Message _message = uiMessage.Message(
-        id: Tools().getRandomString(12),
+        id: Tools().getRandomString(32),
         conversationID: widget.conversation!.id,
-        message: ValueNotifier(""),
+        message: ValueNotifier(text),
         documentID: '',
-        name: 'ChatBot',
-        senderID: 'bot13451234',
+        name: 'ChatBot',  // Assuming this is a user message, adjust if needed
+        senderID: 'bot13451234',  // Adjust according to your sender ID handling
         status: '',
         timestamp: DateTime.now(),
-        type: uiMessage.MessageType.text);
+        type: uiMessage.MessageType.text
+    );
+
     messages.add(_message);
+
+    // Depending on the game type, use the appropriate service to handle the message
+    if (widget.gameType == GameType.debate) {
+      String topicString = "unknown topic";
+
+      if (widget.conversation?.gameModel != null) {
+        topicString = widget.conversation?.gameModel.topic ?? "";
+      }
+
+      (llmInterface as DebateLLMInterface).newDebateMessage(
+          text,
+          topicString,  // Assuming this contains the debate topic
+          messages,
+          selectedModel,
+          generationCallback
+      );
+    } else {
+      (llmInterface as LocalLLMInterface).newMessage(
+          text,
+          messages,
+          selectedModel,
+          generationCallback
+      );
+    }
   }
+
+// TODO Move this out of the chatroom, and into the game page
+// Will need to handle specific api calls per game type
+//   void sendMessageToModel(String text) async {
+//     debugPrint("\t[ Submitting: $text to chat model ]");
+//     currentIdx = messages.length;
+//     // // Submit text to generator here
+//     LocalLLMInterface()
+//         .newMessage(text, messages, selectedModel, generationCallback);
+//     uiMessage.Message _message = uiMessage.Message(
+//         id: Tools().getRandomString(32),
+//         conversationID: widget.conversation!.id,
+//         message: ValueNotifier(""),
+//         documentID: '',
+//         name: 'ChatBot',
+//         senderID: 'bot13451234',
+//         status: '',
+//         timestamp: DateTime.now(),
+//         type: uiMessage.MessageType.text);
+//     messages.add(_message);
+//   }
 
   @override
   void dispose() {
@@ -480,15 +536,15 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                     isGenerating.value = false;
                   },
                   onSubmit: (String text) async {
-                    print("onSubmit");
+                    debugPrint("[ Submit Button Pressed ]");
                     if (widget.conversation == null) {
                       // This is the quickstart path, where the chat box is open on start up
                       // we direct people directly into a Chat game
                       // create an official conversation ID and add to the conversations list
                       widget.conversation = Conversation(
-                        id: Tools().getRandomString(12),
+                        id: Tools().getRandomString(32),
                         lastMessage: text,
-                        gameType: GameType.chat,
+                        gameType: widget.gameType,  // Make sure the game type is dynamically set
                         time: DateTime.now(),
                         primaryModel: "Llama 2",
                         title: "New Chat",
@@ -496,29 +552,34 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                       if (widget.onCreateNewConversation != null)
                         widget.onCreateNewConversation(widget.conversation);
                     }
-                    if (text.trim() != "") {
+
+                    String messageString = text.trim();
+                    if (messageString != "") {
+                      debugPrint("\t[ Found Message :: $messageString ]");
+
                       uiMessage.Message message = uiMessage.Message(
-                          id: Tools().getRandomString(12),
+                          id: Tools().getRandomString(32),
                           conversationID: widget.conversation!.id,
-                          message: ValueNotifier(text),
+                          message: ValueNotifier(messageString),
                           documentID: '',
                           name: 'User',
-                          senderID: '',
+                          senderID: '',  // Adjust according to your sender ID handling
                           status: '',
                           timestamp: DateTime.now(),
-                          type: uiMessage.MessageType.text);
+                          type: uiMessage.MessageType.text
+                      );
                       messages.add(message);
-                      await ConversationDatabase.instance
-                          .createMessage(message);
+                      await ConversationDatabase.instance.createMessage(message);
 
-                      widget.conversation!.lastMessage = text;
+                      widget.conversation!.lastMessage = messageString;
                       widget.conversation!.time = DateTime.now();
-                      widget.onNewText(widget
-                          .conversation); // pass back to main to update states
+                      widget.onNewText(widget.conversation);  // pass back to main to update states
                       setState(() {
                         isGenerating.value = true;
                       });
-                      sendMessagetoModel(message.message!.value);
+
+                      sendMessage(messageString);  // Send message using the correct interface based on the game type
+
                       setState(() {});
                     }
                   },

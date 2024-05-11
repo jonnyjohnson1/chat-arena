@@ -21,6 +21,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
   @override
   Widget build(BuildContext context) {
     return ChatRoomPage(
+      gameType: GameType.chat,
       key: widget.conversation != null
           ? Key(widget.conversation!.id)
           : Key(DateTime.now().toIso8601String()),

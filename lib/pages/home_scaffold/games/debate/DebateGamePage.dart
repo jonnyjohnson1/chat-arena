@@ -1,3 +1,5 @@
+// DebateGamePage.dart
+
 import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/game_models/debate.dart';
@@ -14,8 +16,12 @@ class DebateGamePage extends StatefulWidget {
 }
 
 class _DebateGamePageState extends State<DebateGamePage> {
+  ChatRoomPage? chatRoomPage;
+
   @override
   void initState() {
+    debugPrint("\t[ Debate :: GamePage initState ]");
+
     if (widget.conversation!.gameModel == null ||
         widget.conversation!.gameModel.topic.isEmpty) {
       Future.delayed(const Duration(milliseconds: 400), () async {
@@ -31,7 +37,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
 
   Future<String> getGameSettings(BuildContext context) async {
     TextEditingController topicController = TextEditingController();
-    debugPrint("get game settings");
+    debugPrint("\t[ Debate :: Get Game Settings ]");
 
     await showDialog(
       context: context,
@@ -60,7 +66,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
     );
 
     // Now you can use _topicController.text to get the entered topic
-    debugPrint("Topic: ${topicController.text}");
+    debugPrint("\t\t[ Debate Topic: ${topicController.text} ]");
 
     return topicController.text;
   }
@@ -76,7 +82,8 @@ class _DebateGamePageState extends State<DebateGamePage> {
 
   @override
   Widget build(BuildContext context) {
-    return ChatRoomPage(
+    chatRoomPage = ChatRoomPage(
+      gameType: GameType.debate,
       key: widget.conversation != null
           ? Key(widget.conversation!.id)
           : Key(DateTime.now().toIso8601String()),
@@ -86,6 +93,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
       topTitleHeading: "Topic:",
       topTitleText: getTopicText(widget.conversation),
       onCreateNewConversation: (Conversation conv) async {
+        debugPrint("\t[ Debate Create New Conversation ]");
         await ConversationDatabase.instance.create(conv);
         widget.conversations.value.insert(0, conv);
         widget.conversations.notifyListeners();
@@ -102,5 +110,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
         widget.conversations.notifyListeners();
       },
     );
+
+    return chatRoomPage!;
   }
 }
