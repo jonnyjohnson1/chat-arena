@@ -187,7 +187,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
         message: ValueNotifier(""),
         documentID: '',
         name: 'ChatBot',
-        senderID: 'bot13451234',
+        senderID: 'assistant',
         status: '',
         timestamp: DateTime.now(),
         type: uiMessage.MessageType.text);
