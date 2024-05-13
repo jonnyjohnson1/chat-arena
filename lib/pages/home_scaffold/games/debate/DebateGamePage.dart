@@ -2,11 +2,12 @@
 
 import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/game_models/debate.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/services/conversation_database.dart';
-import 'package:chat/services/local_llm_interface.dart';
+import 'package:chat/services/debate_llm_interface.dart';
 import 'package:chat/services/tools.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/models/messages.dart' as uiMessage;
@@ -164,11 +165,22 @@ class _DebateGamePageState extends State<DebateGamePage> {
   }
 
   void sendMessagetoModel(String text) async {
-    print("Submitting: $text to chat model");
+    debugPrint("[ Submitting: $text ]"); // General debug print
     currentIdx = messages.length;
     // // Submit text to generator here
-    LocalLLMInterface()
-        .newChatMessage(text, messages, selectedModel, generationCallback);
+    String topicString = "unknown topic";
+
+    if (widget.conversation?.gameModel != null) {
+      topicString = widget.conversation?.gameModel.topic ?? "";
+    }
+
+    DebateLLMInterface().newDebateMessage(
+        text,
+        topicString, // Assuming this contains the debate topic
+        messages,
+        selectedModel,
+        generationCallback);
+
     uiMessage.Message message = uiMessage.Message(
         id: Tools().getRandomString(12),
         conversationID: widget.conversation!.id,
@@ -197,7 +209,8 @@ class _DebateGamePageState extends State<DebateGamePage> {
             showTopTitle: true,
             topTitleHeading: "Topic:",
             topTitleText: getTopicText(widget.conversation),
-            onNewMessage: (Conversation lastMessageUpdate, String text) async {
+            onNewMessage: (Conversation lastMessageUpdate, String text,
+                List<ImageFile> images) async {
               if (widget.conversation == null) {
                 // CREATES A NEW CONVERSATION
                 // This is the quickstart path, where the chat box is open on start up
@@ -221,9 +234,10 @@ class _DebateGamePageState extends State<DebateGamePage> {
                     id: Tools().getRandomString(12),
                     conversationID: widget.conversation!.id,
                     message: ValueNotifier(text),
+                    images: images,
                     documentID: '',
                     name: 'User',
-                    senderID: 'user',
+                    senderID: '',
                     status: '',
                     timestamp: DateTime.now(),
                     type: uiMessage.MessageType.text);

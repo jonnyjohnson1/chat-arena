@@ -6,7 +6,6 @@ import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/services/conversation_database.dart';
-import 'package:chat/services/debate_llm_interface.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/tools.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +50,8 @@ class _ChatGamePageState extends State<ChatGamePage> {
   @override
   void initState() {
     initData();
-    llmInterface = LocalLLMInterface();
+    debugPrint("\t[ Chat :: GamePage initState ]");
+    // llmInterface = LocalLLMInterface();
     super.initState();
   }
 
@@ -180,7 +180,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
                     timestamp: DateTime.now(),
                     type: uiMessage.MessageType.text);
                 messages.add(message);
-                print("create message w/ images in database");
+
                 await ConversationDatabase.instance.createMessage(message);
 
                 widget.conversation!.lastMessage = text;

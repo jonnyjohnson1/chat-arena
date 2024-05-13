@@ -23,8 +23,8 @@ class DebateLLMInterface {
         Uri.parse('$wsPrefix://$extractedDiAPI/$chatEndpoint'));
   }
 
-  void newDebateMessage(String message, String debateTopic, List<Message> messageHistory,
-      ModelConfig model, callbackFunction) {
+  void newDebateMessage(String message, String debateTopic,
+      List<Message> messageHistory, ModelConfig model, callbackFunction) {
     initChatWebsocket();
 
     if (webSocket == null) {
@@ -33,9 +33,37 @@ class DebateLLMInterface {
     }
 
     // Format messageHistory for json
-    List<Map<String, String>> msgHist = [];
+    List<Map<String, dynamic>> msgHist = [];
     for (Message msg in messageHistory) {
-      msgHist.add({'role': msg.senderID!, 'content': msg.message!.value});
+      if (msg.images != null) {
+        if (msg.images!.isNotEmpty) {
+          List<String> images = [];
+          for (var file in msg.images!) {
+            // if we have used the web, the local path should still exist
+            // the web path is used to render the web image
+            String path = file.localFile!.path;
+            // if (file.path.startsWith("blob:")) {
+            //   path = path.substring(5);
+            // }
+            images.add(path);
+          }
+          msgHist.add({
+            'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+            'content': msg.message!.value,
+            'images': images,
+          });
+        } else {
+          msgHist.add({
+            'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+            'content': msg.message!.value
+          });
+        }
+      } else {
+        msgHist.add({
+          'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+          'content': msg.message!.value
+        });
+      }
     }
 
     Map<String, dynamic> submitPkg = {
@@ -54,7 +82,7 @@ class DebateLLMInterface {
     DateTime? startTime;
 
     webSocket!.stream.listen(
-          (data) {
+      (data) {
         // print(data.runtimeType);
         // print(data);
         Map<String, dynamic> decoded = {};
@@ -91,8 +119,8 @@ class DebateLLMInterface {
             callbackFunction(decoded);
 
           case 'completed':
-          // UPDATE MESSAGES
-          // print(decoded['response']);
+            // UPDATE MESSAGES
+            // print(decoded['response']);
             toksStr.add(decoded['response']);
             int duration = DateTime.now().difference(startTime!).inMilliseconds;
             double durInSeconds = duration / 1000;
