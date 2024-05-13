@@ -11,6 +11,9 @@ import 'package:chat/services/tools.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/models/messages.dart' as uiMessage;
 
+late final dynamic
+    llmInterface; // Can be LocalLLMInterface or DebateLLMInterface
+
 class ChatGamePage extends StatefulWidget {
   Conversation? conversation;
   ValueNotifier<List<Conversation>> conversations;
@@ -47,6 +50,8 @@ class _ChatGamePageState extends State<ChatGamePage> {
   @override
   void initState() {
     initData();
+    debugPrint("\t[ Chat :: GamePage initState ]");
+    // llmInterface = LocalLLMInterface();
     super.initState();
   }
 
@@ -66,7 +71,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
 
       generatedChat = response.generation;
       if (response.isCompleted) {
-        print("chat completed");
+        debugPrint("\t\t[ chat completed ]");
         // end token is received
         isGenerating.value = false;
         messages[currentIdx].isGenerating = false;
@@ -105,7 +110,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
   }
 
   void sendMessagetoModel(String text) async {
-    print("Submitting: $text to chat model");
+    debugPrint("[ Submitting: $text ]"); // General debug print
 
     LocalLLMInterface()
         .newChatMessage(text, messages, selectedModel, generationCallback);
@@ -113,7 +118,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
     currentIdx = messages.length;
     // // Submit text to generator here
     uiMessage.Message message = uiMessage.Message(
-        id: Tools().getRandomString(12),
+        id: Tools().getRandomString(32),
         conversationID: widget.conversation!.id,
         message: ValueNotifier(""),
         documentID: '',
@@ -175,7 +180,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
                     timestamp: DateTime.now(),
                     type: uiMessage.MessageType.text);
                 messages.add(message);
-                print("create message w/ images in database");
+
                 await ConversationDatabase.instance.createMessage(message);
 
                 widget.conversation!.lastMessage = text;

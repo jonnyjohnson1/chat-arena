@@ -1,17 +1,15 @@
 // local_llm_interface.dart
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:chat/models/llm.dart';
-import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/messages.dart';
 
-class LocalLLMInterface {
-  String chatEndpoint = "websocket_chat";
+class DebateLLMInterface {
+  String chatEndpoint = "websocket_debate";
 
   bool get isLocal => true;
   String get wsPrefix => isLocal ? 'ws' : 'wss';
@@ -25,18 +23,17 @@ class LocalLLMInterface {
         Uri.parse('$wsPrefix://$extractedDiAPI/$chatEndpoint'));
   }
 
-  void newChatMessage(String message, List<Message> messageHistory,
-      ModelConfig model, callbackFunction) {
+  void newDebateMessage(String message, String debateTopic,
+      List<Message> messageHistory, ModelConfig model, callbackFunction) {
     initChatWebsocket();
 
     if (webSocket == null) {
       print("You must init the class first to connect to the websocket.");
-      return null;
+      return;
     }
 
     // Format messageHistory for json
     List<Map<String, dynamic>> msgHist = [];
-
     for (Message msg in messageHistory) {
       if (msg.images != null) {
         if (msg.images!.isNotEmpty) {
