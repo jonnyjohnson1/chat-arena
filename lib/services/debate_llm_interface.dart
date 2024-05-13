@@ -1,17 +1,15 @@
 // local_llm_interface.dart
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:chat/models/llm.dart';
-import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/messages.dart';
 
-class LocalLLMInterface {
-  String chatEndpoint = "websocket_chat";
+class DebateLLMInterface {
+  String chatEndpoint = "websocket_debate";
 
   bool get isLocal => true;
   String get wsPrefix => isLocal ? 'ws' : 'wss';
@@ -25,48 +23,19 @@ class LocalLLMInterface {
         Uri.parse('$wsPrefix://$extractedDiAPI/$chatEndpoint'));
   }
 
-  void newChatMessage(String message, List<Message> messageHistory,
+  void newDebateMessage(String message, String debateTopic, List<Message> messageHistory,
       ModelConfig model, callbackFunction) {
     initChatWebsocket();
 
     if (webSocket == null) {
       print("You must init the class first to connect to the websocket.");
-      return null;
+      return;
     }
 
     // Format messageHistory for json
-    List<Map<String, dynamic>> msgHist = [];
-
+    List<Map<String, String>> msgHist = [];
     for (Message msg in messageHistory) {
-      if (msg.images != null) {
-        if (msg.images!.isNotEmpty) {
-          List<String> images = [];
-          for (var file in msg.images!) {
-            // if we have used the web, the local path should still exist
-            // the web path is used to render the web image
-            String path = file.localFile!.path;
-            // if (file.path.startsWith("blob:")) {
-            //   path = path.substring(5);
-            // }
-            images.add(path);
-          }
-          msgHist.add({
-            'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
-            'content': msg.message!.value,
-            'images': images,
-          });
-        } else {
-          msgHist.add({
-            'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
-            'content': msg.message!.value
-          });
-        }
-      } else {
-        msgHist.add({
-          'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
-          'content': msg.message!.value
-        });
-      }
+      msgHist.add({'role': msg.senderID!, 'content': msg.message!.value});
     }
 
     Map<String, dynamic> submitPkg = {
@@ -85,7 +54,7 @@ class LocalLLMInterface {
     DateTime? startTime;
 
     webSocket!.stream.listen(
-      (data) {
+          (data) {
         // print(data.runtimeType);
         // print(data);
         Map<String, dynamic> decoded = {};
@@ -122,8 +91,8 @@ class LocalLLMInterface {
             callbackFunction(decoded);
 
           case 'completed':
-            // UPDATE MESSAGES
-            // print(decoded['response']);
+          // UPDATE MESSAGES
+          // print(decoded['response']);
             toksStr.add(decoded['response']);
             int duration = DateTime.now().difference(startTime!).inMilliseconds;
             double durInSeconds = duration / 1000;

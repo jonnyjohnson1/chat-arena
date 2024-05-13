@@ -82,10 +82,10 @@ class _ConversationsListState extends State<ConversationsList> {
                         link: chatALertDialogLink,
                         child: GestureDetector(
                           onTap: () async {
-                            print("create dropdown");
+                            debugPrint("\t[ Create Selection Dropdown ]");
                             String? gameType = await showGameOptions(
                                 more_ctx, chatALertDialogLink);
-                            print(gameType);
+                            debugPrint("\t\t[ Selected :: $gameType ]");
                             if (gameType != null) {
                               if (gameType == 'chat') {
                                 addConversation('chat');

@@ -1,3 +1,5 @@
+// DebateGamePage.dart
+
 import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/event_channel_model.dart';
@@ -46,6 +48,8 @@ class _DebateGamePageState extends State<DebateGamePage> {
   @override
   void initState() {
     initData();
+    debugPrint("\t[ Debate :: GamePage initState ]");
+
     if (widget.conversation!.gameModel == null ||
         widget.conversation!.gameModel.topic.isEmpty) {
       Future.delayed(const Duration(milliseconds: 400), () async {
@@ -63,7 +67,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
 
   Future<String> getGameSettings(BuildContext context) async {
     TextEditingController topicController = TextEditingController();
-    debugPrint("get game settings");
+    debugPrint("\t[ Debate :: Get Game Settings ]");
 
     await showDialog(
       context: context,
@@ -92,7 +96,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
     );
 
     // Now you can use _topicController.text to get the entered topic
-    debugPrint("Topic: ${topicController.text}");
+    debugPrint("\t\t[ Debate Topic: ${topicController.text} ]");
 
     return topicController.text;
   }
