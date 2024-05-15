@@ -44,78 +44,81 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800, maxHeight: 36),
-          child: Row(
-            children: [
-              if (widget._isOurMessage)
-                Expanded(
-                  child: Container(),
-                ),
-              for (int index = 0; index < images!.length; index++)
-                Builder(builder: (context) {
-                  Widget? image;
-                  String resourcePath =
-                      kIsWeb // the path should be displayed from local file system
-                          ? images![index].localFile!.path
-                          : images![index].localFile!.path;
-                  try {
-                    if (kIsWeb) {
-                      image = Image.network(
-                        images![index].webFile!.path,
-                        key: Key(images![index].id),
-                        errorBuilder: (context, error, stackTrace) {
-                          print("Error loading image from network: $error");
-                          print(
-                              "Sometimes the http blob needs to be recreated from the filename and bytes.");
-                          return const Icon(Icons
-                              .attachment_outlined); // Return an empty container in case of error
-                        },
-                      );
-                    } else {
-                      image = Image.file(
-                        images![index].localFile!,
-                        key: Key(images![index].id),
-                        errorBuilder: (context, error, stackTrace) {
-                          print("Error loading image from file: $error");
-                          return const Icon(Icons
-                              .attachment_outlined); // Return an empty container in case of error
-                        },
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                // if (widget._isOurMessage)
+                //   Expanded(
+                //     child: Container(),
+                //   ),
+                for (int index = 0; index < images!.length; index++)
+                  Builder(builder: (context) {
+                    Widget? image;
+                    String resourcePath =
+                        kIsWeb // the path should be displayed from local file system
+                            ? images![index].localFile!.path
+                            : images![index].localFile!.path;
+                    try {
+                      if (kIsWeb) {
+                        image = Image.network(
+                          images![index].webFile!.path,
+                          key: Key(images![index].id),
+                          errorBuilder: (context, error, stackTrace) {
+                            print("Error loading image from network: $error");
+                            print(
+                                "Sometimes the http blob needs to be recreated from the filename and bytes.");
+                            return const Icon(Icons
+                                .attachment_outlined); // Return an empty container in case of error
+                          },
+                        );
+                      } else {
+                        image = Image.file(
+                          images![index].localFile!,
+                          key: Key(images![index].id),
+                          errorBuilder: (context, error, stackTrace) {
+                            print("Error loading image from file: $error");
+                            return const Icon(Icons
+                                .attachment_outlined); // Return an empty container in case of error
+                          },
+                        );
+                      }
+                    } catch (e) {
+                      print("Error loading image: $e");
+                      image =
+                          const SizedBox(); // Return an empty container in case of error
+                    }
+
+                    if (image != null) {
+                      // Your code for using the image
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                        child: Tooltip(
+                          message: resourcePath,
+                          preferBelow: false,
+                          child: InkWell(
+                              onTap: () {
+                                launchImageViewer(
+                                    context,
+                                    kIsWeb
+                                        ? images![index].webFile!
+                                        : images![index].localFile!);
+                              },
+                              child: ClipRRect(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(5)),
+                                  child: image)),
+                        ),
                       );
                     }
-                  } catch (e) {
-                    print("Error loading image: $e");
-                    image =
-                        const SizedBox(); // Return an empty container in case of error
-                  }
-
-                  if (image != null) {
-                    // Your code for using the image
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                      child: Tooltip(
-                        message: resourcePath,
-                        preferBelow: false,
-                        child: InkWell(
-                            onTap: () {
-                              launchImageViewer(
-                                  context,
-                                  kIsWeb
-                                      ? images![index].webFile!
-                                      : images![index].localFile!);
-                            },
-                            child: ClipRRect(
-                                borderRadius:
-                                    const BorderRadius.all(Radius.circular(5)),
-                                child: image)),
-                      ),
-                    );
-                  }
-                  return Container();
-                }),
-              if (!widget._isOurMessage)
-                Expanded(
-                  child: Container(),
-                ),
-            ],
+                    return Container();
+                  }),
+                // if (widget._isOurMessage)
+                //   Expanded(
+                //     child: Container(),
+                //   ),
+              ],
+            ),
           ),
         ),
       );

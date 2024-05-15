@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
+
 const String tableImages = "images";
 
 class ImageFields {
@@ -35,8 +37,8 @@ class ImageFile {
 
     String? webFilePath = json[ImageFields.webFile];
     String? localFilePath = json[ImageFields.localFile];
-    print(webFilePath);
-    print(localFilePath);
+    debugPrint("Webfile path loaded: $webFilePath");
+    debugPrint("Webfile path loaded: $localFilePath");
 
     return ImageFile(
         id: json[ImageFields.id],
