@@ -7,10 +7,7 @@ class MessageListViewChild extends StatelessWidget {
   final _isOurMessage;
   final _message;
 
-  const MessageListViewChild(
-    this._isOurMessage,
-    this._message,
-  );
+  const MessageListViewChild(this._isOurMessage, this._message, {super.key});
 
   @override
   Widget build(BuildContext context) {

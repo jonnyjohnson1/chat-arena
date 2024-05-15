@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/services/static_queries.dart';
+import 'package:chat/services/tools.dart';
 import 'package:chat/shared/image_viewer.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -13,15 +14,12 @@ import 'package:chat/chatroom/widgets/message_field/message_field.dart';
 import 'package:chat/chatroom/widgets/message_list_view.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/messages.dart' as uiMessage;
-import 'package:path_provider/path_provider.dart';
-// import 'package:chat/services/conversation_database.dart';
-// import 'package:file_selector/file_selector.dart';
 
 import 'package:chat/services/web_specific_queries.dart';
 
 class ChatRoomPage extends StatefulWidget {
   Conversation? conversation;
-  final onNewMessage;
+  final Function? onNewMessage;
   bool showModelSelectButton;
   bool showTopTitle;
   ModelConfig? selectedModelConfig;
@@ -51,7 +49,6 @@ class ChatRoomPage extends StatefulWidget {
 
 class _ChatRoomPageState extends State<ChatRoomPage> {
   final ScrollController _listViewController = ScrollController();
-  List<Map<String, dynamic>> dialogFlowMessages = [];
 
   bool isIphone = false;
   ModelConfig? selectedModel;
@@ -93,7 +90,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   Future<void> getImageWeb() async {
     if (kIsWeb) {
-      print("file path");
       try {
         List<ImageFile>? images = await getLocalFilePaths();
         if (images == null) return;
@@ -181,7 +177,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                         return DropdownMenuItem<LanguageModel>(
                                           value: item,
                                           alignment: Alignment.centerLeft,
-                                          child: Container(
+                                          child: SizedBox(
                                             width: 170,
                                             child: Row(
                                               children: [
@@ -349,9 +345,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
               widget.isGenerating!.value = false;
             },
             onSubmit: (String text) async {
-              await widget.onNewMessage(widget.conversation, text,
-                  selectedImages); // pass back to main to update states
-              selectedImages.clear();
+              List<ImageFile> submittedImages =
+                  List.from(selectedImages); // pass images list to the function
+              selectedImages =
+                  []; // clear the selected Images from the current view
+              if (widget.onNewMessage != null) {
+                await widget.onNewMessage!(widget.conversation, text,
+                    submittedImages); // pass back to main to update states
+              }
             },
             onLoadImage: () async {
               if (kIsWeb) {
@@ -364,7 +365,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                   result.files.forEach((PlatformFile element) {
                     File file = File(element.path!);
                     selectedImages.add(ImageFile(
-                        bytes: file.readAsBytesSync(), localFile: file));
+                        id: Tools().getRandomString(32),
+                        bytes: file.readAsBytesSync(),
+                        isWeb: false,
+                        localFile: file));
                   });
                   setState(() {});
                 } else {

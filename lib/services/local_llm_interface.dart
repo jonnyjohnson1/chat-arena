@@ -40,21 +40,28 @@ class LocalLLMInterface {
     for (Message msg in messageHistory) {
       if (msg.images != null) {
         if (msg.images!.isNotEmpty) {
-          List<String> images = [];
-          for (var file in msg.images!) {
-            // if we have used the web, the local path should still exist
-            // the web path is used to render the web image
-            String path = file.localFile!.path;
-            // if (file.path.startsWith("blob:")) {
-            //   path = path.substring(5);
-            // }
-            images.add(path);
+          try {
+            List<String> images = [];
+            for (var file in msg.images!) {
+              // if we have used the web, the local path should still exist
+              // the web path is used to render the web images
+
+              String path = file.localFile!.path;
+
+              // if (file.path.startsWith("blob:")) {
+              //   path = path.substring(5);
+              // }
+              // the local ollama must take the name of the local file path
+              images.add(path);
+            }
+            msgHist.add({
+              'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+              'content': msg.message!.value,
+              'images': images,
+            });
+          } catch (e) {
+            debugPrint("[ error parsing image ]");
           }
-          msgHist.add({
-            'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
-            'content': msg.message!.value,
-            'images': images,
-          });
         } else {
           msgHist.add({
             'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,

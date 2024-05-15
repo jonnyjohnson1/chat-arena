@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:chat/models/custom_file.dart';
+import 'package:chat/services/conversation_database.dart';
+import 'package:chat/services/tools.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -77,17 +79,17 @@ class Message {
 
   // Convert the Message instance to a Map
   Map<String, dynamic> toMap() {
-    // convert img files to list
+    // store the image id
     String imgSep = "#&%*";
     List<String> imgStrings = [];
     if (images != null) {
-      images!.forEach((element) {
+      for (var element in images!) {
         if (kIsWeb) {
-          imgStrings.add(element.webFile!.path);
+          imgStrings.add(element.id);
         } else {
-          imgStrings.add(element.localFile!.path);
+          imgStrings.add(element.id);
         }
-      });
+      }
     }
 
     return {
@@ -107,16 +109,40 @@ class Message {
     };
   }
 
+  // Convert the Message instance to a Map
+  Future<List<ImageFile>> loadImages() async {
+    print("in load images");
+    // store the image id
+    if (images != null) {
+      if (images!.isNotEmpty) {
+        List<ImageFile> loadedImgs = [];
+        images!.forEach((ImageFile file) async {
+          String id = file.id;
+          print(id);
+          ImageFile loadedFile =
+              await ConversationDatabase.instance.getImage(id);
+          loadedImgs.add(loadedFile);
+        });
+        images = loadedImgs;
+      }
+    }
+    return [];
+  }
+
   // Create a Message instance from a Map
   factory Message.fromMap(Map<String, dynamic> map) {
     String imgSep = "#&%*";
     List<ImageFile>? images = [];
     if (map.containsKey(MessageFields.images)) {
-      map[MessageFields.images].split(imgSep).forEach((String filepath) {
-        if (kIsWeb) {
-          images.add(ImageFile(webFile: File(filepath)));
-        } else {
-          images.add(ImageFile(localFile: File(filepath)));
+      map[MessageFields.images].split(imgSep).forEach((String id) {
+        // get the image reference from the id
+
+        if (id.isNotEmpty) {
+          if (kIsWeb) {
+            images.add(ImageFile(id: id));
+          } else {
+            images.add(ImageFile(id: id));
+          }
         }
       });
     }

@@ -10,6 +10,7 @@ import 'package:chat/models/custom_file.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:chat/services/static_queries.dart';
+import 'package:chat/services/tools.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:html' as html if (dart.library.html) '';
 import 'package:http/http.dart' as http if (dart.library.html) '';
@@ -55,14 +56,16 @@ Future<List<ImageFile>?> getLocalFilePaths() async {
     // Create a link element
     var anchorElement =
         html.AnchorElement(href: html.Url.createObjectUrlFromBlob(blob));
-    List<ImageFile> models = [
+    List<ImageFile> files = [
       ImageFile(
+          id: Tools().getRandomString(32),
           bytes: bytes,
+          isWeb: true,
           webFile: File(anchorElement.href!),
           localFile: localFile)
     ];
 
-    return models;
+    return files;
   } catch (e) {
     debugPrint('Error: $e');
     return null;

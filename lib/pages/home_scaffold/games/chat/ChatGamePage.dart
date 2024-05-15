@@ -56,7 +56,6 @@ class _ChatGamePageState extends State<ChatGamePage> {
   }
 
   String generatedChat = "";
-  double progress = 0.0;
   double toksPerSec = 0.0;
   double completionTime = 0.0;
   int currentIdx = 0;
@@ -65,7 +64,6 @@ class _ChatGamePageState extends State<ChatGamePage> {
   generationCallback(Map<String, dynamic>? event) {
     if (event != null) {
       double completionTime = 0.0;
-      double progress = 0.0;
 
       EventGenerationResponse response = EventGenerationResponse.fromMap(event);
 
@@ -115,6 +113,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
     LocalLLMInterface()
         .newChatMessage(text, messages, selectedModel, generationCallback);
 
+    debugPrint("[ Message Submitted: $text ]");
     currentIdx = messages.length;
     // // Submit text to generator here
     uiMessage.Message message = uiMessage.Message(

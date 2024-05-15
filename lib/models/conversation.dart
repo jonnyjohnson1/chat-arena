@@ -5,7 +5,6 @@ class ConversationFields {
     id,
     title,
     lastMessage,
-    image,
     primaryModel,
     time,
     gameType

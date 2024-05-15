@@ -93,6 +93,7 @@ class _ConversationListItemState extends State<ConversationListItem> {
           widget.onSelected();
         },
         child: Container(
+          height: 85,
           padding:
               const EdgeInsets.only(left: 6, right: 6, top: 10, bottom: 10),
           child: Row(
@@ -171,12 +172,16 @@ class _ConversationListItemState extends State<ConversationListItem> {
                                   const SizedBox(
                                     height: 0,
                                   ),
-                                  Text(
-                                    widget.conversation.lastMessage ?? "",
-                                    style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.normal),
+                                  Expanded(
+                                    child: Text(
+                                      widget.conversation.lastMessage ?? "",
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade600,
+                                          fontWeight: FontWeight.normal),
+                                    ),
                                   ),
                                 ],
                               ),
