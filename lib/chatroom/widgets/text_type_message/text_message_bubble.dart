@@ -73,6 +73,8 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                           },
                         );
                       } else {
+                        print(
+                            "File exists: ${images![index].localFile!.existsSync()}");
                         image = Image.file(
                           images![index].localFile!,
                           key: Key(images![index].id),
@@ -211,6 +213,37 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                         ? const CupertinoActivityIndicator()
                                         : Container(),
                                   ),
+                                  Row(
+                                    children: [
+                                      // Text(
+                                      //     DateFormat('jm').format(
+                                      //         widget._message.timestamp!),
+                                      //     style: const TextStyle(
+                                      //         color: Colors.black45,
+                                      //         fontSize: 13),
+                                      //   ),
+                                      if (widget._message.completionTime !=
+                                          null)
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(left: 5.0),
+                                          child: Text(
+                                              "${widget._message.completionTime!.toStringAsFixed(2)}s",
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w200)),
+                                        ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 5.0),
+                                        child: Text(
+                                            "@ ${widget._message.toksPerSec.toStringAsFixed(2)} toks/sec.",
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w200)),
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
                               Container(
@@ -236,28 +269,6 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                 height: 2,
                               ),
                               if (images != null) buildImagesRow(),
-                              Row(
-                                children: [
-                                  // Text(
-                                  //     DateFormat('jm').format(
-                                  //         widget._message.timestamp!),
-                                  //     style: const TextStyle(
-                                  //         color: Colors.black45,
-                                  //         fontSize: 13),
-                                  //   ),
-                                  if (widget._message.completionTime != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 5.0),
-                                      child: Text(
-                                          "${widget._message.completionTime!.toStringAsFixed(widget._message.isGenerating ? 2 : 2)}s"),
-                                    ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 5.0),
-                                    child: Text(
-                                        "@ ${widget._message.toksPerSec.toStringAsFixed(2)} toks/sec."),
-                                  ),
-                                ],
-                              ),
                             ],
                           ));
               }),

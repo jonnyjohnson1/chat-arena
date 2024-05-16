@@ -38,7 +38,8 @@ class ImageFile {
     String? webFilePath = json[ImageFields.webFile];
     String? localFilePath = json[ImageFields.localFile];
     debugPrint("Webfile path loaded: $webFilePath");
-    debugPrint("Webfile path loaded: $localFilePath");
+    debugPrint("Localfile path loaded: $localFilePath");
+    debugPrint("isWeb: ${json[ImageFields.isWeb]}");
 
     return ImageFile(
         id: json[ImageFields.id],
