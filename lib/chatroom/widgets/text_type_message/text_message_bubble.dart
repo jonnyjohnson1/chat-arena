@@ -231,7 +231,7 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                               "${widget._message.completionTime!.toStringAsFixed(2)}s",
                                               style: const TextStyle(
                                                   fontSize: 12,
-                                                  fontWeight: FontWeight.w200)),
+                                                  fontWeight: FontWeight.w300)),
                                         ),
                                       Padding(
                                         padding:
@@ -240,7 +240,7 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                             "@ ${widget._message.toksPerSec.toStringAsFixed(2)} toks/sec.",
                                             style: const TextStyle(
                                                 fontSize: 12,
-                                                fontWeight: FontWeight.w200)),
+                                                fontWeight: FontWeight.w300)),
                                       ),
                                     ],
                                   ),

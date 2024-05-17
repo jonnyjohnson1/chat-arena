@@ -1,12 +1,10 @@
 // local_llm_interface.dart
 
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:chat/models/llm.dart';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/messages.dart';
 
@@ -15,6 +13,7 @@ class LocalLLMInterface {
 
   bool get isLocal => true;
   String get wsPrefix => isLocal ? 'ws' : 'wss';
+  String get getUrlStart => isLocal ? "http://" : "https://";
   WebSocketChannel? webSocket;
 
   void initChatWebsocket() {
@@ -26,7 +25,7 @@ class LocalLLMInterface {
   }
 
   void newChatMessage(String message, List<Message> messageHistory,
-      ModelConfig model, callbackFunction) {
+      String conversationId, ModelConfig model, callbackFunction) {
     initChatWebsocket();
 
     if (webSocket == null) {
@@ -77,6 +76,7 @@ class LocalLLMInterface {
     }
 
     Map<String, dynamic> submitPkg = {
+      "conversation_id": conversationId,
       "model": model.model.model,
       "message": message,
       "message_history": msgHist,
@@ -154,5 +154,30 @@ class LocalLLMInterface {
         print("WebSocket closed.");
       },
     );
+  }
+
+  Future<void> getChatAnalysis(String conversationID) async {
+    final uri = getUrlStart + "0.0.0.0:13341/chat_conversation_analysis";
+    final url = Uri.parse(uri);
+    final headers = {
+      "accept": "application/json",
+      "Content-Type": "application/json"
+    };
+    final body = json.encode({"conversation_id": conversationID});
+
+    try {
+      var request = await http.post(url, headers: headers, body: body);
+      if (request.statusCode == 200) {
+        var data = json.decode(request.body);
+        print("CONVERSATION ANALYSIS RETURNS");
+        print("_" * 42);
+        print(data);
+      } else {
+        debugPrint(
+            'Error: Server responded with status code ${request.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
   }
 }

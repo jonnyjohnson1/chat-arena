@@ -80,6 +80,9 @@ class _ChatGamePageState extends State<ChatGamePage> {
         setState(() {});
         // add the final message to the database
         ConversationDatabase.instance.createMessage(messages[currentIdx]);
+
+        // TODO TESTING :: Ping the chat_conversation_analysis endpoint here
+        LocalLLMInterface().getChatAnalysis(widget.conversation!.id);
       } else {
         toksPerSec = response.toksPerSec;
         while (generatedChat.startsWith("\n")) {
@@ -110,8 +113,8 @@ class _ChatGamePageState extends State<ChatGamePage> {
   void sendMessagetoModel(String text) async {
     debugPrint("[ Submitting: $text ]"); // General debug print
 
-    LocalLLMInterface()
-        .newChatMessage(text, messages, selectedModel, generationCallback);
+    LocalLLMInterface().newChatMessage(text, messages, widget.conversation!.id,
+        selectedModel, generationCallback);
 
     debugPrint("[ Message Submitted: $text ]");
     currentIdx = messages.length;
