@@ -66,14 +66,15 @@ class DebateLLMInterface {
       }
     }
 
-    Map<String, dynamic> submitPkg = {
+    Map<String, dynamic> chatInitializePackage = {
       "model": model.model.model,
+      "topic": debateTopic,
       "message": message,
       "message_history": msgHist,
       "temperature": 0.06
     };
 
-    webSocket!.sink.add(json.encode(submitPkg));
+    webSocket!.sink.add(json.encode(chatInitializePackage));
     debugPrint("\t\t[ Submitted package to websocket sink ]");
 
     double toksPerSec = 0;
