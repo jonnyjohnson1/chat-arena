@@ -61,6 +61,7 @@ class Message {
   final String? name;
   bool isGenerating;
   List<ImageFile>? images;
+  ValueNotifier<Map<String, dynamic>>? baseAnalytics;
 
   Message(
       {required this.id,
@@ -75,7 +76,8 @@ class Message {
       this.status,
       this.name,
       this.isGenerating = false,
-      this.images});
+      this.images,
+      this.baseAnalytics});
 
   // Convert the Message instance to a Map
   Map<String, dynamic> toMap() {

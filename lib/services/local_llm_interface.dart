@@ -30,7 +30,8 @@ class LocalLLMInterface {
       String conversationId,
       String chatBotMsgId,
       ModelConfig model,
-      callbackFunction) {
+      chatCallbackFunction,
+      analysisCallBackFunction) {
     initChatWebsocket();
 
     if (webSocket == null) {
@@ -116,6 +117,13 @@ class LocalLLMInterface {
         switch (decoded['status']) {
           case 'started':
             break;
+          case 'fetched_user_analysis':
+            // First reception of user analytics
+            if (decoded.containsKey('user_message')) {
+              if (decoded['user_message'].isNotEmpty) {
+                analysisCallBackFunction(decoded['user_message'], {});
+              }
+            }
           case 'generating':
             if (!isStarted) {
               isStarted = true;
@@ -133,7 +141,7 @@ class LocalLLMInterface {
             decoded['completionTime'] =
                 durInSeconds; // completion time in seconds
             decoded['toksPerSec'] = toksPerSec;
-            callbackFunction(decoded);
+            chatCallbackFunction(decoded);
 
           case 'completed':
             // UPDATE MESSAGES
@@ -147,7 +155,15 @@ class LocalLLMInterface {
             decoded['toksPerSec'] = toksPerSec;
             decoded['completionTime'] =
                 durInSeconds; // completion time in seconds
-            callbackFunction(decoded);
+            chatCallbackFunction(decoded);
+
+            // check for bot message analytics
+            if (decoded.containsKey('bot_data')) {
+              if (decoded['bot_data'].isNotEmpty) {
+                // send back to chatroom to handle what to do with the information
+                analysisCallBackFunction({}, decoded['bot_data']);
+              }
+            }
 
           case 'error':
             print(decoded['error']);

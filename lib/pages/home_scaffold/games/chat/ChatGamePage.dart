@@ -61,6 +61,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
   int currentIdx = 0;
   ValueNotifier<bool> isGenerating = ValueNotifier(false);
 
+  // handles the chat response
   generationCallback(Map<String, dynamic>? event) {
     if (event != null) {
       double completionTime = 0.0;
@@ -110,11 +111,39 @@ class _ChatGamePageState extends State<ChatGamePage> {
     }
   }
 
+  // handles the analysis from the chat response
+  // this includes: in-line values- token and text classification
+  // and returns the response for both the initial user message and the chatbot's message
+  analysisCallBackFunction(dynamic userMessage, dynamic chatBotMessage) async {
+    if (userMessage.isNotEmpty) {
+      String userMsgId = userMessage.keys.first;
+      int idx = messages
+          .indexWhere((uiMessage.Message element) => element.id == userMsgId);
+      // Set the message's analytics value
+      messages[idx].baseAnalytics = ValueNotifier(userMessage[userMsgId]);
+      messages[idx].baseAnalytics!.notifyListeners();
+    }
+    if (chatBotMessage.isNotEmpty) {
+      String botMsgId = chatBotMessage.keys.first;
+      int idx = messages
+          .indexWhere((uiMessage.Message element) => element.id == botMsgId);
+      // Set the message's analytics value
+      messages[idx].baseAnalytics = ValueNotifier(chatBotMessage[botMsgId]);
+      messages[idx].baseAnalytics!.notifyListeners();
+    }
+  }
+
   void sendMessagetoModel(String text) async {
     debugPrint("[ Submitting: $text ]"); // General debug print
     final newChatBotMsgId = Tools().getRandomString(32);
-    LocalLLMInterface().newChatMessage(text, messages, widget.conversation!.id,
-        newChatBotMsgId, selectedModel, generationCallback);
+    LocalLLMInterface().newChatMessage(
+        text,
+        messages,
+        widget.conversation!.id,
+        newChatBotMsgId,
+        selectedModel,
+        generationCallback,
+        analysisCallBackFunction);
 
     debugPrint("[ Message Submitted: $text ]");
     currentIdx = messages.length;
