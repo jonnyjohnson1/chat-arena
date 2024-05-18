@@ -112,15 +112,15 @@ class _ChatGamePageState extends State<ChatGamePage> {
 
   void sendMessagetoModel(String text) async {
     debugPrint("[ Submitting: $text ]"); // General debug print
-
+    final newChatBotMsgId = Tools().getRandomString(32);
     LocalLLMInterface().newChatMessage(text, messages, widget.conversation!.id,
-        selectedModel, generationCallback);
+        newChatBotMsgId, selectedModel, generationCallback);
 
     debugPrint("[ Message Submitted: $text ]");
     currentIdx = messages.length;
     // // Submit text to generator here
     uiMessage.Message message = uiMessage.Message(
-        id: Tools().getRandomString(32),
+        id: newChatBotMsgId,
         conversationID: widget.conversation!.id,
         message: ValueNotifier(""),
         documentID: '',

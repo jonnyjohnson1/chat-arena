@@ -24,8 +24,13 @@ class LocalLLMInterface {
         Uri.parse('$wsPrefix://$extractedDiAPI/$chatEndpoint'));
   }
 
-  void newChatMessage(String message, List<Message> messageHistory,
-      String conversationId, ModelConfig model, callbackFunction) {
+  void newChatMessage(
+      String message,
+      List<Message> messageHistory,
+      String conversationId,
+      String chatBotMsgId,
+      ModelConfig model,
+      callbackFunction) {
     initChatWebsocket();
 
     if (webSocket == null) {
@@ -77,6 +82,8 @@ class LocalLLMInterface {
 
     Map<String, dynamic> submitPkg = {
       "conversation_id": conversationId,
+      "message_id": messageHistory.last.id,
+      "chatbot_msg_id": chatBotMsgId,
       "model": model.model.model,
       "message": message,
       "message_history": msgHist,
