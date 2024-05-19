@@ -74,7 +74,7 @@ buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   IconButton(
-                      tooltip: "Analytics",
+                      tooltip: "Chat Analytics",
                       onPressed: () {
                         onAnalyticsTap();
                       },

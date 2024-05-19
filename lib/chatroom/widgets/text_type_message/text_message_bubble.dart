@@ -234,20 +234,24 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                         MainAxisAlignment.spaceAround,
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: <Widget>[
-                                      Row(children: [
-                                        Expanded(child: Container()),
-                                        ValueListenableBuilder<
-                                                Map<String, dynamic>>(
-                                            valueListenable:
-                                                widget._message.baseAnalytics,
-                                            builder:
-                                                (context, base_analytics, _) {
-                                              if (base_analytics.isEmpty)
-                                                return Container();
-                                              return buildCommentsRow(
-                                                  base_analytics);
-                                            })
-                                      ]),
+                                      Container(
+                                        constraints: BoxConstraints(
+                                            maxWidth: maxMesageWidth),
+                                        child: Row(children: [
+                                          Expanded(child: Container()),
+                                          ValueListenableBuilder<
+                                                  Map<String, dynamic>>(
+                                              valueListenable:
+                                                  widget._message.baseAnalytics,
+                                              builder:
+                                                  (context, baseAnalytics, _) {
+                                                if (baseAnalytics.isEmpty)
+                                                  return Container();
+                                                return buildCommentsRow(
+                                                    baseAnalytics);
+                                              })
+                                        ]),
+                                      ),
                                       Container(height: 2),
                                       Container(
                                         decoration: BoxDecoration(
@@ -366,11 +370,11 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                               valueListenable:
                                                   widget._message.baseAnalytics,
                                               builder:
-                                                  (context, base_analytics, _) {
-                                                if (base_analytics.isEmpty)
+                                                  (context, baseAnalytics, _) {
+                                                if (baseAnalytics.isEmpty)
                                                   return Container();
                                                 return buildCommentsRow(
-                                                    base_analytics);
+                                                    baseAnalytics);
                                               })
                                         ],
                                       ),

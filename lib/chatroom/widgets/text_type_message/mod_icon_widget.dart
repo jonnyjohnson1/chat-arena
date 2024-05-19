@@ -31,7 +31,7 @@ class ModeratorIcon extends StatelessWidget {
       case 'V2':
         return _buildIcon(Icons.gavel, Colors.redAccent, "Violence/graphic");
       case 'OK':
-        return _buildIcon(Icons.thumb_up, Colors.green, "OK");
+        return _buildIcon(Icons.check_circle_outline_sharp, Colors.green, "OK");
       default:
         return _buildIcon(Icons.help, Colors.grey, "Unknown");
     }

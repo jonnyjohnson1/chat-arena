@@ -15,11 +15,11 @@ class SentimentIcon extends StatelessWidget {
   Widget _getWidgetForSentiment(String sentiment, double score) {
     switch (sentiment) {
       case 'POS':
-        return _buildIcon(Icons.sentiment_satisfied,
-            _getColor(Colors.green, score), "Positive");
+        return _buildIcon(
+            Icons.add, _getColor(Colors.black87, score), "Positive");
       case 'NEG':
-        return _buildIcon(Icons.sentiment_dissatisfied,
-            _getColor(Colors.red, score), "Negative");
+        return _buildIcon(
+            Icons.remove, _getColor(Colors.black87, score), "Negative");
       case 'NEU':
         return _buildIcon(
             Icons.sentiment_neutral, _getColor(Colors.grey, score), "Neutral");
