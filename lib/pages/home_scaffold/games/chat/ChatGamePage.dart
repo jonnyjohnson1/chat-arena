@@ -120,16 +120,16 @@ class _ChatGamePageState extends State<ChatGamePage> {
       int idx = messages
           .indexWhere((uiMessage.Message element) => element.id == userMsgId);
       // Set the message's analytics value
-      messages[idx].baseAnalytics = ValueNotifier(userMessage[userMsgId]);
-      messages[idx].baseAnalytics!.notifyListeners();
+      messages[idx].baseAnalytics.value = userMessage[userMsgId];
+      messages[idx].baseAnalytics.notifyListeners();
     }
     if (chatBotMessage.isNotEmpty) {
       String botMsgId = chatBotMessage.keys.first;
       int idx = messages
           .indexWhere((uiMessage.Message element) => element.id == botMsgId);
       // Set the message's analytics value
-      messages[idx].baseAnalytics = ValueNotifier(chatBotMessage[botMsgId]);
-      messages[idx].baseAnalytics!.notifyListeners();
+      messages[idx].baseAnalytics.value = chatBotMessage[botMsgId];
+      messages[idx].baseAnalytics.notifyListeners();
     }
   }
 

@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/services/conversation_database.dart';
-import 'package:chat/services/tools.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -61,23 +58,24 @@ class Message {
   final String? name;
   bool isGenerating;
   List<ImageFile>? images;
-  ValueNotifier<Map<String, dynamic>>? baseAnalytics;
+  ValueNotifier<Map<String, dynamic>> baseAnalytics;
 
-  Message(
-      {required this.id,
-      this.documentID,
-      this.senderID,
-      required this.conversationID,
-      this.message,
-      this.timestamp,
-      this.completionTime = 000,
-      this.toksPerSec = 000,
-      this.type,
-      this.status,
-      this.name,
-      this.isGenerating = false,
-      this.images,
-      this.baseAnalytics});
+  Message({
+    required this.id,
+    this.documentID,
+    this.senderID,
+    required this.conversationID,
+    this.message,
+    this.timestamp,
+    this.completionTime = 000,
+    this.toksPerSec = 000,
+    this.type,
+    this.status,
+    this.name,
+    this.isGenerating = false,
+    this.images,
+    ValueNotifier<Map<String, dynamic>>? baseAnalytics,
+  }) : baseAnalytics = baseAnalytics ?? ValueNotifier<Map<String, dynamic>>({});
 
   // Convert the Message instance to a Map
   Map<String, dynamic> toMap() {

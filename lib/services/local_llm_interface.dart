@@ -169,6 +169,8 @@ class LocalLLMInterface {
             print(decoded['error']);
             print("handle error");
           default:
+            print("CASE!!!!");
+            print(decoded['status']);
             break;
         }
       },
@@ -194,7 +196,7 @@ class LocalLLMInterface {
         var data = json.decode(request.body);
         print("CONVERSATION ANALYSIS RETURNS");
         print("_" * 42);
-        print(data);
+        // print(data.length);
       } else {
         debugPrint(
             'Error: Server responded with status code ${request.statusCode}');
