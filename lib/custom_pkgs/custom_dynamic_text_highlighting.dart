@@ -288,7 +288,7 @@ class DynamicTextHighlighting extends StatelessWidget {
       BackgroundTextSpan(
           text: text,
           style: style.copyWith(
-            height: 1.6,
+            height: 1.4,
             letterSpacing: 1.0,
             color: ThemeData.estimateBrightnessForColor(value.color) ==
                     Brightness.light

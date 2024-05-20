@@ -1,3 +1,6 @@
+import 'package:chat/models/conversation_analytics.dart';
+import 'package:flutter/material.dart';
+
 const String tableConversations = 'conversations';
 
 class ConversationFields {
@@ -31,6 +34,7 @@ class Conversation {
   GameType? gameType;
   dynamic gameModel;
   Map<String, dynamic>? gameSettings;
+  ValueNotifier<ConversationData?> conversationAnalytics;
   Map<String, dynamic>? gameAnalytics;
 
   Conversation(
@@ -43,7 +47,8 @@ class Conversation {
       this.gameModel,
       this.gameSettings,
       this.gameAnalytics,
-      required this.id});
+      required this.id})
+      : conversationAnalytics = ValueNotifier<ConversationData?>(null);
 
   // Convert the Conversation instance to a Map
   Map<String, dynamic> toMap() {

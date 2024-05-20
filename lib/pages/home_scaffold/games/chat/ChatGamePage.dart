@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/event_channel_model.dart';
@@ -69,7 +70,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
   ValueNotifier<bool> isGenerating = ValueNotifier(false);
 
   // handles the chat response
-  generationCallback(Map<String, dynamic>? event) {
+  generationCallback(Map<String, dynamic>? event) async {
     if (event != null) {
       double completionTime = 0.0;
 
@@ -92,7 +93,11 @@ class _ChatGamePageState extends State<ChatGamePage> {
         // TODO TESTING :: Ping the chat_conversation_analysis endpoint here
         // run sidebar calculations if config says so
         if (displayConfigData.value.showSidebarBaseAnalytics) {
-          LocalLLMInterface().getChatAnalysis(widget.conversation!.id);
+          ConversationData? data = await LocalLLMInterface()
+              .getChatAnalysis(widget.conversation!.id);
+          // return analysis to the Conversation object
+          widget.conversation!.conversationAnalytics.value = data;
+          widget.conversation!.conversationAnalytics.notifyListeners();
         }
       } else {
         toksPerSec = response.toksPerSec;

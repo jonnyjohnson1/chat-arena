@@ -1,6 +1,7 @@
 // local_llm_interface.dart
 
 import 'dart:convert';
+import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/llm.dart';
 import 'package:flutter/foundation.dart';
@@ -184,7 +185,7 @@ class LocalLLMInterface {
     );
   }
 
-  Future<void> getChatAnalysis(String conversationID) async {
+  Future<ConversationData?> getChatAnalysis(String conversationID) async {
     final uri = getUrlStart + "0.0.0.0:13341/chat_conversation_analysis";
     final url = Uri.parse(uri);
     final headers = {
@@ -199,13 +200,20 @@ class LocalLLMInterface {
         var data = json.decode(request.body);
         print("CONVERSATION ANALYSIS RETURNS");
         print("_" * 42);
-        // print(data.length);
+        // print(data);
+        if (data.containsKey('conversation')) {
+          return ConversationData.fromMap(data['conversation']);
+        } else {
+          return null;
+        }
       } else {
         debugPrint(
             'Error: Server responded with status code ${request.statusCode}');
+        return null;
       }
     } catch (e) {
       debugPrint('Error: $e');
+      return null;
     }
   }
 }
