@@ -53,17 +53,19 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
 
   //labels dict
   buildHighlights(Map<String, dynamic> posData) {
-    List<String> allEnts = posData['base_analysis'].keys.toList();
-    for (String entity in allEnts) {
-      List<dynamic> labels = posData['base_analysis'][entity];
-      for (dynamic lbl in labels) {
-        String highlightString = lbl['text'];
-        highlights.putIfAbsent(
-            highlightString,
-            () => WordHighlight(
-                label: entity.toLowerCase().capitalize(),
-                color: ServicePOSLabelsDict().entitiesLabelsDict[entity] ??
-                    Colors.yellow));
+    if (posData.isNotEmpty) {
+      List<String> allEnts = posData['base_analysis'].keys.toList();
+      for (String entity in allEnts) {
+        List<dynamic> labels = posData['base_analysis'][entity];
+        for (dynamic lbl in labels) {
+          String highlightString = lbl['text'];
+          highlights.putIfAbsent(
+              highlightString,
+              () => WordHighlight(
+                  label: entity.toLowerCase().capitalize(),
+                  color: ServicePOSLabelsDict().entitiesLabelsDict[entity] ??
+                      Colors.yellow));
+        }
       }
     }
   }
@@ -159,44 +161,57 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
   }
 
   Widget buildCommentsRow(Map<String, dynamic> baseAnalytics) {
-    String modName =
-        baseAnalytics['commenter']['base_analysis']['mod_level'].first['name'];
-    String modLabel =
-        baseAnalytics['commenter']['base_analysis']['mod_level'].first['label'];
-    String ternSent =
-        baseAnalytics['commenter']['base_analysis']['tern_sent'].first['label'];
-    double ternSentScore =
-        baseAnalytics['commenter']['base_analysis']['tern_sent'].first['score'];
-    String emo_27 =
-        baseAnalytics['commenter']['base_analysis']['emo_27'].first['label'];
-    double emo_27Score =
-        baseAnalytics['commenter']['base_analysis']['emo_27'].first['score'];
-    return Row(
-      children: [
-        Text(emo_27.capitalize()),
-        const SizedBox(
-          width: 3,
-        ),
-        EmotionIcon(
-          emotion: emo_27,
-          score: emo_27Score,
-          size: 16,
-        ),
-        const SizedBox(
-          width: 6,
-        ),
-        ModeratorIcon(
-          label: modLabel,
-          name: modName,
-          size: 16,
-        ),
-        SentimentIcon(
-          sentiment: ternSent,
-          score: ternSentScore,
-          size: 16,
-        )
-      ],
-    );
+    if (baseAnalytics.isNotEmpty) {
+      if (baseAnalytics.containsKey('commenter')) {
+        String modName = baseAnalytics['commenter']['base_analysis']
+                ['mod_level']
+            .first['name'];
+        String modLabel = baseAnalytics['commenter']['base_analysis']
+                ['mod_level']
+            .first['label'];
+        String ternSent = baseAnalytics['commenter']['base_analysis']
+                ['tern_sent']
+            .first['label'];
+        double ternSentScore = baseAnalytics['commenter']['base_analysis']
+                ['tern_sent']
+            .first['score'];
+        String emo_27 = baseAnalytics['commenter']['base_analysis']['emo_27']
+            .first['label'];
+        double emo_27Score = baseAnalytics['commenter']['base_analysis']
+                ['emo_27']
+            .first['score'];
+        return Row(
+          children: [
+            Text(emo_27.capitalize()),
+            const SizedBox(
+              width: 3,
+            ),
+            EmotionIcon(
+              emotion: emo_27,
+              score: emo_27Score,
+              size: 16,
+            ),
+            const SizedBox(
+              width: 6,
+            ),
+            ModeratorIcon(
+              label: modLabel,
+              name: modName,
+              size: 16,
+            ),
+            SentimentIcon(
+              sentiment: ternSent,
+              score: ternSentScore,
+              size: 16,
+            )
+          ],
+        );
+      } else {
+        return Container();
+      }
+    } else {
+      return Container();
+    }
   }
 
   TextStyle secondary =
@@ -225,8 +240,9 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                             // build highlights dict if there is pos data
                             if (displayConfigData.value.showInMessageNER) if (widget
                                 ._message.baseAnalytics.value.isNotEmpty) {
-                              buildHighlights(widget
-                                  ._message.baseAnalytics.value['in_line']);
+                              buildHighlights(widget._message.baseAnalytics
+                                      .value['in_line'] ??
+                                  {});
                             }
                             return Container(
                                 constraints:
