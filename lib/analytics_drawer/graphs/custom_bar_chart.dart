@@ -17,33 +17,53 @@ class CustomBarChart extends StatelessWidget {
 
     // Create a new map from the sorted list
     var sortedData = Map.fromEntries(sortedEntries);
-    double totalWidth = 300;
-    double barWidth = 32; //totalWidth / 8.8;
+    double barWidth = 29;
 
-    return Column(
-      children: [
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool needsScrolling =
+            sortedData.length * barWidth > constraints.maxWidth;
+
+        return Column(
           children: [
-            Text(
-              title,
-              style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  decoration: TextDecoration.underline),
+            Row(
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      decoration: TextDecoration.underline),
+                ),
+              ],
             ),
+            needsScrolling
+                ? SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: _buildBarRow(sortedData, maxValue, barWidth),
+                  )
+                : _buildBarRow(sortedData, maxValue, barWidth),
           ],
-        ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: sortedData.entries.map((entry) {
-              double barHeight = entry.value / maxValue;
-              return Tooltip(
-                message: entry.key,
-                preferBelow: true,
-                child: SizedBox(
-                  width: barWidth,
-                  height: 88,
+        );
+      },
+    );
+  }
+
+  Widget _buildBarRow(
+      Map<String, int> sortedData, int maxValue, double barWidth) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: sortedData.entries.map((entry) {
+        double barHeight = entry.value / maxValue;
+        return Tooltip(
+          message: entry.key,
+          preferBelow: true,
+          child: SizedBox(
+            width: barWidth,
+            child: Column(
+              children: [
+                const SizedBox(height: 4),
+                SizedBox(
+                  height: 94,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -54,7 +74,6 @@ class CustomBarChart extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
                       Flexible(
                         child: FractionallySizedBox(
                           heightFactor: barHeight,
@@ -68,25 +87,36 @@ class CustomBarChart extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        entry.key.length > 3
-                            ? entry.key.substring(0, 4)
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  height: 35,
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Transform.rotate(
+                      angle: -0.785398, // Rotate by -45 degrees (in radians)
+                      child: Text(
+                        entry.key.length > 7
+                            ? entry.key.substring(0, 8)
                             : entry.key,
+                        maxLines: 1,
+                        overflow: TextOverflow.clip,
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w400,
                         ),
-                        textAlign: TextAlign.center,
+                        // textAlign: TextAlign.center,
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              );
-            }).toList(),
+              ],
+            ),
           ),
-        ),
-      ],
+        );
+      }).toList(),
     );
   }
 }

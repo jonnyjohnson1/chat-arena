@@ -1,4 +1,6 @@
 import 'package:chat/analytics_drawer/graphs/custom_bar_chart.dart';
+import 'package:chat/models/conversation.dart';
+import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:flutter/material.dart';
 import 'package:load_switch/load_switch.dart';
@@ -16,6 +18,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   bool didInit = false;
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
+  late ValueNotifier<Conversation?> currentSelectedConversation;
 
   bool showSidebarBaseAnalytics = true;
   bool showInMsgNER = true;
@@ -26,7 +29,8 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   @override
   void initState() {
     super.initState();
-
+    currentSelectedConversation =
+        Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
     // This delay loads the items in the drawer after the animation has popped out a bit
     Future.delayed(const Duration(milliseconds: 90), () {
       if (mounted) {
@@ -296,7 +300,6 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                   ),
                 ),
                 onPressed: () {
-                  print("tapped");
                   setState(() {
                     notifier2 = !value2; // Toggle value2
                   });
@@ -410,7 +413,6 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                     ),
                   ],
                 ),
-                // to this row
                 _buildRow(
                   icon: Icons.view_module_outlined,
                   label: "Base Analytics",
@@ -418,60 +420,55 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                   future: _toggleShowSidebarBaseAnalytics,
                   notifier: displayConfigData.value.showSidebarBaseAnalytics,
                 ),
-                const SizedBox(
-                  width: 300,
-                  child: CustomBarChart(
-                    title: "Emotions",
-                    barColor: Color.fromARGB(255, 72, 1, 96),
-                    totalsData: {
-                      'CARDINAL': 16,
-                      'GPE': 14,
-                      'ORDINAL': 1,
-                      'NORP': 5,
-                      'DATE': 7,
-                      'PERSON': 15,
-                      'LOC': 1,
-                      'WORK_OF_ART': 4,
-                      'TIME': 1,
-                    },
-                  ),
-                ),
-                const SizedBox(
-                  width: 300,
-                  child: CustomBarChart(
-                    title: "Evocations",
-                    barColor: Color.fromARGB(255, 122, 11, 158),
-                    totalsData: {
-                      'CARDINAL': 16,
-                      'GPE': 14,
-                      'ORDINAL': 1,
-                      'NORP': 5,
-                      'DATE': 7,
-                      'PERSON': 15,
-                      'LOC': 1,
-                      'WORK_OF_ART': 4,
-                      'TIME': 1,
-                    },
-                  ),
-                ),
-                const SizedBox(
-                  width: 300,
-                  child: CustomBarChart(
-                    title: "Summoned",
-                    barColor: Color.fromARGB(255, 176, 122, 194),
-                    totalsData: {
-                      'CARDINAL': 16,
-                      'GPE': 14,
-                      'ORDINAL': 1,
-                      'NORP': 5,
-                      'DATE': 7,
-                      'PERSON': 15,
-                      'LOC': 1,
-                      'WORK_OF_ART': 4,
-                      'TIME': 1,
-                    },
-                  ),
-                ),
+                ValueListenableBuilder<Conversation?>(
+                    valueListenable: currentSelectedConversation,
+                    builder: (context, Conversation? conversation, _) {
+                      if (conversation == null) return Container();
+                      debugPrint(
+                          "\t[ Loading analytics for conversation id :: ${conversation.id} ]");
+
+                      return ValueListenableBuilder<ConversationData?>(
+                          valueListenable: conversation.conversationAnalytics,
+                          builder: (context, ConversationData? convData, _) {
+                            if (convData == null) return Container();
+                            print(convData.emotionsTotals);
+                            return Column(
+                              children: [
+                                if (convData.emotionsTotals.isNotEmpty)
+                                  SizedBox(
+                                    width: 300,
+                                    child: CustomBarChart(
+                                      title: "Emotions",
+                                      barColor:
+                                          const Color.fromARGB(255, 72, 1, 96),
+                                      totalsData: convData.emotionsTotals,
+                                    ),
+                                  ),
+                                if (convData.entityEvocationsTotals.isNotEmpty)
+                                  SizedBox(
+                                    width: 300,
+                                    child: CustomBarChart(
+                                      title: "Evocations",
+                                      barColor: const Color.fromARGB(
+                                          255, 122, 11, 158),
+                                      totalsData:
+                                          convData.entityEvocationsTotals,
+                                    ),
+                                  ),
+                                if (convData.entitySummonsTotals.isNotEmpty)
+                                  SizedBox(
+                                    width: 300,
+                                    child: CustomBarChart(
+                                      title: "Summoned",
+                                      barColor: const Color.fromARGB(
+                                          255, 176, 122, 194),
+                                      totalsData: convData.entitySummonsTotals,
+                                    ),
+                                  ),
+                              ],
+                            );
+                          });
+                    }),
               ],
             ),
           );

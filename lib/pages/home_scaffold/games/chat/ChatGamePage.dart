@@ -44,6 +44,9 @@ class _ChatGamePageState extends State<ChatGamePage> {
       } catch (e) {
         print(e);
       }
+      // set the current conversation value to the loaded conversation
+      currentSelectedConversation.value = widget.conversation;
+      currentSelectedConversation.notifyListeners();
     }
     setState(() {
       isLoading = false;
@@ -51,16 +54,18 @@ class _ChatGamePageState extends State<ChatGamePage> {
   }
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
+  late ValueNotifier<Conversation?> currentSelectedConversation;
 
   @override
   void initState() {
     super.initState();
-    initData();
-    debugPrint("\t[ Chat :: GamePage initState ]");
-    // llmInterface = LocalLLMInterface();
-
+    currentSelectedConversation =
+        Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
+    initData();
+    debugPrint("\t[ Chat :: GamePage initState ]");
+    // llmInterface = LocalLLMInterface()
   }
 
   String generatedChat = "";

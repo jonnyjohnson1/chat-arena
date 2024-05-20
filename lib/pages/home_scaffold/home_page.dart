@@ -55,11 +55,15 @@ class _HomePageState extends State<HomePage> {
 
   ValueNotifier<DisplayConfigData> displayConfigData =
       ValueNotifier(DisplayConfigData());
+  ValueNotifier<Conversation?> currentSelectedConversation =
+      ValueNotifier(null);
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<ValueNotifier<Conversation?>>.value(
+            value: currentSelectedConversation),
         ChangeNotifierProvider<ValueNotifier<DisplayConfigData>>.value(
             value: displayConfigData)
       ],
