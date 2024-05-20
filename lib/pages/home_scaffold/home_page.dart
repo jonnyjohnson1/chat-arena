@@ -1,9 +1,11 @@
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/sys_resources.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:chat/pages/home_scaffold/home_page_layout_manager.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,7 +26,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     _loadModelListFromAppConfig;
-
     refreshConversationDatabase();
     super.initState();
   }
@@ -52,12 +53,21 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
+  ValueNotifier<DisplayConfigData> displayConfigData =
+      ValueNotifier(DisplayConfigData());
+
   @override
   Widget build(BuildContext context) {
-    return HomePageLayoutManager(
-      title: title,
-      conversations: conversations,
-      body: !didInit ? ValueNotifier(Container()) : homePage,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ValueNotifier<DisplayConfigData>>.value(
+            value: displayConfigData)
+      ],
+      child: HomePageLayoutManager(
+        title: title,
+        conversations: conversations,
+        body: !didInit ? ValueNotifier(Container()) : homePage,
+      ),
     );
   }
 }

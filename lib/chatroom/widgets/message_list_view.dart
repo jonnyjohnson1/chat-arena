@@ -45,7 +45,11 @@ class _MessageListViewState extends State<MessageListView> {
                       var _message =
                           reversedList[_index]; //_conversationData[_index];
                       bool _isOurMessage = _message.senderID == ""; //_uid;
-                      return MessageListViewChild(_isOurMessage, _message);
+                      return MessageListViewChild(
+                        _isOurMessage,
+                        _message,
+                        key: Key(_message.id),
+                      );
                     },
                   ),
                 ),

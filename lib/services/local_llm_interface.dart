@@ -1,12 +1,10 @@
 // local_llm_interface.dart
 
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:chat/models/llm.dart';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/messages.dart';
 
@@ -15,6 +13,7 @@ class LocalLLMInterface {
 
   bool get isLocal => true;
   String get wsPrefix => isLocal ? 'ws' : 'wss';
+  String get getUrlStart => isLocal ? "http://" : "https://";
   WebSocketChannel? webSocket;
 
   void initChatWebsocket() {
@@ -25,8 +24,14 @@ class LocalLLMInterface {
         Uri.parse('$wsPrefix://$extractedDiAPI/$chatEndpoint'));
   }
 
-  void newChatMessage(String message, List<Message> messageHistory,
-      ModelConfig model, callbackFunction) {
+  void newChatMessage(
+      String message,
+      List<Message> messageHistory,
+      String conversationId,
+      String chatBotMsgId,
+      ModelConfig model,
+      chatCallbackFunction,
+      analysisCallBackFunction) {
     initChatWebsocket();
 
     if (webSocket == null) {
@@ -40,21 +45,28 @@ class LocalLLMInterface {
     for (Message msg in messageHistory) {
       if (msg.images != null) {
         if (msg.images!.isNotEmpty) {
-          List<String> images = [];
-          for (var file in msg.images!) {
-            // if we have used the web, the local path should still exist
-            // the web path is used to render the web image
-            String path = file.localFile!.path;
-            // if (file.path.startsWith("blob:")) {
-            //   path = path.substring(5);
-            // }
-            images.add(path);
+          try {
+            List<String> images = [];
+            for (var file in msg.images!) {
+              // if we have used the web, the local path should still exist
+              // the web path is used to render the web images
+
+              String path = file.localFile!.path;
+
+              // if (file.path.startsWith("blob:")) {
+              //   path = path.substring(5);
+              // }
+              // the local ollama must take the name of the local file path
+              images.add(path);
+            }
+            msgHist.add({
+              'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+              'content': msg.message!.value,
+              'images': images,
+            });
+          } catch (e) {
+            debugPrint("[ error parsing image ]");
           }
-          msgHist.add({
-            'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
-            'content': msg.message!.value,
-            'images': images,
-          });
         } else {
           msgHist.add({
             'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
@@ -70,6 +82,9 @@ class LocalLLMInterface {
     }
 
     Map<String, dynamic> submitPkg = {
+      "conversation_id": conversationId,
+      "message_id": messageHistory.last.id,
+      "chatbot_msg_id": chatBotMsgId,
       "model": model.model.model,
       "message": message,
       "message_history": msgHist,
@@ -102,6 +117,13 @@ class LocalLLMInterface {
         switch (decoded['status']) {
           case 'started':
             break;
+          case 'fetched_user_analysis':
+            // First reception of user analytics
+            if (decoded.containsKey('user_message')) {
+              if (decoded['user_message'].isNotEmpty) {
+                analysisCallBackFunction(decoded['user_message'], {});
+              }
+            }
           case 'generating':
             if (!isStarted) {
               isStarted = true;
@@ -119,7 +141,7 @@ class LocalLLMInterface {
             decoded['completionTime'] =
                 durInSeconds; // completion time in seconds
             decoded['toksPerSec'] = toksPerSec;
-            callbackFunction(decoded);
+            chatCallbackFunction(decoded);
 
           case 'completed':
             // UPDATE MESSAGES
@@ -133,12 +155,22 @@ class LocalLLMInterface {
             decoded['toksPerSec'] = toksPerSec;
             decoded['completionTime'] =
                 durInSeconds; // completion time in seconds
-            callbackFunction(decoded);
+            chatCallbackFunction(decoded);
+
+            // check for bot message analytics
+            if (decoded.containsKey('bot_data')) {
+              if (decoded['bot_data'].isNotEmpty) {
+                // send back to chatroom to handle what to do with the information
+                analysisCallBackFunction({}, decoded['bot_data']);
+              }
+            }
 
           case 'error':
             print(decoded['error']);
             print("handle error");
           default:
+            print("CASE!!!!");
+            print(decoded['status']);
             break;
         }
       },
@@ -147,5 +179,30 @@ class LocalLLMInterface {
         print("WebSocket closed.");
       },
     );
+  }
+
+  Future<void> getChatAnalysis(String conversationID) async {
+    final uri = getUrlStart + "0.0.0.0:13341/chat_conversation_analysis";
+    final url = Uri.parse(uri);
+    final headers = {
+      "accept": "application/json",
+      "Content-Type": "application/json"
+    };
+    final body = json.encode({"conversation_id": conversationID});
+
+    try {
+      var request = await http.post(url, headers: headers, body: body);
+      if (request.statusCode == 200) {
+        var data = json.decode(request.body);
+        print("CONVERSATION ANALYSIS RETURNS");
+        print("_" * 42);
+        // print(data.length);
+      } else {
+        debugPrint(
+            'Error: Server responded with status code ${request.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
   }
 }

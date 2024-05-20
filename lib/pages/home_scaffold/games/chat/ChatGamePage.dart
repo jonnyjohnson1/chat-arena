@@ -56,16 +56,15 @@ class _ChatGamePageState extends State<ChatGamePage> {
   }
 
   String generatedChat = "";
-  double progress = 0.0;
   double toksPerSec = 0.0;
   double completionTime = 0.0;
   int currentIdx = 0;
   ValueNotifier<bool> isGenerating = ValueNotifier(false);
 
+  // handles the chat response
   generationCallback(Map<String, dynamic>? event) {
     if (event != null) {
       double completionTime = 0.0;
-      double progress = 0.0;
 
       EventGenerationResponse response = EventGenerationResponse.fromMap(event);
 
@@ -82,6 +81,9 @@ class _ChatGamePageState extends State<ChatGamePage> {
         setState(() {});
         // add the final message to the database
         ConversationDatabase.instance.createMessage(messages[currentIdx]);
+
+        // TODO TESTING :: Ping the chat_conversation_analysis endpoint here
+        LocalLLMInterface().getChatAnalysis(widget.conversation!.id);
       } else {
         toksPerSec = response.toksPerSec;
         while (generatedChat.startsWith("\n")) {
@@ -109,16 +111,45 @@ class _ChatGamePageState extends State<ChatGamePage> {
     }
   }
 
+  // handles the analysis from the chat response
+  // this includes: in-line values- token and text classification
+  // and returns the response for both the initial user message and the chatbot's message
+  analysisCallBackFunction(dynamic userMessage, dynamic chatBotMessage) async {
+    if (userMessage.isNotEmpty) {
+      String userMsgId = userMessage.keys.first;
+      int idx = messages
+          .indexWhere((uiMessage.Message element) => element.id == userMsgId);
+      // Set the message's analytics value
+      messages[idx].baseAnalytics.value = userMessage[userMsgId];
+      messages[idx].baseAnalytics.notifyListeners();
+    }
+    if (chatBotMessage.isNotEmpty) {
+      String botMsgId = chatBotMessage.keys.first;
+      int idx = messages
+          .indexWhere((uiMessage.Message element) => element.id == botMsgId);
+      // Set the message's analytics value
+      messages[idx].baseAnalytics.value = chatBotMessage[botMsgId];
+      messages[idx].baseAnalytics.notifyListeners();
+    }
+  }
+
   void sendMessagetoModel(String text) async {
     debugPrint("[ Submitting: $text ]"); // General debug print
+    final newChatBotMsgId = Tools().getRandomString(32);
+    LocalLLMInterface().newChatMessage(
+        text,
+        messages,
+        widget.conversation!.id,
+        newChatBotMsgId,
+        selectedModel,
+        generationCallback,
+        analysisCallBackFunction);
 
-    LocalLLMInterface()
-        .newChatMessage(text, messages, selectedModel, generationCallback);
-
+    debugPrint("[ Message Submitted: $text ]");
     currentIdx = messages.length;
     // // Submit text to generator here
     uiMessage.Message message = uiMessage.Message(
-        id: Tools().getRandomString(32),
+        id: newChatBotMsgId,
         conversationID: widget.conversation!.id,
         message: ValueNotifier(""),
         documentID: '',

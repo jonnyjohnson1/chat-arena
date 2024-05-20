@@ -38,7 +38,7 @@ class _MessageFieldState extends State<MessageField> {
         });
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5.0),
+        padding: const EdgeInsets.only(left: 5.0, right: 12),
         child: Row(
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
