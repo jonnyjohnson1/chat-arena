@@ -1,9 +1,6 @@
 <p align="center">
   <div style="display: flex; overflow-x: auto; max-width: 100%; height: 350px;">
     <img src="https://github.com/jonnyjohnson1/chat-arena/blob/main/ui_screenshot_1.png" height="350" alt="UI Chat debates" style="margin-right: 10px;" />
-    <img src="https://github.com/jonnyjohnson1/chat-arena/blob/main/ui_screenshot_1.png" height="350" alt="UI Chat debates" style="margin-right: 10px;" />
-    <img src="https://github.com/jonnyjohnson1/chat-arena/blob/main/ui_screenshot_1.png" height="350" alt="UI Chat debates" style="margin-right: 10px;" />
-    <!-- Add more images as needed -->
   </div>
 </p>
 <p align="center">
