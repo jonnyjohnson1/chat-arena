@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/custom_file.dart';
+import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/services/conversation_database.dart';
@@ -10,6 +11,7 @@ import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/tools.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/models/messages.dart' as uiMessage;
+import 'package:provider/provider.dart';
 
 late final dynamic
     llmInterface; // Can be LocalLLMInterface or DebateLLMInterface
@@ -47,12 +49,17 @@ class _ChatGamePageState extends State<ChatGamePage> {
     });
   }
 
+  late ValueNotifier<DisplayConfigData> displayConfigData;
+
   @override
   void initState() {
+    super.initState();
     initData();
     debugPrint("\t[ Chat :: GamePage initState ]");
     // llmInterface = LocalLLMInterface();
-    super.initState();
+
+    displayConfigData =
+        Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
   }
 
   String generatedChat = "";
@@ -83,7 +90,10 @@ class _ChatGamePageState extends State<ChatGamePage> {
         ConversationDatabase.instance.createMessage(messages[currentIdx]);
 
         // TODO TESTING :: Ping the chat_conversation_analysis endpoint here
-        LocalLLMInterface().getChatAnalysis(widget.conversation!.id);
+        // run sidebar calculations if config says so
+        if (displayConfigData.value.showSidebarBaseAnalytics) {
+          LocalLLMInterface().getChatAnalysis(widget.conversation!.id);
+        }
       } else {
         toksPerSec = response.toksPerSec;
         while (generatedChat.startsWith("\n")) {
@@ -142,6 +152,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
         widget.conversation!.id,
         newChatBotMsgId,
         selectedModel,
+        displayConfigData.value,
         generationCallback,
         analysisCallBackFunction);
 

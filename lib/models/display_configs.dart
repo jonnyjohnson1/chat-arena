@@ -12,4 +12,14 @@ class DisplayConfigData {
     this.calculateModerationTags = true,
     this.showSidebarBaseAnalytics = true,
   });
+
+  Map<String, bool> toMap() {
+    return {
+      'showInMessageNER': showInMessageNER,
+      'calculateInMessageNER': calculateInMessageNER,
+      'showModerationTags': showModerationTags,
+      'calculateModerationTags': calculateModerationTags,
+      'showSidebarBaseAnalytics': showSidebarBaseAnalytics,
+    };
+  }
 }

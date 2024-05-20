@@ -1,6 +1,7 @@
 // local_llm_interface.dart
 
 import 'dart:convert';
+import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/llm.dart';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -30,6 +31,7 @@ class LocalLLMInterface {
       String conversationId,
       String chatBotMsgId,
       ModelConfig model,
+      DisplayConfigData displayConfigData,
       chatCallbackFunction,
       analysisCallBackFunction) {
     initChatWebsocket();
@@ -88,7 +90,8 @@ class LocalLLMInterface {
       "model": model.model.model,
       "message": message,
       "message_history": msgHist,
-      "temperature": 0.06
+      "temperature": 0.06,
+      "processing_config": displayConfigData.toMap()
     };
 
     webSocket!.sink.add(json.encode(submitPkg));

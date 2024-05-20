@@ -316,47 +316,98 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
     );
   }
 
+  bool _isExpanded = false;
+
   @override
   Widget build(BuildContext context) {
     return !didInit
         ? Container()
         : Column(
             children: [
-              const SizedBox(height: 3),
-              _buildRow(
-                icon: Icons.abc_outlined,
-                label: "In-Message (NER)",
-                value: showInMsgNER,
-                future: _toggleShowInMsgNER,
-                notifier: displayConfigData.value.showInMessageNER,
+              ExpansionPanelList(
+                elevation: 0,
+                expansionCallback: (int index, bool isExpanded) {
+                  setState(() {
+                    _isExpanded = !_isExpanded;
+                  });
+                },
+                children: [
+                  ExpansionPanel(
+                    headerBuilder: (BuildContext context, bool isExpanded) {
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 18.0),
+                        child: SizedBox(
+                          height: 45,
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _isExpanded = !_isExpanded;
+                              });
+                            },
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.display_settings,
+                                  size: 23,
+                                ),
+                                const SizedBox(width: 6),
+                                Text("Display",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    body: Column(
+                      children: [
+                        _buildRow(
+                          icon: Icons.abc_outlined,
+                          label: "In-Message (NER)",
+                          value: showInMsgNER,
+                          future: _toggleShowInMsgNER,
+                          notifier: displayConfigData.value.showInMessageNER,
+                        ),
+                        _buildAnalysisRow(
+                          icon: Icons.abc_outlined,
+                          label1: "Calc:",
+                          value1: calcInMsgNER,
+                          future1: _toggleNERCalculations,
+                          notifier1:
+                              displayConfigData.value.calculateInMessageNER,
+                          label2: "Rerun:",
+                          value2: false,
+                          future2: _toggleRerunNEROnConversation,
+                          notifier2: false,
+                        ),
+                        _buildRow(
+                          icon: Icons.block,
+                          label: "Moderation Tags",
+                          value: showModerationTags,
+                          future: _toggleShowModerationTags,
+                          notifier: displayConfigData.value.showModerationTags,
+                        ),
+                        _buildAnalysisRow(
+                          icon: Icons.abc_outlined,
+                          label1: "Calc:",
+                          value1: calcModerationTags,
+                          future1: _toggleModerationCalculations,
+                          notifier1:
+                              displayConfigData.value.calculateModerationTags,
+                          label2: "Rerun:",
+                          value2: false,
+                          future2: _toggleRerunNEROnConversation,
+                          notifier2: false,
+                        ),
+                      ],
+                    ),
+                    isExpanded: _isExpanded,
+                  ),
+                ],
               ),
-              _buildAnalysisRow(
-                  icon: Icons.abc_outlined,
-                  label1: "Calc:",
-                  value1: calcInMsgNER,
-                  future1: _toggleNERCalculations,
-                  notifier1: displayConfigData.value.calculateInMessageNER,
-                  label2: "Rerun:",
-                  value2: false,
-                  future2: _toggleRerunNEROnConversation,
-                  notifier2: false),
-              _buildRow(
-                icon: Icons.block,
-                label: "Moderation Tags",
-                value: showModerationTags,
-                future: _toggleShowModerationTags,
-                notifier: displayConfigData.value.showModerationTags,
-              ),
-              _buildAnalysisRow(
-                  icon: Icons.abc_outlined,
-                  label1: "Calc:",
-                  value1: calcModerationTags,
-                  future1: _toggleNERCalculations,
-                  notifier1: displayConfigData.value.calculateModerationTags,
-                  label2: "Rerun:",
-                  value2: false,
-                  future2: _toggleRerunNEROnConversation,
-                  notifier2: false),
+              // to this row
               _buildRow(
                 icon: Icons.view_module_outlined,
                 label: "Base Analytics",
