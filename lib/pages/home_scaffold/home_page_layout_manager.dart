@@ -127,7 +127,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                               widget.body.value = GamesListPage(
                                 duration: 90,
                                 selectedGame: (GamesConfig selected) {
-                                  // TODO Update hoem page to game viewer page
+                                  // TODO Update home page to game viewer page
                                 },
                                 // homePage: widget.body,
                               );
@@ -170,7 +170,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                             duration: 90,
                                             selectedGame:
                                                 (GamesConfig selected) {
-                                              // TODO Update hoem page to game viewer page
+                                              // TODO Update home page to game viewer page
                                             },
                                             // homePage: widget.body,
                                           );

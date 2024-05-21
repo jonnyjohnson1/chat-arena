@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/event_channel_model.dart';
@@ -43,6 +44,9 @@ class _ChatGamePageState extends State<ChatGamePage> {
       } catch (e) {
         print(e);
       }
+      // set the current conversation value to the loaded conversation
+      currentSelectedConversation.value = widget.conversation;
+      currentSelectedConversation.notifyListeners();
     }
     setState(() {
       isLoading = false;
@@ -50,16 +54,18 @@ class _ChatGamePageState extends State<ChatGamePage> {
   }
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
+  late ValueNotifier<Conversation?> currentSelectedConversation;
 
   @override
   void initState() {
     super.initState();
-    initData();
-    debugPrint("\t[ Chat :: GamePage initState ]");
-    // llmInterface = LocalLLMInterface();
-
+    currentSelectedConversation =
+        Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
+    initData();
+    debugPrint("\t[ Chat :: GamePage initState ]");
+    // llmInterface = LocalLLMInterface()
   }
 
   String generatedChat = "";
@@ -69,7 +75,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
   ValueNotifier<bool> isGenerating = ValueNotifier(false);
 
   // handles the chat response
-  generationCallback(Map<String, dynamic>? event) {
+  generationCallback(Map<String, dynamic>? event) async {
     if (event != null) {
       double completionTime = 0.0;
 
@@ -89,10 +95,23 @@ class _ChatGamePageState extends State<ChatGamePage> {
         // add the final message to the database
         ConversationDatabase.instance.createMessage(messages[currentIdx]);
 
-        // TODO TESTING :: Ping the chat_conversation_analysis endpoint here
+        // Run all the post conversation analyses here
         // run sidebar calculations if config says so
         if (displayConfigData.value.showSidebarBaseAnalytics) {
-          LocalLLMInterface().getChatAnalysis(widget.conversation!.id);
+          ConversationData? data = await LocalLLMInterface()
+              .getChatAnalysis(widget.conversation!.id);
+          // return analysis to the Conversation object
+          widget.conversation!.conversationAnalytics.value = data;
+          widget.conversation!.conversationAnalytics.notifyListeners();
+
+          // get an image depiction of the conversation
+          ImageFile? data3 =
+              await LocalLLMInterface().getConvToImage(widget.conversation!.id);
+          if (data3 != null) {
+            // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
+            widget.conversation!.convToImagesList.value.add(data3);
+            widget.conversation!.convToImagesList.notifyListeners();
+          }
         }
       } else {
         toksPerSec = response.toksPerSec;

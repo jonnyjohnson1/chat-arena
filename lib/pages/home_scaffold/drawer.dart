@@ -77,7 +77,8 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
             widget.body.notifyListeners();
           },
           onTap: (Conversation chatSelected) {
-            debugPrint("\t[ Switching to conversation id :: ${chatSelected.id} ]");
+            debugPrint(
+                "\t[ Switching to conversation id :: ${chatSelected.id} ]");
             // set title
             String title = setTitle(chatSelected);
             widget.title.value = title;
