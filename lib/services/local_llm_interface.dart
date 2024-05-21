@@ -1,9 +1,13 @@
 // local_llm_interface.dart
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:chat/models/conversation_analytics.dart';
+import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/llm.dart';
+import 'package:chat/services/tools.dart';
+import 'package:chat/shared/image_utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
@@ -189,8 +193,8 @@ class LocalLLMInterface {
     final uri = getUrlStart + "0.0.0.0:13341/chat_conversation_analysis";
     final url = Uri.parse(uri);
     final headers = {
-      "accept": "application/json",
-      "Content-Type": "application/json"
+      "accept": "application/json; charset=utf-8",
+      "Content-Type": "application/json; charset=utf-8"
     };
     final body = json.encode({"conversation_id": conversationID});
 
@@ -200,12 +204,52 @@ class LocalLLMInterface {
         var data = json.decode(request.body);
         print("CONVERSATION ANALYSIS RETURNS");
         print("_" * 42);
-        // print(data);
+        print(data);
         if (data.containsKey('conversation')) {
           return ConversationData.fromMap(data['conversation']);
         } else {
           return null;
         }
+      } else {
+        debugPrint(
+            'Error: Server responded with status code ${request.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+      return null;
+    }
+  }
+
+  Future<ImageFile?> getConvToImage(String conversationID) async {
+    final uri = getUrlStart + "0.0.0.0:13341/chat/conv_to_image";
+    final url = Uri.parse(uri);
+    final headers = {
+      "accept": "application/json; charset=utf-8",
+      "Content-Type": "application/json; charset=utf-8"
+    };
+    final body = json.encode({"conversation_id": conversationID});
+
+    try {
+      var request = await http.post(url, headers: headers, body: body);
+      if (request.statusCode == 200) {
+        var data = json.decode(request.body);
+        print("CONV_TO_IMAGE");
+        print("_" * 42);
+        print(data['file_name']);
+        // Create the File object
+        File localFile = File(data['file_name']);
+        List<int> bytes = convertDynamicListToIntList(data['bytes']);
+        // Convert bytes to Uint8List
+        Uint8List uint8List = Uint8List.fromList(bytes);
+        ImageFile image = ImageFile(
+            id: Tools().getRandomString(32),
+            description: data['prompt'],
+            bytes: bytes,
+            isWeb: true,
+            webFile: null,
+            localFile: localFile);
+        return image;
       } else {
         debugPrint(
             'Error: Server responded with status code ${request.statusCode}');

@@ -95,7 +95,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
         // add the final message to the database
         ConversationDatabase.instance.createMessage(messages[currentIdx]);
 
-        // TODO TESTING :: Ping the chat_conversation_analysis endpoint here
+        // Run all the post conversation analyses here
         // run sidebar calculations if config says so
         if (displayConfigData.value.showSidebarBaseAnalytics) {
           ConversationData? data = await LocalLLMInterface()
@@ -103,6 +103,15 @@ class _ChatGamePageState extends State<ChatGamePage> {
           // return analysis to the Conversation object
           widget.conversation!.conversationAnalytics.value = data;
           widget.conversation!.conversationAnalytics.notifyListeners();
+
+          // get an image depiction of the conversation
+          ImageFile? data3 =
+              await LocalLLMInterface().getConvToImage(widget.conversation!.id);
+          if (data3 != null) {
+            // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
+            widget.conversation!.convToImagesList.value.add(data3);
+            widget.conversation!.convToImagesList.notifyListeners();
+          }
         }
       } else {
         toksPerSec = response.toksPerSec;

@@ -1,18 +1,30 @@
 import 'package:flutter/material.dart';
 
-class CustomBarChart extends StatelessWidget {
+class CustomBarChart extends StatefulWidget {
   final String title;
   final Color barColor;
   final Map<String, int> totalsData;
+  final Map<String, Map<String, String>>? labelConfig;
 
-  const CustomBarChart(
-      {required this.title, required this.barColor, required this.totalsData});
+  const CustomBarChart({
+    required this.title,
+    required this.barColor,
+    required this.totalsData,
+    this.labelConfig,
+  });
+
+  @override
+  _CustomBarChartState createState() => _CustomBarChartState();
+}
+
+class _CustomBarChartState extends State<CustomBarChart> {
+  bool useDisplayName = true;
 
   @override
   Widget build(BuildContext context) {
-    int maxValue = totalsData.values.reduce((a, b) => a > b ? a : b);
+    int maxValue = widget.totalsData.values.reduce((a, b) => a > b ? a : b);
     // Convert map entries to a list and sort the list by value in descending order
-    var sortedEntries = totalsData.entries.toList()
+    var sortedEntries = widget.totalsData.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
     // Create a new map from the sorted list
@@ -29,7 +41,7 @@ class CustomBarChart extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  title,
+                  widget.title,
                   style: const TextStyle(
                       fontWeight: FontWeight.w500,
                       decoration: TextDecoration.underline),
@@ -53,9 +65,13 @@ class CustomBarChart extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: sortedData.entries.map((entry) {
+        final displayName =
+            widget.labelConfig?[entry.key]?['display_name'] ?? entry.key;
+        final fullName = widget.labelConfig?[entry.key]?['name'] ?? entry.key;
+
         double barHeight = entry.value / maxValue;
         return Tooltip(
-          message: entry.key,
+          message: fullName,
           preferBelow: true,
           child: SizedBox(
             width: barWidth,
@@ -81,7 +97,7 @@ class CustomBarChart extends StatelessWidget {
                               0.8, // Adjust this factor if needed for better bar width appearance
                           child: Container(
                             decoration: BoxDecoration(
-                              color: barColor,
+                              color: widget.barColor,
                               borderRadius: BorderRadius.circular(8.0),
                             ),
                           ),
@@ -91,24 +107,43 @@ class CustomBarChart extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Container(
-                  height: 35,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Transform.rotate(
-                      angle: -0.785398, // Rotate by -45 degrees (in radians)
-                      child: Text(
-                        entry.key.length > 7
-                            ? entry.key.substring(0, 8)
-                            : entry.key,
-                        maxLines: 1,
-                        overflow: TextOverflow.clip,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        // textAlign: TextAlign.center,
-                      ),
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      useDisplayName = !useDisplayName;
+                    });
+                  },
+                  child: Container(
+                    // height: 35,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: useDisplayName &&
+                              widget.labelConfig?[entry.key]?['display_name'] !=
+                                  null
+                          ? Text(
+                              displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.clip,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            )
+                          : Transform.rotate(
+                              angle:
+                                  -0.785398, // Rotate by -45 degrees (in radians)
+                              child: Text(
+                                entry.key.length > 7
+                                    ? entry.key.substring(0, 8)
+                                    : entry.key,
+                                maxLines: 1,
+                                overflow: TextOverflow.clip,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
                     ),
                   ),
                 ),

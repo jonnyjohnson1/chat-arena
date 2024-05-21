@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:chat/shared/image_utils.dart';
 import 'package:flutter/material.dart';
 
 const String tableImages = "images";
@@ -21,13 +22,15 @@ class ImageFile {
   final bool isWeb;
   final File? webFile;
   final File? localFile;
+  final String? description;
 
   ImageFile(
       {required this.id,
       this.isWeb = false,
       this.bytes,
       this.webFile,
-      this.localFile});
+      this.localFile,
+      this.description});
 
   factory ImageFile.fromJson(Map<String, dynamic> json) {
     List<int>? bytes;
@@ -59,9 +62,4 @@ class ImageFile {
       ImageFields.localFile: localFile?.path
     };
   }
-}
-
-List<int> convertDynamicListToIntList(List<dynamic> dynamicList) {
-  // Use map to convert each dynamic item to int
-  return dynamicList.map((item) => int.parse(item.toString())).toList();
 }

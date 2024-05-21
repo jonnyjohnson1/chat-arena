@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 
 class VerticalDialogueChart extends StatefulWidget {
   final String title;
+  final bool showTitle;
   final Color userBarColor;
   final Color botBarColor;
   final Map<String, Map<String, int>> data;
+  final Map<String, Map<String, String>>? labelConfig;
 
   const VerticalDialogueChart({
     required this.title,
+    this.showTitle = true,
     required this.userBarColor,
     required this.botBarColor,
     required this.data,
+    this.labelConfig,
   });
 
   @override
@@ -26,6 +30,7 @@ class _VerticalDialogueChartState extends State<VerticalDialogueChart> {
   late List<String> participants;
   late List<String> pairs;
   late String selectedPair;
+  bool useDisplayName = true;
 
   @override
   void initState() {
@@ -112,12 +117,17 @@ class _VerticalDialogueChartState extends State<VerticalDialogueChart> {
 
     return Column(
       children: [
-        Text(
-          widget.title,
-          style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              decoration: TextDecoration.underline),
-        ),
+        if (widget.showTitle)
+          Row(
+            children: [
+              Text(
+                widget.title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    decoration: TextDecoration.underline),
+              ),
+            ],
+          ),
         Row(
           children: [
             Expanded(
@@ -159,27 +169,21 @@ class _VerticalDialogueChartState extends State<VerticalDialogueChart> {
                     },
                     alignment: Alignment.center,
                     isDense: true,
-                    icon: Row(
+                    icon: const Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Icon(Icons.arrow_left),
                         Icon(Icons.arrow_right),
-                        const SizedBox(width: 7)
+                        SizedBox(width: 7)
                       ],
                     ),
                     underline: const SizedBox.shrink(),
                     selectedItemBuilder: (BuildContext context) {
                       return pairs.map<Widget>((String value) {
-                        return isFocused
-                            ? Text(value.split(' & ').join(' vs '))
-                            : Container();
-                        // Row(
-                        //     mainAxisAlignment: MainAxisAlignment.center,
-                        //     children: [
-                        //       Icon(Icons.arrow_left),
-                        //       Icon(Icons.arrow_right),
-                        //     ],
-                        //   );
+                        return Container();
+                        // isFocused
+                        //     ? Text(value.split(' & ').join(' vs '))
+                        //     : ;
                       }).toList();
                     },
                     items: pairs.map<DropdownMenuItem<String>>((String value) {
@@ -229,6 +233,9 @@ class _VerticalDialogueChartState extends State<VerticalDialogueChart> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: sortedKeys.map((key) {
+        final displayName = widget.labelConfig?[key]?['display_name'] ?? key;
+        final fullName = widget.labelConfig?[key]?['name'] ?? key;
+
         double firstBarWidthFactor = (firstDataSet[key] ?? 0) / maxValue;
         double secondBarWidthFactor = (secondDataSet[key] ?? 0) / maxValue;
         Color firstColor = (firstDataSet[key] ?? 0) >= (secondDataSet[key] ?? 0)
@@ -237,8 +244,9 @@ class _VerticalDialogueChartState extends State<VerticalDialogueChart> {
         Color secondColor = (secondDataSet[key] ?? 0) > (firstDataSet[key] ?? 0)
             ? widget.botBarColor
             : widget.botBarColor.withOpacity(0.5);
+
         return Tooltip(
-          message: key,
+          message: fullName,
           preferBelow: true,
           child: SizedBox(
             height: 15,
@@ -253,7 +261,7 @@ class _VerticalDialogueChartState extends State<VerticalDialogueChart> {
                         child: FractionallySizedBox(
                           widthFactor: firstBarWidthFactor,
                           child: Container(
-                            height: 7,
+                            height: 8,
                             decoration: BoxDecoration(
                               color: firstColor,
                               borderRadius: BorderRadius.circular(8.0),
@@ -272,18 +280,36 @@ class _VerticalDialogueChartState extends State<VerticalDialogueChart> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(
-                  width: 35,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      key.length > 7 ? key.substring(0, 8) : key,
-                      maxLines: 1,
-                      overflow: TextOverflow.clip,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w400,
-                      ),
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      useDisplayName = !useDisplayName;
+                    });
+                  },
+                  child: SizedBox(
+                    width: 35,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: useDisplayName &&
+                              widget.labelConfig?[key]?['display_name'] != null
+                          ? Text(
+                              displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.clip,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            )
+                          : Text(
+                              key.length > 7 ? key.substring(0, 8) : key,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
                     ),
                   ),
                 ),
@@ -303,7 +329,7 @@ class _VerticalDialogueChartState extends State<VerticalDialogueChart> {
                         child: FractionallySizedBox(
                           widthFactor: secondBarWidthFactor,
                           child: Container(
-                            height: 7,
+                            height: 8,
                             decoration: BoxDecoration(
                               color: secondColor,
                               borderRadius: BorderRadius.circular(8.0),

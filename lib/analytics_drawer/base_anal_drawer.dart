@@ -2,7 +2,12 @@ import 'package:chat/analytics_drawer/graphs/custom_bar_chart.dart';
 import 'package:chat/analytics_drawer/graphs/vertical_dialogue_chart.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/conversation_analytics.dart';
+import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/shared/emo27config.dart';
+import 'package:chat/shared/image_viewer.dart';
+import 'package:chat/shared/images_list_widget.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
@@ -203,8 +208,8 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
         Container(),
         Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 18.0),
+            const Padding(
+              padding: EdgeInsets.only(left: 18.0),
               child: SizedBox(
                 height: 45,
                 child: Row(
@@ -352,7 +357,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                               },
                               child: Row(
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.display_settings,
                                     size: 23,
                                   ),
@@ -428,60 +433,133 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                       debugPrint(
                           "\t[ Loading analytics for conversation id :: ${conversation.id} ]");
 
-                      return ValueListenableBuilder<ConversationData?>(
-                          valueListenable: conversation.conversationAnalytics,
-                          builder: (context, ConversationData? convData, _) {
-                            if (convData == null) return Container();
-                            print(convData.emotionsTotals);
-                            print(convData.emotionsPerRole);
-                            return Column(
-                              children: [
-                                if (convData.emotionsTotals.isNotEmpty)
-                                  SizedBox(
-                                    width: 300,
-                                    child: CustomBarChart(
-                                      title: "Emotions",
-                                      barColor:
-                                          const Color.fromARGB(255, 72, 1, 96),
-                                      totalsData: convData.emotionsTotals,
+                      return Column(
+                        children: [
+                          if (conversation.convToImagesList.value.isNotEmpty)
+                            ValueListenableBuilder<List<ImageFile>>(
+                                valueListenable: conversation.convToImagesList,
+                                builder:
+                                    (context, List<ImageFile> imagesList, _) {
+                                  if (imagesList.isEmpty) return Container();
+                                  ImageFile lastImage = imagesList.last;
+                                  return Column(
+                                    children: [
+                                      ImagesListWidget(
+                                        width: 150,
+                                        height: 150,
+                                        imagesList: imagesList,
+                                      ),
+                                    ],
+                                  );
+                                }),
+                          ValueListenableBuilder<ConversationData?>(
+                              valueListenable:
+                                  conversation.conversationAnalytics,
+                              builder:
+                                  (context, ConversationData? convData, _) {
+                                if (convData == null) return Container();
+                                return Column(
+                                  children: [
+                                    if (convData.emotionsTotals.isNotEmpty)
+                                      Container(
+                                        constraints: const BoxConstraints(
+                                            minHeight: 180),
+                                        margin: const EdgeInsets.all(
+                                            8.0), // Add some margin to separate it from other widgets
+                                        padding: const EdgeInsets.all(
+                                            8.0), // Add some padding inside the container
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                              width: 1,
+                                              color:
+                                                  Colors.grey.withOpacity(.5)),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surface, // Background color for the container
+                                          borderRadius: BorderRadius.circular(
+                                              12.0), // Rounded borders
+                                        ),
+                                        child: SizedBox(
+                                          width: 290,
+                                          child: VerticalDialogueChart(
+                                            title: "Emotions",
+                                            showTitle: true,
+                                            botBarColor: const Color.fromARGB(
+                                                255, 72, 1, 96),
+                                            userBarColor: const Color.fromARGB(
+                                                255, 72, 1, 96),
+                                            data: convData.emotionsPerRole,
+                                            labelConfig: emotionLabelConfig,
+                                          ),
+                                        ),
+                                      ),
+                                    const SizedBox(
+                                      height: 1,
                                     ),
-                                  ),
-                                if (convData.emotionsTotals.isNotEmpty)
-                                  SizedBox(
-                                    width: 280,
-                                    child: VerticalDialogueChart(
-                                      title: "Emotions",
-                                      botBarColor:
-                                          const Color.fromARGB(255, 72, 1, 96),
-                                      userBarColor:
-                                          const Color.fromARGB(255, 72, 1, 96),
-                                      data: convData.emotionsPerRole,
-                                    ),
-                                  ),
-                                if (convData.entityEvocationsTotals.isNotEmpty)
-                                  SizedBox(
-                                    width: 300,
-                                    child: CustomBarChart(
-                                      title: "Evocations",
-                                      barColor: const Color.fromARGB(
-                                          255, 122, 11, 158),
-                                      totalsData:
-                                          convData.entityEvocationsTotals,
-                                    ),
-                                  ),
-                                if (convData.entitySummonsTotals.isNotEmpty)
-                                  SizedBox(
-                                    width: 300,
-                                    child: CustomBarChart(
-                                      title: "Summoned",
-                                      barColor: const Color.fromARGB(
-                                          255, 176, 122, 194),
-                                      totalsData: convData.entitySummonsTotals,
-                                    ),
-                                  ),
-                              ],
-                            );
-                          });
+                                    if (convData
+                                        .entityEvocationsTotals.isNotEmpty)
+                                      Container(
+                                        // constraints: BoxConstraints(minHeight: 180),
+                                        margin: const EdgeInsets.all(
+                                            8.0), // Add some margin to separate it from other widgets
+                                        padding: const EdgeInsets.all(
+                                            8.0), // Add some padding inside the container
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                              width: 1,
+                                              color:
+                                                  Colors.grey.withOpacity(.5)),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surface, // Background color for the container
+                                          borderRadius: BorderRadius.circular(
+                                              12.0), // Rounded borders
+                                        ),
+                                        child: SizedBox(
+                                          width: 290,
+                                          child: CustomBarChart(
+                                            title: "Evocations",
+                                            barColor: const Color.fromARGB(
+                                                255, 122, 11, 158),
+                                            totalsData:
+                                                convData.entityEvocationsTotals,
+                                          ),
+                                        ),
+                                      ),
+                                    if (convData.entitySummonsTotals.isNotEmpty)
+                                      Container(
+                                        // constraints: BoxConstraints(minHeight: 180),
+                                        margin: const EdgeInsets.all(
+                                            8.0), // Add some margin to separate it from other widgets
+                                        padding: const EdgeInsets.all(
+                                            8.0), // Add some padding inside the container
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                              width: 1,
+                                              color:
+                                                  Colors.grey.withOpacity(.5)),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surface, // Background color for the container
+                                          borderRadius: BorderRadius.circular(
+                                              12.0), // Rounded borders
+                                        ),
+                                        child: SizedBox(
+                                          width: 290,
+                                          child: CustomBarChart(
+                                            title: "Summoned",
+                                            barColor: const Color.fromARGB(
+                                                255, 176, 122, 194),
+                                            totalsData:
+                                                convData.entitySummonsTotals,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              }),
+                        ],
+                      );
                     }),
               ],
             ),
