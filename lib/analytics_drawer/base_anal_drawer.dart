@@ -1,4 +1,5 @@
 import 'package:chat/analytics_drawer/graphs/custom_bar_chart.dart';
+import 'package:chat/analytics_drawer/graphs/vertical_dialogue_chart.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/display_configs.dart';
@@ -432,6 +433,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                           builder: (context, ConversationData? convData, _) {
                             if (convData == null) return Container();
                             print(convData.emotionsTotals);
+                            print(convData.emotionsPerRole);
                             return Column(
                               children: [
                                 if (convData.emotionsTotals.isNotEmpty)
@@ -442,6 +444,18 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                                       barColor:
                                           const Color.fromARGB(255, 72, 1, 96),
                                       totalsData: convData.emotionsTotals,
+                                    ),
+                                  ),
+                                if (convData.emotionsTotals.isNotEmpty)
+                                  SizedBox(
+                                    width: 280,
+                                    child: VerticalDialogueChart(
+                                      title: "Emotions",
+                                      botBarColor:
+                                          const Color.fromARGB(255, 72, 1, 96),
+                                      userBarColor:
+                                          const Color.fromARGB(255, 72, 1, 96),
+                                      data: convData.emotionsPerRole,
                                     ),
                                   ),
                                 if (convData.entityEvocationsTotals.isNotEmpty)
