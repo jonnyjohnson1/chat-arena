@@ -181,7 +181,7 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
                 child: Icon(CupertinoIcons.chat_bubble_text_fill,
                     color: 0 == bottomSelectedIndex
                         ? unselectedColor
-                        : Colors.blue[200],
+                        : Color.fromARGB(255, 67, 230, 255),
                     size: 19),
               ))),
     ];

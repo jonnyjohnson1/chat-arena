@@ -45,8 +45,8 @@ class _ConversationListItemState extends State<ConversationListItem> {
   Widget getGameIcon(GameType type) {
     switch (type) {
       case GameType.chat:
-        return Icon(CupertinoIcons.chat_bubble_fill,
-            color: Colors.blue[200], size: 26);
+        return const Icon(CupertinoIcons.chat_bubble_fill,
+            color: Color.fromARGB(255, 25, 212, 240), size: 26);
       case GameType.debate:
         return const Icon(CupertinoIcons.group_solid,
             color: Color.fromARGB(255, 188, 144, 249), size: 26);

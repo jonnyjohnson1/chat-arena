@@ -485,9 +485,9 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                                             title: "Emotions",
                                             showTitle: true,
                                             botBarColor: const Color.fromARGB(
-                                                255, 72, 1, 96),
+                                                255, 122, 11, 158),
                                             userBarColor: const Color.fromARGB(
-                                                255, 72, 1, 96),
+                                                255, 122, 11, 158),
                                             data: convData.emotionsPerRole,
                                             labelConfig: emotionLabelConfig,
                                           ),
@@ -549,7 +549,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                                           child: CustomBarChart(
                                             title: "Summoned",
                                             barColor: const Color.fromARGB(
-                                                255, 176, 122, 194),
+                                                255, 122, 11, 158),
                                             totalsData:
                                                 convData.entitySummonsTotals,
                                           ),
