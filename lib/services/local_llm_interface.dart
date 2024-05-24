@@ -223,6 +223,7 @@ class LocalLLMInterface {
       'conv': [],
       'meta': []
     };
+
     for (String key in msgHistDict.keys) {
       for (Message msg in msgHisLists[key]!) {
         if (msg.images != null) {
@@ -258,8 +259,6 @@ class LocalLLMInterface {
 
     Map<String, dynamic> submitPkg = {
       "conversation_id": metaConvId,
-      "message_id": messageHistory.last.id,
-      "chatbot_msg_id": chatBotMsgId,
       "model": model.model.model,
       "message": message,
       "message_history": msgHistDict['conv'] ?? [],

@@ -6,6 +6,7 @@ import 'package:chat/models/messages.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/tools.dart';
+import 'package:chat/shared/model_selector.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:load_switch/load_switch.dart';
@@ -25,7 +26,6 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late ValueNotifier<Conversation?> currentSelectedConversation;
-  bool isLoading = true;
 
   late ValueNotifier<List<uiMessage.Message>> messages;
 
@@ -41,12 +41,11 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
         // Load the meta conversation data form the conversation data class
         messages = currentSelectedConversation.value!.metaConvMessages;
       } catch (e) {
-        print(e);
+        debugPrint(e.toString());
       }
+    } else {
+      messages = ValueNotifier([]);
     }
-    setState(() {
-      isLoading = false;
-    });
   }
 
   @override
@@ -135,13 +134,24 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
     // NOTHING ON THIS YET
   }
 
+  String? metaMessageConvId;
+
   void sendMessagetoModel(
     String text,
     List<Message> metaMessages,
   ) async {
-    String metaMessageConvId = metaMessages.isEmpty
-        ? Tools().getRandomString(12)
-        : metaMessages.first.id;
+    // if no conversation is selected yet
+    // if (currentSelectedConversation.value == null) {
+    //   currentSelectedConversation.value = Conversation(
+    //     id: Tools().getRandomString(12),
+    //     lastMessage: text,
+    //     gameType: GameType.chat,
+    //     time: DateTime.now(),
+    //     primaryModel: selectedModel.model.name,
+    //     title: "Chat",
+    //   );
+    //   // currentSelectedConversation.notifyListeners();
+    // }
 
     // Add the user message to the conversation
     uiMessage.Message message = uiMessage.Message(
@@ -154,6 +164,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
         status: '',
         timestamp: DateTime.now(),
         type: uiMessage.MessageType.text);
+
     messages.value.add(message);
     messages.notifyListeners();
 
@@ -170,7 +181,6 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
     }
 
     setState(() {
-      // start generation
       isGenerating.value = true;
     });
 
@@ -183,7 +193,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
         text,
         metaMessages,
         actualConversation!,
-        metaMessageConvId,
+        metaMessageConvId!,
         newChatBotMsgId,
         selectedModel,
         displayConfigData.value,
@@ -211,215 +221,252 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
   Widget build(BuildContext context) {
     return !didInit
         ? Container()
-        : Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        const SizedBox(
-                          height: 3,
-                        ),
-                        SizedBox(
-                          width: 290,
-                          child: Stack(
-                            alignment: Alignment.topRight,
-                            children: [
-                              TextField(
-                                controller: queryController,
-                                keyboardType: TextInputType.text,
-                                minLines: 3,
-                                maxLines: 3,
-                                focusNode: _focusNode,
-                                onSubmitted: (String text) {
-                                  if (text.trim() != "") {
-                                    sendMessagetoModel(
-                                        text.trim(), messages.value);
-                                    queryController.clear();
-                                    _focusNode.requestFocus();
-                                  }
-                                },
-                                decoration: InputDecoration(
-                                  hintText: "Steer the conversation...",
-                                  hintStyle:
-                                      const TextStyle(color: Colors.black38),
-                                  filled: true,
-                                  // hoverColor: Colors.grey.withOpacity(.5),
-                                  focusColor: Colors.grey.withOpacity(.5),
-                                  fillColor:
-                                      Theme.of(context).colorScheme.surface,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(5.0),
-                                  ),
-                                ),
-                                cursorColor: Colors.black38,
-                                style: const TextStyle(color: Colors.black87),
-                                textAlignVertical: TextAlignVertical.center,
-                                autocorrect: true,
-                              ),
-                              InkWell(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text(
-                                          "Tips!—Get more from the conversation"),
-                                      content: const Text(
-                                          "Discuss what you are trying to achieve—be it trying to respond with certain emotion like lightheartedness, depth, caring, lovingness, anger or you want steer the conversation towards a particular outcome such as getting some kind of information, or receiving support for something you care about."),
-                                      actions: [
-                                        InkWell(
-                                          child: const Text("OK"),
-                                          onTap: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                      ],
+        : ValueListenableBuilder<Conversation?>(
+            valueListenable: currentSelectedConversation,
+            builder: (context, conversation, _) {
+              print("COnversation val");
+              print(conversation);
+              initData(); // init data when new conversation is selected
+              metaMessageConvId = messages.value.isEmpty
+                  ? Tools().getRandomString(12)
+                  : messages.value.first.id;
+              return Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            const SizedBox(
+                              height: 15,
+                            ),
+                            SizedBox(
+                              width: 290,
+                              child: Stack(
+                                alignment: Alignment.topRight,
+                                children: [
+                                  TextField(
+                                    controller: queryController,
+                                    keyboardType: TextInputType.text,
+                                    minLines: 3,
+                                    maxLines: 3,
+                                    focusNode: _focusNode,
+                                    onSubmitted: (String text) {
+                                      if (text.trim() != "") {
+                                        sendMessagetoModel(
+                                            text.trim(), messages.value);
+                                        queryController.clear();
+                                        _focusNode.requestFocus();
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      hintText: "Steer the conversation...",
+                                      hintStyle: const TextStyle(
+                                          color: Colors.black38),
+                                      filled: true,
+                                      // hoverColor: Colors.grey.withOpacity(.5),
+                                      focusColor: Colors.grey.withOpacity(.5),
+                                      fillColor:
+                                          Theme.of(context).colorScheme.surface,
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(5.0),
+                                      ),
                                     ),
-                                  );
-                                },
-                                child: const Icon(
-                                  Icons.info_outline,
-                                  color: Colors.black87,
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 4,
-                        ),
-                        SizedBox(
-                          width: 290,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton(
-                                  onPressed: () async {
-                                    if (queryController.text.trim() != "") {
-                                      sendMessagetoModel(
-                                          queryController.text.trim(),
-                                          messages.value);
-                                    }
-                                  },
-                                  child: const Text("Submit")),
-                              const SizedBox(
-                                width: 2,
+                                    cursorColor: Colors.black38,
+                                    style:
+                                        const TextStyle(color: Colors.black87),
+                                    textAlignVertical: TextAlignVertical.center,
+                                    autocorrect: true,
+                                  ),
+                                  InkWell(
+                                    onTap: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => Container(
+                                          constraints: const BoxConstraints(
+                                              maxWidth: 600),
+                                          child: AlertDialog(
+                                            title: ConstrainedBox(
+                                              constraints: const BoxConstraints(
+                                                  maxWidth: 600),
+                                              child: const Text(
+                                                  "Tips!—Get more from the conversation"),
+                                            ),
+                                            content: ConstrainedBox(
+                                              constraints: const BoxConstraints(
+                                                  maxWidth: 600),
+                                              child: const Text(
+                                                  "Discuss what you are trying to achieve—be it trying to respond with certain emotion like lightheartedness, depth, caring, lovingness, anger or you want steer the conversation towards a particular outcome such as getting some kind of information, or receiving support for something you care about."),
+                                            ),
+                                            actions: [
+                                              InkWell(
+                                                child: const Text("OK"),
+                                                onTap: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: const Icon(
+                                      Icons.info_outline,
+                                      color: Colors.black87,
+                                    ),
+                                  )
+                                ],
                               ),
-                              InkWell(
-                                onTap: () {},
-                                child: const Icon(
-                                  Icons.refresh,
-                                  color: Colors.black87,
-                                  size: 20,
-                                ),
+                            ),
+                            const SizedBox(
+                              height: 4,
+                            ),
+                            SizedBox(
+                              width: 290,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  ModelSelector(
+                                      initModel: selectedModel.model,
+                                      onSelectedModelChange:
+                                          (LanguageModel model) {
+                                        selectedModel.model = model;
+                                      }),
+                                  Row(
+                                    children: [
+                                      TextButton(
+                                          onPressed: () async {
+                                            if (queryController.text.trim() !=
+                                                "") {
+                                              sendMessagetoModel(
+                                                  queryController.text.trim(),
+                                                  messages.value);
+                                            }
+                                          },
+                                          child: const Text("Submit")),
+                                      const SizedBox(
+                                        width: 2,
+                                      ),
+                                      InkWell(
+                                        onTap: () {},
+                                        child: const Icon(
+                                          Icons.refresh,
+                                          color: Colors.black87,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            // DISPLAY THE CONVERSATION STEERING CONVERSATION HERE
+                            // Display only the last AI message, and display it streaming
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: ValueListenableBuilder<List<Message>>(
+                                  valueListenable: messages,
+                                  builder: (context, messagesList, _) {
+                                    if (messagesList.isEmpty)
+                                      return Container();
+                                    return ValueListenableBuilder<String>(
+                                        valueListenable:
+                                            messagesList.last.message!,
+                                        builder: (context, messageText, _) {
+                                          return SelectableText(messageText);
+                                        });
+                                  }),
+                            ),
+                            // DISPLAY A LIST OF NEXT THINGS TO SAY (INSERT THEM INTO THE CONVERSATION TEXTFIELD ON TAP)
+                          ],
                         ),
-                        // DISPLAY THE CONVERSATION STEERING CONVERSATION HERE
-                        // Display only the last AI message, and display it streaming
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: ValueListenableBuilder<List<Message>>(
-                              valueListenable: messages,
-                              builder: (context, messagesList, _) {
-                                print(
-                                    "NEW MESSAGE ADDED TO UI: NEW LENGTH ${messagesList.length}");
-                                if (messagesList.isEmpty) return Container();
-                                print(messagesList.last
-                                    .message); // switch this to the last Bot Message
-                                return ValueListenableBuilder<String>(
-                                    valueListenable: messagesList.last.message!,
-                                    builder: (context, messageText, _) {
-                                      print("RESPONSE: $messageText");
-                                      return SelectionArea(
-                                          child: Text(messageText));
-                                    });
-                              }),
-                        ),
-                        // DISPLAY A LIST OF NEXT THINGS TO SAY (INSERT THEM INTO THE CONVERSATION TEXTFIELD ON TAP)
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-                Row(children: [
-                  InkWell(
-                      onTap: null,
-                      // () {
-                      //   widget.onTap();
-                      // },
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 18.0),
-                        child: SizedBox(
-                          height: 45,
-                          child: Row(
-                            children: [
-                              const Icon(Icons.view_module_outlined),
-                              const SizedBox(
-                                width: 5,
+                    Row(children: [
+                      InkWell(
+                          onTap: null,
+                          // () {
+                          //   widget.onTap();
+                          // },
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 18.0),
+                            child: SizedBox(
+                              height: 45,
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.view_module_outlined),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  Text("Conversation Steering",
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium),
+                                ],
                               ),
-                              Text("Conversation Steering",
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium),
-                            ],
+                            ),
+                          )),
+                      Expanded(child: Container()),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(value ? "On" : "Off"),
+                          const SizedBox(
+                            width: 15,
                           ),
-                        ),
-                      )),
-                  Expanded(child: Container()),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(value ? "On" : "Off"),
-                      const SizedBox(
-                        width: 15,
-                      ),
-                      SizedBox(
-                        width: 42,
-                        child: LoadSwitch(
-                          height: 23,
-                          width: 38,
-                          value: value,
-                          future: _getFuture,
-                          style: SpinStyle.material,
-                          switchDecoration: (value, isActive) => BoxDecoration(
-                            color: value
-                                ? Color.fromARGB(255, 122, 11, 158)
-                                : Color.fromARGB(255, 193, 193, 193),
-                            borderRadius: BorderRadius.circular(30),
-                            shape: BoxShape.rectangle,
-                            boxShadow: [
-                              BoxShadow(
+                          SizedBox(
+                            width: 42,
+                            child: LoadSwitch(
+                              height: 23,
+                              width: 38,
+                              value: value,
+                              future: _getFuture,
+                              style: SpinStyle.material,
+                              switchDecoration: (value, isActive) =>
+                                  BoxDecoration(
                                 color: value
-                                    ? const Color.fromARGB(255, 222, 222, 222)
-                                    : const Color.fromARGB(255, 213, 213, 213),
-                                spreadRadius: 5,
-                                blurRadius: 7,
-                                offset: const Offset(
-                                    0, 3), // changes position of shadow
+                                    ? Color.fromARGB(255, 122, 11, 158)
+                                    : Color.fromARGB(255, 193, 193, 193),
+                                borderRadius: BorderRadius.circular(30),
+                                shape: BoxShape.rectangle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: value
+                                        ? const Color.fromARGB(
+                                            255, 222, 222, 222)
+                                        : const Color.fromARGB(
+                                            255, 213, 213, 213),
+                                    spreadRadius: 5,
+                                    blurRadius: 7,
+                                    offset: const Offset(
+                                        0, 3), // changes position of shadow
+                                  ),
+                                ],
                               ),
-                            ],
+                              spinColor: (value) => value
+                                  ? const Color.fromARGB(255, 125, 73, 182)
+                                  : const Color.fromARGB(255, 125, 73, 182),
+                              onChange: (v) {
+                                value = v;
+                                print('Value changed to $v');
+                                setState(() {});
+                              },
+                              onTap: (v) {
+                                print('Tapping while value is $v');
+                              },
+                            ),
                           ),
-                          spinColor: (value) => value
-                              ? const Color.fromARGB(255, 125, 73, 182)
-                              : const Color.fromARGB(255, 125, 73, 182),
-                          onChange: (v) {
-                            value = v;
-                            print('Value changed to $v');
-                            setState(() {});
-                          },
-                          onTap: (v) {
-                            print('Tapping while value is $v');
-                          },
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 8,
-                      ),
-                    ],
-                  )
-                ]),
-              ]);
+                          const SizedBox(
+                            width: 8,
+                          ),
+                        ],
+                      )
+                    ]),
+                  ]);
+            });
   }
 }

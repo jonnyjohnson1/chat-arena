@@ -102,7 +102,7 @@ class _AnalyticsViewDrawerState extends State<AnalyticsViewDrawer> {
           scale: 1 == bottomSelectedIndex ? 1.15 : 1,
           child: InkWell(
               borderRadius: const BorderRadius.all(Radius.circular(5)),
-              onTap: () => bottomTapped(0),
+              onTap: () => bottomTapped(1),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Icon(
@@ -121,7 +121,7 @@ class _AnalyticsViewDrawerState extends State<AnalyticsViewDrawer> {
           scale: 2 == bottomSelectedIndex ? 1.15 : 1,
           child: InkWell(
               borderRadius: const BorderRadius.all(Radius.circular(5)),
-              onTap: () => bottomTapped(1),
+              onTap: () => bottomTapped(2),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Icon(Icons.bubble_chart,
