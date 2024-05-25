@@ -1,5 +1,8 @@
+import 'package:chat/models/display_configs.dart';
+import 'package:chat/pages/settings/settings_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
     {required Function onMenuTap,
@@ -73,6 +76,20 @@ buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  IconButton(
+                    icon: const Icon(Icons.settings),
+                    onPressed: () {
+                      ValueNotifier<DisplayConfigData> displayConfigData =
+                          Provider.of<ValueNotifier<DisplayConfigData>>(ctx,
+                              listen: false);
+                      showDialog(
+                        context: ctx,
+                        builder: (ctx) => MultiProvider(providers: [
+                          ChangeNotifierProvider.value(value: displayConfigData)
+                        ], child: SettingsDialog()),
+                      );
+                    },
+                  ),
                   IconButton(
                       tooltip: "Chat Analytics",
                       onPressed: () {

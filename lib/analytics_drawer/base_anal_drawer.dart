@@ -348,257 +348,261 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   Widget build(BuildContext context) {
     return !didInit
         ? Container()
-        : SingleChildScrollView(
-            child: Column(
-              children: [
-                ExpansionPanelList(
-                  elevation: 0,
-                  expansionCallback: (int index, bool isExpanded) {
-                    setState(() {
-                      _isExpanded = !_isExpanded;
-                    });
-                  },
-                  children: [
-                    ExpansionPanel(
-                      headerBuilder: (BuildContext context, bool isExpanded) {
-                        return Padding(
-                          padding: const EdgeInsets.only(left: 18.0),
-                          child: SizedBox(
-                            height: 45,
-                            child: InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _isExpanded = !_isExpanded;
-                                });
-                              },
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.display_settings,
-                                    size: 23,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text("Display",
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                      body: Column(
-                        children: [
-                          _buildRow(
-                            icon: Icons.abc_outlined,
-                            label: "In-Message (NER)",
-                            value: showInMsgNER,
-                            future: _toggleShowInMsgNER,
-                            notifier: displayConfigData.value.showInMessageNER,
-                          ),
-                          _buildAnalysisRow(
-                            icon: Icons.abc_outlined,
-                            label1: "Calc:",
-                            value1: calcInMsgNER,
-                            future1: _toggleNERCalculations,
-                            notifier1:
-                                displayConfigData.value.calculateInMessageNER,
-                            label2: "Rerun:",
-                            value2: false,
-                            future2: _toggleRerunNEROnConversation,
-                            notifier2: false,
-                          ),
-                          _buildRow(
-                            icon: Icons.block,
-                            label: "Moderation Tags",
-                            value: showModerationTags,
-                            future: _toggleShowModerationTags,
-                            notifier:
-                                displayConfigData.value.showModerationTags,
-                          ),
-                          _buildAnalysisRow(
-                            icon: Icons.abc_outlined,
-                            label1: "Calc:",
-                            value1: calcModerationTags,
-                            future1: _toggleModerationCalculations,
-                            notifier1:
-                                displayConfigData.value.calculateModerationTags,
-                            label2: "Rerun:",
-                            value2: false,
-                            future2: _toggleRerunNEROnConversation,
-                            notifier2: false,
-                          ),
-                          _buildRow(
-                            icon: Icons.image,
-                            label: "ImageGen",
-                            value: calcImageGen,
-                            future: _togglecalcImageGen,
-                            notifier: displayConfigData.value.calcImageGen,
-                          ),
-                        ],
-                      ),
-                      isExpanded: _isExpanded,
-                    ),
-                  ],
-                ),
-                _buildRow(
-                  icon: Icons.view_module_outlined,
-                  label: "Base Analytics",
-                  value: showSidebarBaseAnalytics,
-                  future: _toggleShowSidebarBaseAnalytics,
-                  notifier: displayConfigData.value.showSidebarBaseAnalytics,
-                ),
-                ValueListenableBuilder<Conversation?>(
+        : Column(
+            children: [
+              // ExpansionPanelList(
+              //   elevation: 0,
+              //   expansionCallback: (int index, bool isExpanded) {
+              //     setState(() {
+              //       _isExpanded = !_isExpanded;
+              //     });
+              //   },
+              //   children: [
+              //     ExpansionPanel(
+              //       headerBuilder: (BuildContext context, bool isExpanded) {
+              //         return Padding(
+              //           padding: const EdgeInsets.only(left: 18.0),
+              //           child: SizedBox(
+              //             height: 45,
+              //             child: InkWell(
+              //               onTap: () {
+              //                 setState(() {
+              //                   _isExpanded = !_isExpanded;
+              //                 });
+              //               },
+              //               child: Row(
+              //                 children: [
+              //                   const Icon(
+              //                     Icons.display_settings,
+              //                     size: 23,
+              //                   ),
+              //                   const SizedBox(width: 6),
+              //                   Text("Display",
+              //                       style: Theme.of(context)
+              //                           .textTheme
+              //                           .titleMedium),
+              //                 ],
+              //               ),
+              //             ),
+              //           ),
+              //         );
+              //       },
+              //       body: Column(
+              //         children: [
+              //           _buildRow(
+              //             icon: Icons.abc_outlined,
+              //             label: "In-Message (NER)",
+              //             value: showInMsgNER,
+              //             future: _toggleShowInMsgNER,
+              //             notifier: displayConfigData.value.showInMessageNER,
+              //           ),
+              //           _buildAnalysisRow(
+              //             icon: Icons.abc_outlined,
+              //             label1: "Calc:",
+              //             value1: calcInMsgNER,
+              //             future1: _toggleNERCalculations,
+              //             notifier1:
+              //                 displayConfigData.value.calculateInMessageNER,
+              //             label2: "Rerun:",
+              //             value2: false,
+              //             future2: _toggleRerunNEROnConversation,
+              //             notifier2: false,
+              //           ),
+              //           _buildRow(
+              //             icon: Icons.block,
+              //             label: "Moderation Tags",
+              //             value: showModerationTags,
+              //             future: _toggleShowModerationTags,
+              //             notifier:
+              //                 displayConfigData.value.showModerationTags,
+              //           ),
+              //           _buildAnalysisRow(
+              //             icon: Icons.abc_outlined,
+              //             label1: "Calc:",
+              //             value1: calcModerationTags,
+              //             future1: _toggleModerationCalculations,
+              //             notifier1:
+              //                 displayConfigData.value.calculateModerationTags,
+              //             label2: "Rerun:",
+              //             value2: false,
+              //             future2: _toggleRerunNEROnConversation,
+              //             notifier2: false,
+              //           ),
+              //           _buildRow(
+              //             icon: Icons.image,
+              //             label: "ImageGen",
+              //             value: calcImageGen,
+              //             future: _togglecalcImageGen,
+              //             notifier: displayConfigData.value.calcImageGen,
+              //           ),
+              //         ],
+              //       ),
+              //       isExpanded: _isExpanded,
+              //     ),
+              //   ],
+              // ),
+              Expanded(
+                child: ValueListenableBuilder<Conversation?>(
                     valueListenable: currentSelectedConversation,
                     builder: (context, Conversation? conversation, _) {
                       if (conversation == null) return Container();
                       debugPrint(
                           "\t[ Loading analytics for conversation id :: ${conversation.id} ]");
 
-                      return Column(
-                        children: [
-                          ValueListenableBuilder<List<ImageFile>>(
-                              valueListenable: conversation.convToImagesList,
-                              builder:
-                                  (context, List<ImageFile> imagesList, _) {
-                                return Column(
-                                  children: [
-                                    ImagesListWidget(
-                                      width: 150,
-                                      height: 150,
-                                      imagesList: imagesList,
-                                      regenImage: () async {
-                                        ImageFile? imageFile =
-                                            await LocalLLMInterface()
-                                                .getConvToImage(
-                                                    currentSelectedConversation
-                                                        .value!.id);
-                                        if (imageFile != null) {
-                                          // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
-                                          currentSelectedConversation
-                                              .value!.convToImagesList.value
-                                              .add(imageFile);
-                                          currentSelectedConversation
-                                              .value!.convToImagesList
-                                              .notifyListeners();
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                );
-                              }),
-                          ValueListenableBuilder<ConversationData?>(
-                              valueListenable:
-                                  conversation.conversationAnalytics,
-                              builder:
-                                  (context, ConversationData? convData, _) {
-                                if (convData == null) return Container();
-                                return Column(
-                                  children: [
-                                    if (convData.emotionsTotals.isNotEmpty)
-                                      Container(
-                                        constraints: const BoxConstraints(
-                                            minHeight: 180),
-                                        margin: const EdgeInsets.all(
-                                            8.0), // Add some margin to separate it from other widgets
-                                        padding: const EdgeInsets.all(
-                                            8.0), // Add some padding inside the container
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                              width: 1,
-                                              color:
-                                                  Colors.grey.withOpacity(.5)),
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .surface, // Background color for the container
-                                          borderRadius: BorderRadius.circular(
-                                              12.0), // Rounded borders
-                                        ),
-                                        child: SizedBox(
-                                          width: 290,
-                                          child: VerticalDialogueChart(
-                                            title: "Emotions",
-                                            showTitle: true,
-                                            botBarColor: const Color.fromARGB(
-                                                255, 122, 11, 158),
-                                            userBarColor: const Color.fromARGB(
-                                                255, 122, 11, 158),
-                                            data: convData.emotionsPerRole,
-                                            labelConfig: emotionLabelConfig,
+                      return SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            ValueListenableBuilder<List<ImageFile>>(
+                                valueListenable: conversation.convToImagesList,
+                                builder:
+                                    (context, List<ImageFile> imagesList, _) {
+                                  return Column(
+                                    children: [
+                                      ImagesListWidget(
+                                        width: 150,
+                                        height: 150,
+                                        imagesList: imagesList,
+                                        regenImage: () async {
+                                          ImageFile? imageFile =
+                                              await LocalLLMInterface()
+                                                  .getConvToImage(
+                                                      currentSelectedConversation
+                                                          .value!.id);
+                                          if (imageFile != null) {
+                                            // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
+                                            currentSelectedConversation
+                                                .value!.convToImagesList.value
+                                                .add(imageFile);
+                                            currentSelectedConversation
+                                                .value!.convToImagesList
+                                                .notifyListeners();
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                }),
+                            ValueListenableBuilder<ConversationData?>(
+                                valueListenable:
+                                    conversation.conversationAnalytics,
+                                builder:
+                                    (context, ConversationData? convData, _) {
+                                  if (convData == null) return Container();
+                                  return Column(
+                                    children: [
+                                      if (convData.emotionsTotals.isNotEmpty)
+                                        Container(
+                                          constraints: const BoxConstraints(
+                                              minHeight: 180),
+                                          margin: const EdgeInsets.all(
+                                              8.0), // Add some margin to separate it from other widgets
+                                          padding: const EdgeInsets.all(
+                                              8.0), // Add some padding inside the container
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                                width: 1,
+                                                color: Colors.grey
+                                                    .withOpacity(.5)),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surface, // Background color for the container
+                                            borderRadius: BorderRadius.circular(
+                                                12.0), // Rounded borders
+                                          ),
+                                          child: SizedBox(
+                                            width: 290,
+                                            child: VerticalDialogueChart(
+                                              title: "Emotions",
+                                              showTitle: true,
+                                              botBarColor: const Color.fromARGB(
+                                                  255, 122, 11, 158),
+                                              userBarColor:
+                                                  const Color.fromARGB(
+                                                      255, 122, 11, 158),
+                                              data: convData.emotionsPerRole,
+                                              labelConfig: emotionLabelConfig,
+                                            ),
                                           ),
                                         ),
+                                      const SizedBox(
+                                        height: 1,
                                       ),
-                                    const SizedBox(
-                                      height: 1,
-                                    ),
-                                    if (convData
-                                        .entityEvocationsTotals.isNotEmpty)
-                                      Container(
-                                        // constraints: BoxConstraints(minHeight: 180),
-                                        margin: const EdgeInsets.all(
-                                            8.0), // Add some margin to separate it from other widgets
-                                        padding: const EdgeInsets.all(
-                                            8.0), // Add some padding inside the container
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                              width: 1,
-                                              color:
-                                                  Colors.grey.withOpacity(.5)),
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .surface, // Background color for the container
-                                          borderRadius: BorderRadius.circular(
-                                              12.0), // Rounded borders
-                                        ),
-                                        child: SizedBox(
-                                          width: 290,
-                                          child: CustomBarChart(
-                                            title: "Evocations",
-                                            barColor: const Color.fromARGB(
-                                                255, 122, 11, 158),
-                                            totalsData:
-                                                convData.entityEvocationsTotals,
+                                      if (convData
+                                          .entityEvocationsTotals.isNotEmpty)
+                                        Container(
+                                          // constraints: BoxConstraints(minHeight: 180),
+                                          margin: const EdgeInsets.all(
+                                              8.0), // Add some margin to separate it from other widgets
+                                          padding: const EdgeInsets.all(
+                                              8.0), // Add some padding inside the container
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                                width: 1,
+                                                color: Colors.grey
+                                                    .withOpacity(.5)),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surface, // Background color for the container
+                                            borderRadius: BorderRadius.circular(
+                                                12.0), // Rounded borders
+                                          ),
+                                          child: SizedBox(
+                                            width: 290,
+                                            child: CustomBarChart(
+                                              title: "Evocations",
+                                              barColor: const Color.fromARGB(
+                                                  255, 122, 11, 158),
+                                              totalsData: convData
+                                                  .entityEvocationsTotals,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    if (convData.entitySummonsTotals.isNotEmpty)
-                                      Container(
-                                        // constraints: BoxConstraints(minHeight: 180),
-                                        margin: const EdgeInsets.all(
-                                            8.0), // Add some margin to separate it from other widgets
-                                        padding: const EdgeInsets.all(
-                                            8.0), // Add some padding inside the container
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                              width: 1,
-                                              color:
-                                                  Colors.grey.withOpacity(.5)),
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .surface, // Background color for the container
-                                          borderRadius: BorderRadius.circular(
-                                              12.0), // Rounded borders
-                                        ),
-                                        child: SizedBox(
-                                          width: 290,
-                                          child: CustomBarChart(
-                                            title: "Summoned",
-                                            barColor: const Color.fromARGB(
-                                                255, 122, 11, 158),
-                                            totalsData:
-                                                convData.entitySummonsTotals,
+                                      if (convData
+                                          .entitySummonsTotals.isNotEmpty)
+                                        Container(
+                                          // constraints: BoxConstraints(minHeight: 180),
+                                          margin: const EdgeInsets.all(
+                                              8.0), // Add some margin to separate it from other widgets
+                                          padding: const EdgeInsets.all(
+                                              8.0), // Add some padding inside the container
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                                width: 1,
+                                                color: Colors.grey
+                                                    .withOpacity(.5)),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surface, // Background color for the container
+                                            borderRadius: BorderRadius.circular(
+                                                12.0), // Rounded borders
+                                          ),
+                                          child: SizedBox(
+                                            width: 290,
+                                            child: CustomBarChart(
+                                              title: "Summoned",
+                                              barColor: const Color.fromARGB(
+                                                  255, 122, 11, 158),
+                                              totalsData:
+                                                  convData.entitySummonsTotals,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                  ],
-                                );
-                              }),
-                        ],
+                                    ],
+                                  );
+                                }),
+                          ],
+                        ),
                       );
                     }),
-              ],
-            ),
+              ),
+              _buildRow(
+                icon: Icons.view_module_outlined,
+                label: "Base Analytics",
+                value: showSidebarBaseAnalytics,
+                future: _toggleShowSidebarBaseAnalytics,
+                notifier: displayConfigData.value.showSidebarBaseAnalytics,
+              ),
+            ],
           );
   }
 }
