@@ -372,6 +372,53 @@ class LocalLLMInterface {
     }
   }
 
+  Future<String?> getNextMessageOptions(
+      String conversationID, List<Message> messageHistory, String model) async {
+    final uri = getUrlStart + "0.0.0.0:13341/gen_next_message_options";
+    final url = Uri.parse(uri);
+    final headers = {
+      "accept": "application/json; charset=utf-8",
+      "Content-Type": "application/json; charset=utf-8"
+    };
+    // pull together the last three messages from the message history
+    String lastThreeMessages = "";
+
+    // Loop through the last three messages and add their text to the list
+    for (int i = messageHistory.length - 3; i < messageHistory.length; i++) {
+      if (i >= 0) {
+        lastThreeMessages +=
+            "${messageHistory[i].name}: ${messageHistory[i].message!.value}\n";
+      }
+    }
+    print("LAST THREE MESSAGES ARE");
+    print(lastThreeMessages);
+
+    final body = json.encode({
+      "conversation_id": conversationID,
+      "model": model,
+      "query": lastThreeMessages
+    });
+
+    try {
+      var request = await http.post(url, headers: headers, body: body);
+      if (request.statusCode == 200) {
+        var data = json.decode(request.body);
+        // print("CONV_TO_IMAGE");
+        // print("_" * 42);
+        print(data);
+
+        return null;
+      } else {
+        debugPrint(
+            'Error: Server responded with status code ${request.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+      return null;
+    }
+  }
+
   Future<ImageFile?> getConvToImage(String conversationID) async {
     final uri = getUrlStart + "0.0.0.0:13341/chat/conv_to_image";
     final url = Uri.parse(uri);

@@ -26,7 +26,6 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late ValueNotifier<Conversation?> currentSelectedConversation;
-
   late ValueNotifier<List<uiMessage.Message>> messages;
 
   ModelConfig selectedModel = ModelConfig(
@@ -224,8 +223,6 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
         : ValueListenableBuilder<Conversation?>(
             valueListenable: currentSelectedConversation,
             builder: (context, conversation, _) {
-              print("COnversation val");
-              print(conversation);
               initData(); // init data when new conversation is selected
               metaMessageConvId = messages.value.isEmpty
                   ? Tools().getRandomString(12)
@@ -249,8 +246,8 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
                                   TextField(
                                     controller: queryController,
                                     keyboardType: TextInputType.text,
-                                    minLines: 3,
-                                    maxLines: 3,
+                                    minLines: 4,
+                                    maxLines: 4,
                                     focusNode: _focusNode,
                                     onSubmitted: (String text) {
                                       if (text.trim() != "") {
@@ -275,8 +272,8 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
                                       ),
                                     ),
                                     cursorColor: Colors.black38,
-                                    style:
-                                        const TextStyle(color: Colors.black87),
+                                    style: const TextStyle(
+                                        color: Colors.black87, fontSize: 14),
                                     textAlignVertical: TextAlignVertical.center,
                                     autocorrect: true,
                                   ),
@@ -381,6 +378,14 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
                                         });
                                   }),
                             ),
+                            ElevatedButton(
+                                onPressed: () async {
+                                  LocalLLMInterface().getNextMessageOptions(
+                                      currentSelectedConversation.value!.id,
+                                      messages.value,
+                                      selectedModel.model.model);
+                                },
+                                child: const Text("Gen Options")),
                             // DISPLAY A LIST OF NEXT THINGS TO SAY (INSERT THEM INTO THE CONVERSATION TEXTFIELD ON TAP)
                           ],
                         ),

@@ -4,6 +4,7 @@ import 'package:chat/models/conversation.dart';
 import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/shared/emo27config.dart';
 import 'package:chat/shared/image_viewer.dart';
 import 'package:chat/shared/images_list_widget.dart';
@@ -31,6 +32,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   bool calcInMsgNER = true;
   bool showModerationTags = true;
   bool calcModerationTags = true;
+  bool calcImageGen = false;
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
     calcInMsgNER = config.calculateInMessageNER;
     showModerationTags = config.showModerationTags;
     calcModerationTags = config.calculateModerationTags;
+    calcImageGen = config.calcImageGen;
   }
 
   Future<bool> _toggleRerunNEROnConversation() async {
@@ -65,8 +68,21 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
     return false;
   }
 
+  final int futureWaitDuration = 900;
+
+  Future<bool> _togglecalcImageGen() async {
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
+    final newValue = !displayConfigData.value.calcImageGen;
+    displayConfigData.value.calcImageGen = newValue;
+    displayConfigData.notifyListeners();
+    setState(() {
+      calcImageGen = newValue;
+    });
+    return newValue;
+  }
+
   Future<bool> _toggleShowSidebarBaseAnalytics() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.showSidebarBaseAnalytics;
     displayConfigData.value.showSidebarBaseAnalytics = newValue;
     displayConfigData.notifyListeners();
@@ -77,7 +93,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   }
 
   Future<bool> _toggleNERCalculations() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.calculateInMessageNER;
     displayConfigData.value.calculateInMessageNER = newValue;
     displayConfigData.notifyListeners();
@@ -88,7 +104,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   }
 
   Future<bool> _toggleModerationCalculations() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.calculateModerationTags;
     displayConfigData.value.calculateModerationTags = newValue;
     displayConfigData.notifyListeners();
@@ -99,7 +115,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   }
 
   Future<bool> _toggleShowModerationTags() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.showModerationTags;
     displayConfigData.value.showModerationTags = newValue;
     displayConfigData.notifyListeners();
@@ -110,7 +126,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   }
 
   Future<bool> _toggleShowInMsgNER() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.showInMessageNER;
     displayConfigData.value.showInMessageNER = newValue;
     displayConfigData.notifyListeners();
@@ -413,6 +429,13 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                             future2: _toggleRerunNEROnConversation,
                             notifier2: false,
                           ),
+                          _buildRow(
+                            icon: Icons.image,
+                            label: "ImageGen",
+                            value: calcImageGen,
+                            future: _togglecalcImageGen,
+                            notifier: displayConfigData.value.calcImageGen,
+                          ),
                         ],
                       ),
                       isExpanded: _isExpanded,
@@ -435,23 +458,36 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
 
                       return Column(
                         children: [
-                          if (conversation.convToImagesList.value.isNotEmpty)
-                            ValueListenableBuilder<List<ImageFile>>(
-                                valueListenable: conversation.convToImagesList,
-                                builder:
-                                    (context, List<ImageFile> imagesList, _) {
-                                  if (imagesList.isEmpty) return Container();
-                                  ImageFile lastImage = imagesList.last;
-                                  return Column(
-                                    children: [
-                                      ImagesListWidget(
-                                        width: 150,
-                                        height: 150,
-                                        imagesList: imagesList,
-                                      ),
-                                    ],
-                                  );
-                                }),
+                          ValueListenableBuilder<List<ImageFile>>(
+                              valueListenable: conversation.convToImagesList,
+                              builder:
+                                  (context, List<ImageFile> imagesList, _) {
+                                return Column(
+                                  children: [
+                                    ImagesListWidget(
+                                      width: 150,
+                                      height: 150,
+                                      imagesList: imagesList,
+                                      regenImage: () async {
+                                        ImageFile? imageFile =
+                                            await LocalLLMInterface()
+                                                .getConvToImage(
+                                                    currentSelectedConversation
+                                                        .value!.id);
+                                        if (imageFile != null) {
+                                          // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
+                                          currentSelectedConversation
+                                              .value!.convToImagesList.value
+                                              .add(imageFile);
+                                          currentSelectedConversation
+                                              .value!.convToImagesList
+                                              .notifyListeners();
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                );
+                              }),
                           ValueListenableBuilder<ConversationData?>(
                               valueListenable:
                                   conversation.conversationAnalytics,

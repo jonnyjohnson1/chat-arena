@@ -123,12 +123,14 @@ class _ChatGamePageState extends State<ChatGamePage> {
           widget.conversation!.conversationAnalytics.notifyListeners();
 
           // get an image depiction of the conversation
-          ImageFile? data3 =
-              await LocalLLMInterface().getConvToImage(widget.conversation!.id);
-          if (data3 != null) {
-            // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
-            widget.conversation!.convToImagesList.value.add(data3);
-            widget.conversation!.convToImagesList.notifyListeners();
+          if (displayConfigData.value.calcImageGen) {
+            ImageFile? imageFile = await LocalLLMInterface()
+                .getConvToImage(widget.conversation!.id);
+            if (imageFile != null) {
+              // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
+              widget.conversation!.convToImagesList.value.add(imageFile);
+              widget.conversation!.convToImagesList.notifyListeners();
+            }
           }
         }
       } else {
