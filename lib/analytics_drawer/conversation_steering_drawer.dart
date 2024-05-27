@@ -1,4 +1,5 @@
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/conversation_settings.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/llm.dart';
@@ -8,7 +9,10 @@ import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/suggestions_query.dart';
 import 'package:chat/services/tools.dart';
+import 'package:chat/shared/chip_widget.dart';
 import 'package:chat/shared/conv_steering_selector.dart';
+import 'package:chat/shared/conversation_settings.dart';
+import 'package:chat/shared/markdown_display.dart/markdown_text.dart';
 import 'package:chat/shared/model_selector.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -615,10 +619,10 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
             ElevatedButton(
               onPressed: () async {
                 LocalLLMInterface().getNextMessageOptions(
-                  currentSelectedConversation.value!.id,
-                  messages.value,
-                  selectedModel.model.model,
-                );
+                    currentSelectedConversation.value!.id,
+                    messages.value,
+                    selectedModel.model.model,
+                    _settings);
               },
               child: const Text("Summarize"),
             ),
@@ -630,10 +634,10 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
             ElevatedButton(
               onPressed: () async {
                 LocalLLMInterface().getNextMessageOptions(
-                  currentSelectedConversation.value!.id,
-                  messages.value,
-                  selectedModel.model.model,
-                );
+                    currentSelectedConversation.value!.id,
+                    messages.value,
+                    selectedModel.model.model,
+                    _settings);
               },
               child: const Text("Get Topics"),
             ),
@@ -643,6 +647,20 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
     );
   }
 
+  // TODO Save the settings of the suggested items right here
+  ValueNotifier<List<String>> suggestedNextStepIdeas = ValueNotifier([]);
+  ValueNotifier<int> selectedIndex = ValueNotifier<int>(0);
+  ScrollController scrollController = ScrollController();
+  ValueNotifier<bool> showSettings = ValueNotifier(false);
+  ConversationVoiceSettings _settings = ConversationVoiceSettings(
+    attention: "inclusive",
+    tone: "friendly",
+    distance: "cordial",
+    pace: "leisurely",
+    depth: "insightful",
+    engagement: "engaging",
+    messageLength: "brief",
+  );
   Widget buildSteerTab() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -655,16 +673,133 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
           children: [
             ElevatedButton(
               onPressed: () async {
-                LocalLLMInterface().getNextMessageOptions(
-                  currentSelectedConversation.value!.id,
-                  messages.value,
-                  selectedModel.model.model,
+                debugPrint("\t\t[ generating conversation options ]");
+                String? nextStepResponse = await LocalLLMInterface()
+                    .getNextMessageOptions(
+                        currentSelectedConversation.value!.id,
+                        messages.value,
+                        selectedModel.model.model,
+                        _settings);
+                if (nextStepResponse != null) {
+                  if (nextStepResponse.trim().isNotEmpty) {
+                    suggestedNextStepIdeas.value.add(nextStepResponse);
+                    suggestedNextStepIdeas.notifyListeners();
+                    selectedIndex.value =
+                        suggestedNextStepIdeas.value.length - 1;
+                    selectedIndex.notifyListeners();
+                  }
+                }
+              },
+              child: const Text("Generate"),
+            ),
+            const SizedBox(
+              width: 12,
+            ),
+            ValueListenableBuilder(
+              valueListenable: showSettings,
+              builder: (context, value, child) {
+                final theme = Theme.of(context);
+                final colorScheme = theme.colorScheme;
+                final highlightColor = colorScheme.primary.withOpacity(0.2);
+                final iconColor = colorScheme.primary;
+
+                return InkWell(
+                  onTap: () {
+                    showSettings.value = !showSettings.value;
+                    showSettings.notifyListeners();
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: value ? highlightColor : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      CupertinoIcons.slider_horizontal_3,
+                      color: value ? iconColor : Colors.black,
+                    ),
+                  ),
                 );
               },
-              child: const Text("Gen Options"),
-            ),
+            )
           ],
         ),
+        ValueListenableBuilder<bool>(
+            valueListenable: showSettings,
+            builder: (context, show, _) {
+              if (!show) return Container();
+              return Container(
+                  padding: EdgeInsets.all(16),
+                  margin: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: Colors.grey.shade300,
+                      width: 1,
+                    ),
+                  ),
+                  constraints: const BoxConstraints(maxWidth: 290),
+                  child: ConversationSettingsPage(
+                    initSettings: _settings,
+                    onChange: ((ConversationVoiceSettings updatedSettings) {
+                      _settings = updatedSettings;
+                    }),
+                  ));
+            }),
+        const SizedBox(height: 10),
+        ValueListenableBuilder<List<String>>(
+            valueListenable: suggestedNextStepIdeas,
+            builder: (context, nextsteps, _) {
+              return ValueListenableBuilder<int>(
+                valueListenable: selectedIndex,
+                builder: (context, value, _) {
+                  if (suggestedNextStepIdeas.value.isEmpty) return Container();
+                  return Column(
+                    children: [
+                      SingleChildScrollView(
+                        controller: scrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: Scrollbar(
+                          controller: scrollController,
+                          thickness: 8,
+                          child: Row(
+                            children: List.generate(
+                                suggestedNextStepIdeas.value.length, (index) {
+                              return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 2.0),
+                                  child: CustomChip(
+                                    index: index,
+                                    isSelected: selectedIndex.value == index,
+                                    onTap: () {
+                                      selectedIndex.value = index;
+                                    },
+                                  ));
+                            }),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          suggestedNextStepIdeas.value[value],
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            }),
       ],
     );
   }

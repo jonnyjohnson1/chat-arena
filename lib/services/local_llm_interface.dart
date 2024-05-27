@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:chat/models/conversation_analytics.dart';
+import 'package:chat/models/conversation_settings.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/llm.dart';
@@ -373,7 +374,10 @@ class LocalLLMInterface {
   }
 
   Future<String?> getNextMessageOptions(
-      String conversationID, List<Message> messageHistory, String model) async {
+      String conversationID,
+      List<Message> messageHistory,
+      String model,
+      ConversationVoiceSettings settings) async {
     final uri = getUrlStart + "0.0.0.0:13341/gen_next_message_options";
     final url = Uri.parse(uri);
     final headers = {
@@ -396,7 +400,8 @@ class LocalLLMInterface {
     final body = json.encode({
       "conversation_id": conversationID,
       "model": model,
-      "query": lastThreeMessages
+      "query": lastThreeMessages,
+      "voice_settings": settings.toJson()
     });
 
     try {
@@ -405,9 +410,8 @@ class LocalLLMInterface {
         var data = json.decode(request.body);
         // print("CONV_TO_IMAGE");
         // print("_" * 42);
-        print(data);
-
-        return null;
+        String nextStepOptions = data['response'];
+        return nextStepOptions;
       } else {
         debugPrint(
             'Error: Server responded with status code ${request.statusCode}');
