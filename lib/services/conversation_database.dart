@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS $tableImages (
 
   Future<int> delete(String id) async {
     final db = await instance.database;
-    readConversation(id);
+    // readConversation(id);
     return db.delete(tableConversations,
         where: '${ConversationFields.id} = ?', whereArgs: [id]);
   }

@@ -52,19 +52,19 @@ class _ChatGamePageState extends State<ChatGamePage> {
       // This is the quickstart path, where the chat box is open on start up
       // we direct people directly into a Chat game
       // create an official conversation ID and add to the conversations list
-      widget.conversation = Conversation(
-        id: Tools().getRandomString(12),
-        lastMessage: "",
-        gameType: GameType.chat,
-        time: DateTime.now(),
-        primaryModel: selectedModel.model.name,
-        title: "Chat",
-      );
-      await ConversationDatabase.instance.create(widget.conversation!);
-      widget.conversations.value.insert(0, widget.conversation!);
-      widget.conversations.notifyListeners();
-      currentSelectedConversation.value = widget.conversation;
-      currentSelectedConversation.notifyListeners();
+      // widget.conversation = Conversation(
+      //   id: Tools().getRandomString(12),
+      //   lastMessage: "",
+      //   gameType: GameType.chat,
+      //   time: DateTime.now(),
+      //   primaryModel: selectedModel.model.name,
+      //   title: "Chat",
+      // );
+      // await ConversationDatabase.instance.create(widget.conversation!);
+      // widget.conversations.value.insert(0, widget.conversation!);
+      // widget.conversations.notifyListeners();
+      // currentSelectedConversation.value = widget.conversation;
+      // currentSelectedConversation.notifyListeners();
     }
     setState(() {
       isLoading = false;
@@ -230,24 +230,20 @@ class _ChatGamePageState extends State<ChatGamePage> {
             isGenerating: isGenerating,
             onNewMessage: (Conversation? conv, String text,
                 List<ImageFile> images) async {
-              // if (widget.conversation == null) {
-              //   // CREATES A NEW CONVERSATION
-              //   // This is the quickstart path, where the chat box is open on start up
-              //   // we direct people directly into a Chat game
-              //   // create an official conversation ID and add to the conversations list
-              //   widget.conversation = Conversation(
-              //     id: Tools().getRandomString(12),
-              //     lastMessage: text,
-              //     gameType: GameType.chat,
-              //     time: DateTime.now(),
-              //     primaryModel: selectedModel.model.name,
-              //     title: "Chat",
-              //   );
-              //   await ConversationDatabase.instance
-              //       .create(widget.conversation!);
-              //   widget.conversations.value.insert(0, widget.conversation!);
-              //   widget.conversations.notifyListeners();
-              // }
+              if (widget.conversation == null) {
+                widget.conversation = Conversation(
+                  id: Tools().getRandomString(12),
+                  lastMessage: text,
+                  gameType: GameType.chat,
+                  time: DateTime.now(),
+                  primaryModel: selectedModel.model.name,
+                  title: "Chat",
+                );
+                await ConversationDatabase.instance
+                    .create(widget.conversation!);
+                widget.conversations.value.insert(0, widget.conversation!);
+                widget.conversations.notifyListeners();
+              }
               if (text.trim() != "") {
                 uiMessage.Message message = uiMessage.Message(
                     id: Tools().getRandomString(12),

@@ -55,7 +55,6 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
       controller: pageController,
       onPageChanged: (index) {
         pageChanged(index);
-        // FirebaseAnalytics.instance.logEvent(name: getScreenName(index));
       },
       children: <Widget>[
         GamesListDrawer(onGameCardTap: (GamesConfig selectedGame) {
@@ -73,7 +72,6 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
               conversation: null,
               conversations: widget.conversations,
             );
-
             widget.body.notifyListeners();
           },
           onTap: (Conversation chatSelected) {

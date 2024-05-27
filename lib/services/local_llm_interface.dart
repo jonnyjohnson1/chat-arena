@@ -390,8 +390,8 @@ class LocalLLMInterface {
             "${messageHistory[i].name}: ${messageHistory[i].message!.value}\n";
       }
     }
-    print("LAST THREE MESSAGES ARE");
-    print(lastThreeMessages);
+    // print("LAST THREE MESSAGES ARE");
+    // print(lastThreeMessages);
 
     final body = json.encode({
       "conversation_id": conversationID,

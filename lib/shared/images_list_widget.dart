@@ -95,7 +95,6 @@ class _ImagesListWidgetState extends State<ImagesListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    print("Building images list");
     return widget.imagesList.isEmpty
         ? Column(
             mainAxisAlignment: MainAxisAlignment.center,

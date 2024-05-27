@@ -21,12 +21,15 @@ class ConvSteeringDrawer extends StatefulWidget {
   State<ConvSteeringDrawer> createState() => _ConvSteeringDrawerState();
 }
 
-class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
+class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
+    with SingleTickerProviderStateMixin {
   bool didInit = false;
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late ValueNotifier<Conversation?> currentSelectedConversation;
   late ValueNotifier<List<uiMessage.Message>> messages;
+  late TabController _tabController;
+  int pathIndex = 0;
 
   ModelConfig selectedModel = ModelConfig(
       model: const LanguageModel(
@@ -49,6 +52,13 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
 
   @override
   void initState() {
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        pathIndex = _tabController.index;
+      });
+    });
+
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     currentSelectedConversation =
@@ -59,6 +69,14 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
     initData();
     debugPrint("\t[ Chat :: ConvSteeringPage initState ]");
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    queryController.dispose();
+    _focusNode.dispose();
+    super.dispose();
   }
 
   bool value = true;
@@ -223,255 +241,320 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer> {
         : ValueListenableBuilder<Conversation?>(
             valueListenable: currentSelectedConversation,
             builder: (context, conversation, _) {
-              initData(); // init data when new conversation is selected
+              initData(); // Initialize data when a new conversation is selected
               metaMessageConvId = messages.value.isEmpty
                   ? Tools().getRandomString(12)
                   : messages.value.first.id;
               return Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            const SizedBox(
-                              height: 15,
-                            ),
-                            SizedBox(
-                              width: 290,
-                              child: Stack(
-                                alignment: Alignment.topRight,
-                                children: [
-                                  TextField(
-                                    controller: queryController,
-                                    keyboardType: TextInputType.text,
-                                    minLines: 4,
-                                    maxLines: 4,
-                                    focusNode: _focusNode,
-                                    onSubmitted: (String text) {
-                                      if (text.trim() != "") {
-                                        sendMessagetoModel(
-                                            text.trim(), messages.value);
-                                        queryController.clear();
-                                        _focusNode.requestFocus();
-                                      }
-                                    },
-                                    decoration: InputDecoration(
-                                      hintText: "Steer the conversation...",
-                                      hintStyle: const TextStyle(
-                                          color: Colors.black38),
-                                      filled: true,
-                                      // hoverColor: Colors.grey.withOpacity(.5),
-                                      focusColor: Colors.grey.withOpacity(.5),
-                                      fillColor:
-                                          Theme.of(context).colorScheme.surface,
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(5.0),
-                                      ),
-                                    ),
-                                    cursorColor: Colors.black38,
-                                    style: const TextStyle(
-                                        color: Colors.black87, fontSize: 14),
-                                    textAlignVertical: TextAlignVertical.center,
-                                    autocorrect: true,
-                                  ),
-                                  InkWell(
-                                    onTap: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) => Container(
-                                          constraints: const BoxConstraints(
-                                              maxWidth: 600),
-                                          child: AlertDialog(
-                                            title: ConstrainedBox(
-                                              constraints: const BoxConstraints(
-                                                  maxWidth: 600),
-                                              child: const Text(
-                                                  "Tips!—Get more from the conversation"),
-                                            ),
-                                            content: ConstrainedBox(
-                                              constraints: const BoxConstraints(
-                                                  maxWidth: 600),
-                                              child: const Text(
-                                                  "Discuss what you are trying to achieve—be it trying to respond with certain emotion like lightheartedness, depth, caring, lovingness, anger or you want steer the conversation towards a particular outcome such as getting some kind of information, or receiving support for something you care about."),
-                                            ),
-                                            actions: [
-                                              InkWell(
-                                                child: const Text("OK"),
-                                                onTap: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: const Icon(
-                                      Icons.info_outline,
-                                      color: Colors.black87,
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 4,
-                            ),
-                            SizedBox(
-                              width: 290,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ModelSelector(
-                                      initModel: selectedModel.model,
-                                      onSelectedModelChange:
-                                          (LanguageModel model) {
-                                        selectedModel.model = model;
-                                      }),
-                                  Row(
-                                    children: [
-                                      TextButton(
-                                          onPressed: () async {
-                                            if (queryController.text.trim() !=
-                                                "") {
-                                              sendMessagetoModel(
-                                                  queryController.text.trim(),
-                                                  messages.value);
-                                            }
-                                          },
-                                          child: const Text("Submit")),
-                                      const SizedBox(
-                                        width: 2,
-                                      ),
-                                      InkWell(
-                                        onTap: () {},
-                                        child: const Icon(
-                                          Icons.refresh,
-                                          color: Colors.black87,
-                                          size: 20,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // DISPLAY THE CONVERSATION STEERING CONVERSATION HERE
-                            // Display only the last AI message, and display it streaming
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: ValueListenableBuilder<List<Message>>(
-                                  valueListenable: messages,
-                                  builder: (context, messagesList, _) {
-                                    if (messagesList.isEmpty)
-                                      return Container();
-                                    return ValueListenableBuilder<String>(
-                                        valueListenable:
-                                            messagesList.last.message!,
-                                        builder: (context, messageText, _) {
-                                          return SelectableText(messageText);
-                                        });
-                                  }),
-                            ),
-                            ElevatedButton(
-                                onPressed: () async {
-                                  LocalLLMInterface().getNextMessageOptions(
-                                      currentSelectedConversation.value!.id,
-                                      messages.value,
-                                      selectedModel.model.model);
-                                },
-                                child: const Text("Gen Options")),
-                            // DISPLAY A LIST OF NEXT THINGS TO SAY (INSERT THEM INTO THE CONVERSATION TEXTFIELD ON TAP)
-                          ],
-                        ),
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 8),
+                          buildQueryInput(context),
+                          const SizedBox(height: 4),
+                          buildModelSelector(context),
+                          buildResponseBox(),
+                          buildTabBar(),
+                          buildTabContent(),
+                        ],
                       ),
                     ),
-                    Row(children: [
-                      InkWell(
-                          onTap: null,
-                          // () {
-                          //   widget.onTap();
-                          // },
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 18.0),
-                            child: SizedBox(
-                              height: 45,
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.view_module_outlined),
-                                  const SizedBox(
-                                    width: 5,
-                                  ),
-                                  Text("Conversation Steering",
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium),
-                                ],
-                              ),
-                            ),
-                          )),
-                      Expanded(child: Container()),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(value ? "On" : "Off"),
-                          const SizedBox(
-                            width: 15,
-                          ),
-                          SizedBox(
-                            width: 42,
-                            child: LoadSwitch(
-                              height: 23,
-                              width: 38,
-                              value: value,
-                              future: _getFuture,
-                              style: SpinStyle.material,
-                              switchDecoration: (value, isActive) =>
-                                  BoxDecoration(
-                                color: value
-                                    ? Color.fromARGB(255, 122, 11, 158)
-                                    : Color.fromARGB(255, 193, 193, 193),
-                                borderRadius: BorderRadius.circular(30),
-                                shape: BoxShape.rectangle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: value
-                                        ? const Color.fromARGB(
-                                            255, 222, 222, 222)
-                                        : const Color.fromARGB(
-                                            255, 213, 213, 213),
-                                    spreadRadius: 5,
-                                    blurRadius: 7,
-                                    offset: const Offset(
-                                        0, 3), // changes position of shadow
-                                  ),
-                                ],
-                              ),
-                              spinColor: (value) => value
-                                  ? const Color.fromARGB(255, 125, 73, 182)
-                                  : const Color.fromARGB(255, 125, 73, 182),
-                              onChange: (v) {
-                                value = v;
-                                print('Value changed to $v');
-                                setState(() {});
-                              },
-                              onTap: (v) {
-                                print('Tapping while value is $v');
-                              },
-                            ),
-                          ),
-                          const SizedBox(
-                            width: 8,
-                          ),
-                        ],
-                      )
-                    ]),
-                  ]);
-            });
+                  ),
+                  buildFooter(context),
+                ],
+              );
+            },
+          );
+  }
+
+  ValueNotifier<bool> isExpanded = ValueNotifier<bool>(false);
+
+  Widget buildResponseBox() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: isExpanded,
+      builder: (context, expanded, _) {
+        return Stack(
+          alignment: Alignment.topRight,
+          children: [
+            Container(
+              constraints: expanded
+                  ? null
+                  : const BoxConstraints(
+                      minHeight: 150,
+                      maxHeight: 150,
+                    ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 5, 16, 0),
+                child: ValueListenableBuilder<List<Message>>(
+                  valueListenable: messages,
+                  builder: (context, messagesList, _) {
+                    if (messagesList.isEmpty) return Container();
+                    return ValueListenableBuilder<String>(
+                      valueListenable: messagesList.last.message!,
+                      builder: (context, messageText, _) {
+                        return SelectableText(messageText);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 3.0),
+              child: IconButton(
+                icon: Icon(
+                  expanded ? CupertinoIcons.minus_rectangle : Icons.fit_screen,
+                  size: 20,
+                ),
+                color: const Color.fromARGB(255, 122, 11, 158),
+                onPressed: () {
+                  isExpanded.value = !isExpanded.value;
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget buildQueryInput(BuildContext context) {
+    return SizedBox(
+      width: 290,
+      child: Stack(
+        alignment: Alignment.topRight,
+        children: [
+          TextField(
+            controller: queryController,
+            keyboardType: TextInputType.text,
+            minLines: 4,
+            maxLines: 4,
+            focusNode: _focusNode,
+            onSubmitted: (String text) {
+              if (text.trim().isNotEmpty) {
+                sendMessagetoModel(text.trim(), messages.value);
+                queryController.clear();
+                _focusNode.requestFocus();
+              }
+            },
+            decoration: InputDecoration(
+              hintText: "Steer the conversation...",
+              hintStyle: const TextStyle(color: Colors.black38),
+              filled: true,
+              focusColor: Colors.grey.withOpacity(.5),
+              fillColor: Theme.of(context).colorScheme.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(5.0),
+              ),
+            ),
+            cursorColor: Colors.black38,
+            style: const TextStyle(color: Colors.black87, fontSize: 14),
+            textAlignVertical: TextAlignVertical.center,
+            autocorrect: true,
+          ),
+          InkWell(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text("Tips!—Get more from the conversation"),
+                  content: const Text(
+                      "Discuss what you are trying to achieve—be it trying to respond with certain emotion like lightheartedness, depth, caring, lovingness, anger or you want steer the conversation towards a particular outcome such as getting some kind of information, or receiving support for something you care about."),
+                  actions: [
+                    InkWell(
+                      child: const Text("OK"),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: const Icon(Icons.info_outline, color: Colors.black87),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildModelSelector(BuildContext context) {
+    return SizedBox(
+      width: 290,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ModelSelector(
+            initModel: selectedModel.model,
+            onSelectedModelChange: (LanguageModel model) {
+              selectedModel.model = model;
+            },
+          ),
+          Row(
+            children: [
+              TextButton(
+                onPressed: () async {
+                  if (queryController.text.trim().isNotEmpty) {
+                    sendMessagetoModel(
+                        queryController.text.trim(), messages.value);
+                  }
+                },
+                child: const Text("Submit"),
+              ),
+              const SizedBox(width: 2),
+              InkWell(
+                onTap: () {},
+                child:
+                    const Icon(Icons.refresh, color: Colors.black87, size: 20),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildTabBar() {
+    return TabBar(
+      controller: _tabController,
+      tabs: const [
+        Tab(text: "Steer"),
+        Tab(text: "Catch Up"),
+      ],
+    );
+  }
+
+  Widget buildTabContent() {
+    return IndexedStack(
+      index: pathIndex,
+      children: [
+        buildSteerTab(),
+        buildCatchUpTab(),
+      ],
+    );
+  }
+
+  Widget buildCatchUpTab() {
+    return Column(
+      children: [
+        const SizedBox(
+          height: 10,
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            LocalLLMInterface().getNextMessageOptions(
+              currentSelectedConversation.value!.id,
+              messages.value,
+              selectedModel.model.model,
+            );
+          },
+          child: const Text("Summarize"),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            LocalLLMInterface().getNextMessageOptions(
+              currentSelectedConversation.value!.id,
+              messages.value,
+              selectedModel.model.model,
+            );
+          },
+          child: const Text("Get Topics"),
+        ),
+      ],
+    );
+  }
+
+  Widget buildSteerTab() {
+    return Column(
+      children: [
+        const SizedBox(
+          height: 10,
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            LocalLLMInterface().getNextMessageOptions(
+              currentSelectedConversation.value!.id,
+              messages.value,
+              selectedModel.model.model,
+            );
+          },
+          child: const Text("Gen Options"),
+        ),
+      ],
+    );
+  }
+
+  Widget buildFooter(BuildContext context) {
+    return Row(
+      children: [
+        InkWell(
+          onTap: null,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 18.0),
+            child: SizedBox(
+              height: 45,
+              child: Row(
+                children: [
+                  const Icon(Icons.view_module_outlined),
+                  const SizedBox(width: 5),
+                  Text(
+                    "Conversation Steering",
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Expanded(child: Container()),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(value ? "On" : "Off"),
+            const SizedBox(width: 15),
+            SizedBox(
+              width: 42,
+              child: LoadSwitch(
+                height: 23,
+                width: 38,
+                value: value,
+                future: _getFuture,
+                style: SpinStyle.material,
+                switchDecoration: (value, isActive) => BoxDecoration(
+                  color: value
+                      ? const Color.fromARGB(255, 122, 11, 158)
+                      : const Color.fromARGB(255, 193, 193, 193),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: value
+                          ? const Color.fromARGB(255, 222, 222, 222)
+                          : const Color.fromARGB(255, 213, 213, 213),
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                spinColor: (value) => const Color.fromARGB(255, 125, 73, 182),
+                onChange: (v) {
+                  value = v;
+                  print('Value changed to $v');
+                  setState(() {});
+                },
+                onTap: (v) {
+                  print('Tapping while value is $v');
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+      ],
+    );
   }
 }
