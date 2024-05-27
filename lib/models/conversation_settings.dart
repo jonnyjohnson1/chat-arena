@@ -1,3 +1,9 @@
+class ConversationOptionsResponse {
+  String text;
+  ConversationVoiceSettings settings;
+  ConversationOptionsResponse({required this.text, required this.settings});
+}
+
 class ConversationVoiceSettings {
   String tone;
   String distance;
@@ -40,5 +46,10 @@ class ConversationVoiceSettings {
       'message_length': messageLength,
       'attention': attention
     };
+  }
+
+  @override
+  String toString() {
+    return 'Attention: $attention\nTone: $tone\nDistance: $distance\nPace: $pace\nDepth: $depth\nEngagement: $engagement\nMessage Length: $messageLength';
   }
 }

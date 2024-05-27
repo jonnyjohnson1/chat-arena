@@ -222,7 +222,8 @@ class _ConversationSettingsPageState extends State<ConversationSettingsPage> {
             items: options.map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
-                child: Align(
+                child: SizedBox(
+                  height: 20,
                   child: Text(
                     value,
                     style: const TextStyle(fontSize: 14),

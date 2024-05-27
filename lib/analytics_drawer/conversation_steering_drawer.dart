@@ -648,7 +648,8 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   }
 
   // TODO Save the settings of the suggested items right here
-  ValueNotifier<List<String>> suggestedNextStepIdeas = ValueNotifier([]);
+  ValueNotifier<List<ConversationOptionsResponse>> suggestedNextStepIdeas =
+      ValueNotifier([]);
   ValueNotifier<int> selectedIndex = ValueNotifier<int>(0);
   ScrollController scrollController = ScrollController();
   ValueNotifier<bool> showSettings = ValueNotifier(false);
@@ -673,16 +674,20 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
           children: [
             ElevatedButton(
               onPressed: () async {
+                ConversationVoiceSettings submitSettings =
+                    ConversationVoiceSettings.fromJson(_settings.toJson());
                 debugPrint("\t\t[ generating conversation options ]");
                 String? nextStepResponse = await LocalLLMInterface()
                     .getNextMessageOptions(
                         currentSelectedConversation.value!.id,
                         messages.value,
                         selectedModel.model.model,
-                        _settings);
+                        submitSettings);
                 if (nextStepResponse != null) {
                   if (nextStepResponse.trim().isNotEmpty) {
-                    suggestedNextStepIdeas.value.add(nextStepResponse);
+                    suggestedNextStepIdeas.value.add(
+                        ConversationOptionsResponse(
+                            text: nextStepResponse, settings: submitSettings));
                     suggestedNextStepIdeas.notifyListeners();
                     selectedIndex.value =
                         suggestedNextStepIdeas.value.length - 1;
@@ -702,14 +707,13 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                 final colorScheme = theme.colorScheme;
                 final highlightColor = colorScheme.primary.withOpacity(0.2);
                 final iconColor = colorScheme.primary;
-
                 return InkWell(
                   onTap: () {
                     showSettings.value = !showSettings.value;
                     showSettings.notifyListeners();
                   },
                   child: Container(
-                    padding: EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: value ? highlightColor : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
@@ -729,8 +733,8 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
             builder: (context, show, _) {
               if (!show) return Container();
               return Container(
-                  padding: EdgeInsets.all(16),
-                  margin: EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
@@ -738,7 +742,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
                         blurRadius: 10,
-                        offset: Offset(0, 5),
+                        offset: const Offset(0, 5),
                       ),
                     ],
                     border: Border.all(
@@ -755,13 +759,93 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                   ));
             }),
         const SizedBox(height: 10),
-        ValueListenableBuilder<List<String>>(
+        ValueListenableBuilder<List<ConversationOptionsResponse>>(
             valueListenable: suggestedNextStepIdeas,
             builder: (context, nextsteps, _) {
               return ValueListenableBuilder<int>(
                 valueListenable: selectedIndex,
                 builder: (context, value, _) {
                   if (suggestedNextStepIdeas.value.isEmpty) return Container();
+
+                  List<Widget> tabs = List.generate(
+                      suggestedNextStepIdeas.value.length, (index) {
+                    return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                        child: Tooltip(
+                          waitDuration: const Duration(milliseconds: 250),
+                          key: UniqueKey(),
+                          message: suggestedNextStepIdeas.value[index].settings
+                              .toString(),
+                          preferBelow: false,
+                          child: CustomChip(
+                            index: index,
+                            isSelected: selectedIndex.value == index,
+                            onTap: () {
+                              selectedIndex.value = index;
+                            },
+                          ),
+                        ));
+                  });
+                  tabs.insert(
+                      0,
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: InkWell(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(14)),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text('Conversation Voice Settings'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Attention: ${_settings.attention}'),
+                                      Text('Tone: ${_settings.tone}'),
+                                      Text('Distance: ${_settings.distance}'),
+                                      Text('Pace: ${_settings.pace}'),
+                                      Text('Depth: ${_settings.depth}'),
+                                      Text(
+                                          'Engagement: ${_settings.engagement}'),
+                                      Text(
+                                          'Message Length: ${_settings.messageLength}'),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('Close'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          child: const Stack(
+                              clipBehavior: Clip.none,
+                              alignment: Alignment.topRight,
+                              children: [
+                                Icon(
+                                  Icons.chat_bubble_outline,
+                                  size: 14,
+                                ),
+                                Positioned(
+                                  top: -2,
+                                  right: -2,
+                                  child: Icon(
+                                    Icons.settings,
+                                    size: 9,
+                                  ),
+                                ),
+                              ]),
+                        ),
+                      ));
                   return Column(
                     children: [
                       SingleChildScrollView(
@@ -770,28 +854,15 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                         child: Scrollbar(
                           controller: scrollController,
                           thickness: 8,
-                          child: Row(
-                            children: List.generate(
-                                suggestedNextStepIdeas.value.length, (index) {
-                              return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 2.0),
-                                  child: CustomChip(
-                                    index: index,
-                                    isSelected: selectedIndex.value == index,
-                                    onTap: () {
-                                      selectedIndex.value = index;
-                                    },
-                                  ));
-                            }),
-                          ),
+                          child: Row(children: tabs),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text(
-                          suggestedNextStepIdeas.value[value],
+                        child: SelectableText(
+                          suggestedNextStepIdeas.value[value].text,
+                          // context,
                           style: const TextStyle(fontSize: 14),
                         ),
                       ),
