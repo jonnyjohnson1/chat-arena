@@ -147,6 +147,9 @@ class _CustomBarChartState extends State<CustomBarChart> {
                     ),
                   ),
                 ),
+                const SizedBox(
+                  height: 8,
+                )
               ],
             ),
           ),

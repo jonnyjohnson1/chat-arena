@@ -246,7 +246,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                     " (${sizeToGB(item.size)})",
                                                     overflow:
                                                         TextOverflow.ellipsis,
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                         fontSize: 11)),
                                             ],
                                           ),

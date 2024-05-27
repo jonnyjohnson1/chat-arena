@@ -4,6 +4,7 @@ import 'package:chat/models/conversation.dart';
 import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/shared/emo27config.dart';
 import 'package:chat/shared/image_viewer.dart';
 import 'package:chat/shared/images_list_widget.dart';
@@ -31,14 +32,17 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   bool calcInMsgNER = true;
   bool showModerationTags = true;
   bool calcModerationTags = true;
+  bool calcImageGen = false;
 
   @override
   void initState() {
     super.initState();
     currentSelectedConversation =
         Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
+
     // This delay loads the items in the drawer after the animation has popped out a bit
-    Future.delayed(const Duration(milliseconds: 90), () {
+    // It saves some jank
+    Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
         setState(() => didInit = true);
       }
@@ -53,6 +57,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
     calcInMsgNER = config.calculateInMessageNER;
     showModerationTags = config.showModerationTags;
     calcModerationTags = config.calculateModerationTags;
+    calcImageGen = config.calcImageGen;
   }
 
   Future<bool> _toggleRerunNEROnConversation() async {
@@ -65,8 +70,21 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
     return false;
   }
 
+  final int futureWaitDuration = 900;
+
+  Future<bool> _togglecalcImageGen() async {
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
+    final newValue = !displayConfigData.value.calcImageGen;
+    displayConfigData.value.calcImageGen = newValue;
+    displayConfigData.notifyListeners();
+    setState(() {
+      calcImageGen = newValue;
+    });
+    return newValue;
+  }
+
   Future<bool> _toggleShowSidebarBaseAnalytics() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.showSidebarBaseAnalytics;
     displayConfigData.value.showSidebarBaseAnalytics = newValue;
     displayConfigData.notifyListeners();
@@ -77,7 +95,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   }
 
   Future<bool> _toggleNERCalculations() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.calculateInMessageNER;
     displayConfigData.value.calculateInMessageNER = newValue;
     displayConfigData.notifyListeners();
@@ -88,7 +106,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   }
 
   Future<bool> _toggleModerationCalculations() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.calculateModerationTags;
     displayConfigData.value.calculateModerationTags = newValue;
     displayConfigData.notifyListeners();
@@ -99,7 +117,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   }
 
   Future<bool> _toggleShowModerationTags() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.showModerationTags;
     displayConfigData.value.showModerationTags = newValue;
     displayConfigData.notifyListeners();
@@ -110,7 +128,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
   }
 
   Future<bool> _toggleShowInMsgNER() async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.showInMessageNER;
     displayConfigData.value.showInMessageNER = newValue;
     displayConfigData.notifyListeners();
@@ -326,243 +344,179 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
     );
   }
 
-  bool _isExpanded = false;
-
   @override
   Widget build(BuildContext context) {
     return !didInit
         ? Container()
-        : SingleChildScrollView(
-            child: Column(
-              children: [
-                ExpansionPanelList(
-                  elevation: 0,
-                  expansionCallback: (int index, bool isExpanded) {
-                    setState(() {
-                      _isExpanded = !_isExpanded;
-                    });
-                  },
-                  children: [
-                    ExpansionPanel(
-                      headerBuilder: (BuildContext context, bool isExpanded) {
-                        return Padding(
-                          padding: const EdgeInsets.only(left: 18.0),
-                          child: SizedBox(
-                            height: 45,
-                            child: InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _isExpanded = !_isExpanded;
-                                });
-                              },
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.display_settings,
-                                    size: 23,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text("Display",
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                      body: Column(
-                        children: [
-                          _buildRow(
-                            icon: Icons.abc_outlined,
-                            label: "In-Message (NER)",
-                            value: showInMsgNER,
-                            future: _toggleShowInMsgNER,
-                            notifier: displayConfigData.value.showInMessageNER,
-                          ),
-                          _buildAnalysisRow(
-                            icon: Icons.abc_outlined,
-                            label1: "Calc:",
-                            value1: calcInMsgNER,
-                            future1: _toggleNERCalculations,
-                            notifier1:
-                                displayConfigData.value.calculateInMessageNER,
-                            label2: "Rerun:",
-                            value2: false,
-                            future2: _toggleRerunNEROnConversation,
-                            notifier2: false,
-                          ),
-                          _buildRow(
-                            icon: Icons.block,
-                            label: "Moderation Tags",
-                            value: showModerationTags,
-                            future: _toggleShowModerationTags,
-                            notifier:
-                                displayConfigData.value.showModerationTags,
-                          ),
-                          _buildAnalysisRow(
-                            icon: Icons.abc_outlined,
-                            label1: "Calc:",
-                            value1: calcModerationTags,
-                            future1: _toggleModerationCalculations,
-                            notifier1:
-                                displayConfigData.value.calculateModerationTags,
-                            label2: "Rerun:",
-                            value2: false,
-                            future2: _toggleRerunNEROnConversation,
-                            notifier2: false,
-                          ),
-                        ],
-                      ),
-                      isExpanded: _isExpanded,
-                    ),
-                  ],
-                ),
-                _buildRow(
-                  icon: Icons.view_module_outlined,
-                  label: "Base Analytics",
-                  value: showSidebarBaseAnalytics,
-                  future: _toggleShowSidebarBaseAnalytics,
-                  notifier: displayConfigData.value.showSidebarBaseAnalytics,
-                ),
-                ValueListenableBuilder<Conversation?>(
+        : Column(
+            children: [
+              Expanded(
+                child: ValueListenableBuilder<Conversation?>(
                     valueListenable: currentSelectedConversation,
                     builder: (context, Conversation? conversation, _) {
                       if (conversation == null) return Container();
                       debugPrint(
                           "\t[ Loading analytics for conversation id :: ${conversation.id} ]");
-
-                      return Column(
-                        children: [
-                          if (conversation.convToImagesList.value.isNotEmpty)
+                      return SingleChildScrollView(
+                        child: Column(
+                          children: [
                             ValueListenableBuilder<List<ImageFile>>(
                                 valueListenable: conversation.convToImagesList,
                                 builder:
                                     (context, List<ImageFile> imagesList, _) {
-                                  if (imagesList.isEmpty) return Container();
-                                  ImageFile lastImage = imagesList.last;
+                                  debugPrint(
+                                      "\t\t[ Building images list :: listlength ${imagesList.length} ]");
                                   return Column(
                                     children: [
+                                      const SizedBox(
+                                        height: 8,
+                                      ),
                                       ImagesListWidget(
                                         width: 150,
                                         height: 150,
+                                        key: Key(imagesList.length.toString()),
                                         imagesList: imagesList,
+                                        regenImage: () async {
+                                          ImageFile? imageFile =
+                                              await LocalLLMInterface()
+                                                  .getConvToImage(
+                                                      currentSelectedConversation
+                                                          .value!.id);
+                                          if (imageFile != null) {
+                                            // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
+                                            currentSelectedConversation
+                                                .value!.convToImagesList.value
+                                                .add(imageFile);
+                                            currentSelectedConversation
+                                                .value!.convToImagesList
+                                                .notifyListeners();
+                                          }
+                                        },
                                       ),
                                     ],
                                   );
                                 }),
-                          ValueListenableBuilder<ConversationData?>(
-                              valueListenable:
-                                  conversation.conversationAnalytics,
-                              builder:
-                                  (context, ConversationData? convData, _) {
-                                if (convData == null) return Container();
-                                return Column(
-                                  children: [
-                                    if (convData.emotionsTotals.isNotEmpty)
-                                      Container(
-                                        constraints: const BoxConstraints(
-                                            minHeight: 180),
-                                        margin: const EdgeInsets.all(
-                                            8.0), // Add some margin to separate it from other widgets
-                                        padding: const EdgeInsets.all(
-                                            8.0), // Add some padding inside the container
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                              width: 1,
-                                              color:
-                                                  Colors.grey.withOpacity(.5)),
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .surface, // Background color for the container
-                                          borderRadius: BorderRadius.circular(
-                                              12.0), // Rounded borders
-                                        ),
-                                        child: SizedBox(
-                                          width: 290,
-                                          child: VerticalDialogueChart(
-                                            title: "Emotions",
-                                            showTitle: true,
-                                            botBarColor: const Color.fromARGB(
-                                                255, 72, 1, 96),
-                                            userBarColor: const Color.fromARGB(
-                                                255, 72, 1, 96),
-                                            data: convData.emotionsPerRole,
-                                            labelConfig: emotionLabelConfig,
+                            ValueListenableBuilder<ConversationData?>(
+                                valueListenable:
+                                    conversation.conversationAnalytics,
+                                builder:
+                                    (context, ConversationData? convData, _) {
+                                  if (convData == null) return Container();
+                                  return Column(
+                                    children: [
+                                      if (convData.emotionsTotals.isNotEmpty)
+                                        Container(
+                                          constraints: const BoxConstraints(
+                                              minHeight: 180),
+                                          margin: const EdgeInsets.all(
+                                              8.0), // Add some margin to separate it from other widgets
+                                          padding: const EdgeInsets.all(
+                                              8.0), // Add some padding inside the container
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                                width: 1,
+                                                color: Colors.grey
+                                                    .withOpacity(.5)),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surface, // Background color for the container
+                                            borderRadius: BorderRadius.circular(
+                                                12.0), // Rounded borders
+                                          ),
+                                          child: SizedBox(
+                                            width: 290,
+                                            child: VerticalDialogueChart(
+                                              title: "Emotions",
+                                              showTitle: true,
+                                              botBarColor: const Color.fromARGB(
+                                                  255, 122, 11, 158),
+                                              userBarColor:
+                                                  const Color.fromARGB(
+                                                      255, 122, 11, 158),
+                                              data: convData.emotionsPerRole,
+                                              labelConfig: emotionLabelConfig,
+                                            ),
                                           ),
                                         ),
+                                      const SizedBox(
+                                        height: 1,
                                       ),
-                                    const SizedBox(
-                                      height: 1,
-                                    ),
-                                    if (convData
-                                        .entityEvocationsTotals.isNotEmpty)
-                                      Container(
-                                        // constraints: BoxConstraints(minHeight: 180),
-                                        margin: const EdgeInsets.all(
-                                            8.0), // Add some margin to separate it from other widgets
-                                        padding: const EdgeInsets.all(
-                                            8.0), // Add some padding inside the container
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                              width: 1,
-                                              color:
-                                                  Colors.grey.withOpacity(.5)),
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .surface, // Background color for the container
-                                          borderRadius: BorderRadius.circular(
-                                              12.0), // Rounded borders
-                                        ),
-                                        child: SizedBox(
-                                          width: 290,
-                                          child: CustomBarChart(
-                                            title: "Evocations",
-                                            barColor: const Color.fromARGB(
-                                                255, 122, 11, 158),
-                                            totalsData:
-                                                convData.entityEvocationsTotals,
+                                      if (convData
+                                          .entityEvocationsTotals.isNotEmpty)
+                                        Container(
+                                          // constraints: BoxConstraints(minHeight: 180),
+                                          margin: const EdgeInsets.all(
+                                              8.0), // Add some margin to separate it from other widgets
+                                          padding: const EdgeInsets.all(
+                                              8.0), // Add some padding inside the container
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                                width: 1,
+                                                color: Colors.grey
+                                                    .withOpacity(.5)),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surface, // Background color for the container
+                                            borderRadius: BorderRadius.circular(
+                                                12.0), // Rounded borders
+                                          ),
+                                          child: SizedBox(
+                                            width: 290,
+                                            child: CustomBarChart(
+                                              title: "Evocations",
+                                              barColor: const Color.fromARGB(
+                                                  255, 122, 11, 158),
+                                              totalsData: convData
+                                                  .entityEvocationsTotals,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    if (convData.entitySummonsTotals.isNotEmpty)
-                                      Container(
-                                        // constraints: BoxConstraints(minHeight: 180),
-                                        margin: const EdgeInsets.all(
-                                            8.0), // Add some margin to separate it from other widgets
-                                        padding: const EdgeInsets.all(
-                                            8.0), // Add some padding inside the container
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                              width: 1,
-                                              color:
-                                                  Colors.grey.withOpacity(.5)),
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .surface, // Background color for the container
-                                          borderRadius: BorderRadius.circular(
-                                              12.0), // Rounded borders
-                                        ),
-                                        child: SizedBox(
-                                          width: 290,
-                                          child: CustomBarChart(
-                                            title: "Summoned",
-                                            barColor: const Color.fromARGB(
-                                                255, 176, 122, 194),
-                                            totalsData:
-                                                convData.entitySummonsTotals,
+                                      if (convData
+                                          .entitySummonsTotals.isNotEmpty)
+                                        Container(
+                                          // constraints: BoxConstraints(minHeight: 180),
+                                          margin: const EdgeInsets.all(
+                                              8.0), // Add some margin to separate it from other widgets
+                                          padding: const EdgeInsets.all(
+                                              8.0), // Add some padding inside the container
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                                width: 1,
+                                                color: Colors.grey
+                                                    .withOpacity(.5)),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surface, // Background color for the container
+                                            borderRadius: BorderRadius.circular(
+                                                12.0), // Rounded borders
+                                          ),
+                                          child: SizedBox(
+                                            width: 290,
+                                            child: CustomBarChart(
+                                              title: "Summoned",
+                                              barColor: const Color.fromARGB(
+                                                  255, 122, 11, 158),
+                                              totalsData:
+                                                  convData.entitySummonsTotals,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                  ],
-                                );
-                              }),
-                        ],
+                                    ],
+                                  );
+                                }),
+                          ],
+                        ),
                       );
                     }),
-              ],
-            ),
+              ),
+              _buildRow(
+                icon: Icons.view_module_outlined,
+                label: "Base Analytics",
+                value: showSidebarBaseAnalytics,
+                future: _toggleShowSidebarBaseAnalytics,
+                notifier: displayConfigData.value.showSidebarBaseAnalytics,
+              ),
+            ],
           );
   }
 }

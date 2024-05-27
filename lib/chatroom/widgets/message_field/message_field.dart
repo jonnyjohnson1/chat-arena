@@ -68,13 +68,6 @@ class _MessageFieldState extends State<MessageField> {
                   },
                   cursorColor: Colors.black38,
                   style: const TextStyle(color: Colors.black87),
-                  // decoration: const InputDecoration(
-                  //   contentPadding: EdgeInsets.all(5),
-                  //   border: InputBorder.none,
-                  //   focusedBorder: InputBorder.none,
-                  //   hintText: "Message...",
-                  //   hintStyle: TextStyle(color: Colors.black38),
-                  // ),
                   autocorrect: true,
                 ),
               ),
@@ -104,7 +97,6 @@ class _MessageFieldState extends State<MessageField> {
 
   Widget _pauseGenerationButton(BuildContext _context) {
     return FloatingActionButton(
-      // backgroundColor: Colors.white,
       tooltip: "Pause",
       child: const Icon(Icons.stop, color: Colors.black87),
       onPressed: () {

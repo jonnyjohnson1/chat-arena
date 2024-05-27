@@ -55,7 +55,6 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
       controller: pageController,
       onPageChanged: (index) {
         pageChanged(index);
-        // FirebaseAnalytics.instance.logEvent(name: getScreenName(index));
       },
       children: <Widget>[
         GamesListDrawer(onGameCardTap: (GamesConfig selectedGame) {
@@ -73,7 +72,6 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
               conversation: null,
               conversations: widget.conversations,
             );
-
             widget.body.notifyListeners();
           },
           onTap: (Conversation chatSelected) {
@@ -181,7 +179,7 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
                 child: Icon(CupertinoIcons.chat_bubble_text_fill,
                     color: 0 == bottomSelectedIndex
                         ? unselectedColor
-                        : Colors.blue[200],
+                        : Color.fromARGB(255, 67, 230, 255),
                     size: 19),
               ))),
     ];

@@ -32,8 +32,18 @@ class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
     return !didInit
         ? Container()
         : Column(children: [
-            const SizedBox(
-              height: 3,
+            Expanded(
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 3,
+                  ),
+                  SingleChildScrollView(
+                      child: Column(
+                    children: [Container()],
+                  ))
+                ],
+              ),
             ),
             Row(children: [
               InkWell(

@@ -47,6 +47,24 @@ class _ChatGamePageState extends State<ChatGamePage> {
       // set the current conversation value to the loaded conversation
       currentSelectedConversation.value = widget.conversation;
       currentSelectedConversation.notifyListeners();
+    } else {
+      // CREATES A NEW CONVERSATION
+      // This is the quickstart path, where the chat box is open on start up
+      // we direct people directly into a Chat game
+      // create an official conversation ID and add to the conversations list
+      // widget.conversation = Conversation(
+      //   id: Tools().getRandomString(12),
+      //   lastMessage: "",
+      //   gameType: GameType.chat,
+      //   time: DateTime.now(),
+      //   primaryModel: selectedModel.model.name,
+      //   title: "Chat",
+      // );
+      // await ConversationDatabase.instance.create(widget.conversation!);
+      // widget.conversations.value.insert(0, widget.conversation!);
+      // widget.conversations.notifyListeners();
+      // currentSelectedConversation.value = widget.conversation;
+      // currentSelectedConversation.notifyListeners();
     }
     setState(() {
       isLoading = false;
@@ -105,12 +123,14 @@ class _ChatGamePageState extends State<ChatGamePage> {
           widget.conversation!.conversationAnalytics.notifyListeners();
 
           // get an image depiction of the conversation
-          ImageFile? data3 =
-              await LocalLLMInterface().getConvToImage(widget.conversation!.id);
-          if (data3 != null) {
-            // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
-            widget.conversation!.convToImagesList.value.add(data3);
-            widget.conversation!.convToImagesList.notifyListeners();
+          if (displayConfigData.value.calcImageGen) {
+            ImageFile? imageFile = await LocalLLMInterface()
+                .getConvToImage(widget.conversation!.id);
+            if (imageFile != null) {
+              // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
+              widget.conversation!.convToImagesList.value.add(imageFile);
+              widget.conversation!.convToImagesList.notifyListeners();
+            }
           }
         }
       } else {
@@ -211,10 +231,6 @@ class _ChatGamePageState extends State<ChatGamePage> {
             onNewMessage: (Conversation? conv, String text,
                 List<ImageFile> images) async {
               if (widget.conversation == null) {
-                // CREATES A NEW CONVERSATION
-                // This is the quickstart path, where the chat box is open on start up
-                // we direct people directly into a Chat game
-                // create an official conversation ID and add to the conversations list
                 widget.conversation = Conversation(
                   id: Tools().getRandomString(12),
                   lastMessage: text,

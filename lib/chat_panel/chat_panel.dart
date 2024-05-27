@@ -26,7 +26,6 @@ class _ConversationsListState extends State<ConversationsList> {
   void initState() {
     Future.delayed(const Duration(milliseconds: 90),
         () => mounted ? setState((() => didInit = true)) : null);
-
     super.initState();
   }
 
@@ -116,28 +115,35 @@ class _ConversationsListState extends State<ConversationsList> {
                         controller: controller,
                         child: ListView.builder(
                           controller: controller,
-                          itemCount: widget.conversations.value.length,
+                          itemCount: conversationlist.length,
                           shrinkWrap: true,
                           padding: const EdgeInsets.only(top: 4),
                           // physics: NeverScrollableScrollPhysics(),
                           itemBuilder: (context, index) {
                             return ConversationListItem(
-                              key: Key(widget.conversations.value[index].id),
-                              conversation: widget.conversations.value[index],
+                              key: Key(conversationlist[index].id),
+                              conversation: conversationlist[index],
                               onSelected: () {
-                                widget.onTap(widget.conversations.value[index]);
+                                widget.onTap(conversationlist[index]);
                               },
                               onDeleteTap: () async {
-                                print("ID: " +
-                                    widget.conversations.value[index].id);
                                 // delete from the conversations table
-                                // await ConversationDatabase.instance.delete(
-                                //     widget.conversations.value[index].id);
+                                await ConversationDatabase.instance
+                                    .delete(conversationlist[index].id);
+                                print(
+                                    "[ deleted conversation from table : convId: ${widget.conversations.value[index].id}]");
                                 // delete from the messages table
-                                // await ConversationDatabase.instance
-                                //     .deleteMessageByConvId(
-                                //         widget.conversations.value[index].id);
-                                widget.conversations.value.removeAt(index);
+                                await ConversationDatabase.instance
+                                    .deleteMessageByConvId(
+                                        widget.conversations.value[index].id);
+                                print(
+                                    "[ deleted msgs from table with convId: convId: ${widget.conversations.value[index].id}]");
+                                print(index);
+                                try {
+                                  widget.conversations.value.removeAt(index);
+                                } catch (e) {
+                                  print(e);
+                                }
                                 widget.conversations.notifyListeners();
                                 widget.onDelete(true);
                               },

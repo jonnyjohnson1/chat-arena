@@ -1,5 +1,6 @@
 import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/custom_file.dart';
+import 'package:chat/models/messages.dart';
 import 'package:flutter/material.dart';
 
 const String tableConversations = 'conversations';
@@ -37,6 +38,7 @@ class Conversation {
   Map<String, dynamic>? gameSettings;
   ValueNotifier<ConversationData?> conversationAnalytics;
   ValueNotifier<List<ImageFile>> convToImagesList;
+  ValueNotifier<List<Message>> metaConvMessages;
   Map<String, dynamic>? gameAnalytics;
 
   Conversation(
@@ -51,7 +53,8 @@ class Conversation {
       this.gameAnalytics,
       required this.id})
       : conversationAnalytics = ValueNotifier<ConversationData?>(null),
-        convToImagesList = ValueNotifier<List<ImageFile>>([]);
+        convToImagesList = ValueNotifier<List<ImageFile>>([]),
+        metaConvMessages = ValueNotifier<List<Message>>([]);
 
   // Convert the Conversation instance to a Map
   Map<String, dynamic> toMap() {

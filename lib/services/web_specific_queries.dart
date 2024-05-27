@@ -13,7 +13,7 @@ import 'package:chat/services/static_queries.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/shared/image_utils.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:html' as html if (dart.library.html) '';
+import 'package:universal_html/html.dart' as html;
 import 'package:http/http.dart' as http if (dart.library.html) '';
 
 Future<List<ImageFile>?> getLocalFilePaths() async {
