@@ -3,9 +3,12 @@ import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/models/messages.dart';
+import 'package:chat/models/suggestion_model.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/local_llm_interface.dart';
+import 'package:chat/services/suggestions_query.dart';
 import 'package:chat/services/tools.dart';
+import 'package:chat/shared/conv_steering_selector.dart';
 import 'package:chat/shared/model_selector.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -31,11 +34,18 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   late TabController _tabController;
   int pathIndex = 0;
 
+  Map<String, List<Suggestion>> suggestionsMap = {};
+
   ModelConfig selectedModel = ModelConfig(
       model: const LanguageModel(
           model: 'dolphin-llama3', name: "dolphin-llama3", size: 21314),
       temperature: 0.06,
       numGenerations: 1);
+
+  initSuggestionsData() async {
+    suggestionsMap = await getSuggestionsMap() ?? {};
+    setState(() {});
+  }
 
   Future<void> initData() async {
     if (currentSelectedConversation.value != null) {
@@ -52,7 +62,8 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
 
   @override
   void initState() {
-    _tabController = TabController(length: 2, vsync: this);
+    initSuggestionsData();
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       setState(() {
         pathIndex = _tabController.index;
@@ -63,7 +74,6 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     currentSelectedConversation =
         Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
-
     Future.delayed(const Duration(milliseconds: 90),
         () => mounted ? setState((() => didInit = true)) : null);
     initData();
@@ -253,11 +263,11 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
+                          buildGenerationSuggestions(context),
                           const SizedBox(height: 8),
                           buildQueryInput(context),
                           const SizedBox(height: 4),
                           buildModelSelector(context),
-                          buildResponseBox(),
                           buildTabBar(),
                           buildTabContent(),
                         ],
@@ -271,7 +281,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
           );
   }
 
-  ValueNotifier<bool> isExpanded = ValueNotifier<bool>(false);
+  ValueNotifier<bool> isExpanded = ValueNotifier<bool>(true);
 
   Widget buildResponseBox() {
     return ValueListenableBuilder<bool>(
@@ -288,7 +298,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                       maxHeight: 150,
                     ),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 5, 16, 0),
+                padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
                 child: ValueListenableBuilder<List<Message>>(
                   valueListenable: messages,
                   builder: (context, messagesList, _) {
@@ -303,19 +313,27 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(right: 3.0),
-              child: IconButton(
-                icon: Icon(
-                  expanded ? CupertinoIcons.minus_rectangle : Icons.fit_screen,
-                  size: 20,
-                ),
-                color: const Color.fromARGB(255, 122, 11, 158),
-                onPressed: () {
-                  isExpanded.value = !isExpanded.value;
-                },
-              ),
-            ),
+            // This is an expansion toggle used in a prior UI version
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.end,
+            //   children: [
+            //     Padding(
+            //       padding: const EdgeInsets.only(right: 3.0),
+            //       child: IconButton(
+            //         icon: Icon(
+            //           expanded
+            //               ? CupertinoIcons.minus_rectangle
+            //               : Icons.fit_screen,
+            //           size: 20,
+            //         ),
+            //         color: const Color.fromARGB(255, 122, 11, 158),
+            //         onPressed: () {
+            //           isExpanded.value = !isExpanded.value;
+            //         },
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ],
         );
       },
@@ -352,7 +370,8 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
               ),
             ),
             cursorColor: Colors.black38,
-            style: const TextStyle(color: Colors.black87, fontSize: 14),
+            style: const TextStyle(
+                color: Colors.black87, fontSize: 14, height: 1.3),
             textAlignVertical: TextAlignVertical.center,
             autocorrect: true,
           ),
@@ -361,9 +380,15 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text("Tips!—Get more from the conversation"),
-                  content: const Text(
-                      "Discuss what you are trying to achieve—be it trying to respond with certain emotion like lightheartedness, depth, caring, lovingness, anger or you want steer the conversation towards a particular outcome such as getting some kind of information, or receiving support for something you care about."),
+                  title: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child:
+                          const Text("Tips!—Get more from the conversation")),
+                  content: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: const Text(
+                        "Discuss what you are trying to achieve—be it trying to respond with certain emotion like lightheartedness, depth, caring, lovingness, anger or you want steer the conversation towards a particular outcome such as getting some kind of information, or receiving support for something you care about."),
+                  ),
                   actions: [
                     InkWell(
                       child: const Text("OK"),
@@ -375,10 +400,125 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                 ),
               );
             },
-            child: const Icon(Icons.info_outline, color: Colors.black87),
+            child: const Icon(
+              Icons.info_outline,
+              color: Colors.black87,
+              size: 20,
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  String chipHover = "relationship";
+  ValueNotifier<String> selectedKey = ValueNotifier("relationship");
+  Widget buildGenerationSuggestions(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(
+          height: 4,
+        ),
+        SizedBox(
+          width: 290,
+          child: Row(
+            children: [
+              const Text(
+                "Starters:",
+                style: TextStyle(fontSize: 10),
+              ),
+              Expanded(
+                  child: Wrap(
+                spacing: 3.0,
+                runSpacing: 2.0,
+                children: suggestionsMap.keys.map((key) {
+                  bool isHoveringChip = chipHover == key;
+                  bool isSelected = selectedKey.value == key;
+                  return InkWell(
+                    borderRadius: const BorderRadius.all(Radius.circular(14)),
+                    onTap: () {
+                      setState(() {
+                        selectedKey.value = key;
+                        selectedKey.notifyListeners();
+                      });
+                    },
+                    child: MouseRegion(
+                      onEnter: (_) => setState(() {
+                        chipHover = key;
+                      }),
+                      onExit: (_) => setState(() {
+                        chipHover = "-1";
+                      }),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6.0, vertical: 2.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16.0),
+                          border: Border.all(
+                            color: isHoveringChip || isSelected
+                                ? const Color.fromARGB(255, 122, 11, 158)
+                                : Colors.grey,
+                            width: 1.0,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (suggestionsMap[key]!.isNotEmpty)
+                              Text(
+                                suggestionsMap[key]!.first.emoji != null
+                                    ? "${suggestionsMap[key]!.first.emoji} "
+                                    : "",
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: isHoveringChip || isSelected
+                                      ? const Color.fromARGB(255, 122, 11, 158)
+                                      : Colors.black87,
+                                ),
+                              ),
+                            Text(
+                              key,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: isHoveringChip || isSelected
+                                    ? const Color.fromARGB(255, 122, 11, 158)
+                                    : Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ))
+            ],
+          ),
+        ),
+        ValueListenableBuilder<String>(
+            valueListenable: selectedKey,
+            builder: (context, selectkey, _) {
+              // print("rebuilding");
+              // print(selectkey);
+              List<Suggestion> suggestions = suggestionsMap[selectkey] ?? [];
+              Suggestion initSuggest = suggestions[0];
+              return SizedBox(
+                width: 290,
+                child: ConversationSteeringSuggestor(
+                  key: Key(selectkey),
+                  initModel: initSuggest,
+                  list: suggestions,
+                  onSelectedModelChange: (Suggestion suggestion) {
+                    queryController.text = suggestion.suggestion;
+
+                    // selectedModel.model = model;
+                  },
+                ),
+              );
+            }),
+      ],
     );
   }
 
@@ -419,12 +559,32 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   }
 
   Widget buildTabBar() {
-    return TabBar(
-      controller: _tabController,
-      tabs: const [
-        Tab(text: "Steer"),
-        Tab(text: "Catch Up"),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: TabBar(
+        controller: _tabController,
+        tabs: [
+          Tab(
+            child: Stack(alignment: Alignment.centerRight, children: [
+              const Center(child: Text("Chat")),
+              ValueListenableBuilder(
+                  valueListenable: isGenerating,
+                  builder: (_, isGen, widget) {
+                    return isGen
+                        ? const Padding(
+                            padding: EdgeInsets.all(0),
+                            child: CupertinoActivityIndicator(
+                              radius: 8,
+                            ),
+                          )
+                        : Container();
+                  }),
+            ]),
+          ),
+          const Tab(text: "Steer"),
+          const Tab(text: "Catch Up"),
+        ],
+      ),
     );
   }
 
@@ -432,10 +592,15 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
     return IndexedStack(
       index: pathIndex,
       children: [
+        buildChatTab(),
         buildSteerTab(),
         buildCatchUpTab(),
       ],
     );
+  }
+
+  Widget buildChatTab() {
+    return buildResponseBox();
   }
 
   Widget buildCatchUpTab() {
@@ -444,25 +609,35 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
         const SizedBox(
           height: 10,
         ),
-        ElevatedButton(
-          onPressed: () async {
-            LocalLLMInterface().getNextMessageOptions(
-              currentSelectedConversation.value!.id,
-              messages.value,
-              selectedModel.model.model,
-            );
-          },
-          child: const Text("Summarize"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () async {
+                LocalLLMInterface().getNextMessageOptions(
+                  currentSelectedConversation.value!.id,
+                  messages.value,
+                  selectedModel.model.model,
+                );
+              },
+              child: const Text("Summarize"),
+            ),
+          ],
         ),
-        ElevatedButton(
-          onPressed: () async {
-            LocalLLMInterface().getNextMessageOptions(
-              currentSelectedConversation.value!.id,
-              messages.value,
-              selectedModel.model.model,
-            );
-          },
-          child: const Text("Get Topics"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () async {
+                LocalLLMInterface().getNextMessageOptions(
+                  currentSelectedConversation.value!.id,
+                  messages.value,
+                  selectedModel.model.model,
+                );
+              },
+              child: const Text("Get Topics"),
+            ),
+          ],
         ),
       ],
     );
@@ -470,19 +645,25 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
 
   Widget buildSteerTab() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(
           height: 10,
         ),
-        ElevatedButton(
-          onPressed: () async {
-            LocalLLMInterface().getNextMessageOptions(
-              currentSelectedConversation.value!.id,
-              messages.value,
-              selectedModel.model.model,
-            );
-          },
-          child: const Text("Gen Options"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () async {
+                LocalLLMInterface().getNextMessageOptions(
+                  currentSelectedConversation.value!.id,
+                  messages.value,
+                  selectedModel.model.model,
+                );
+              },
+              child: const Text("Gen Options"),
+            ),
+          ],
         ),
       ],
     );

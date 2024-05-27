@@ -39,8 +39,10 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
     super.initState();
     currentSelectedConversation =
         Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
+
     // This delay loads the items in the drawer after the animation has popped out a bit
-    Future.delayed(const Duration(milliseconds: 90), () {
+    // It saves some jank
+    Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
         setState(() => didInit = true);
       }
@@ -342,105 +344,12 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
     );
   }
 
-  bool _isExpanded = false;
-
   @override
   Widget build(BuildContext context) {
     return !didInit
         ? Container()
         : Column(
             children: [
-              // ExpansionPanelList(
-              //   elevation: 0,
-              //   expansionCallback: (int index, bool isExpanded) {
-              //     setState(() {
-              //       _isExpanded = !_isExpanded;
-              //     });
-              //   },
-              //   children: [
-              //     ExpansionPanel(
-              //       headerBuilder: (BuildContext context, bool isExpanded) {
-              //         return Padding(
-              //           padding: const EdgeInsets.only(left: 18.0),
-              //           child: SizedBox(
-              //             height: 45,
-              //             child: InkWell(
-              //               onTap: () {
-              //                 setState(() {
-              //                   _isExpanded = !_isExpanded;
-              //                 });
-              //               },
-              //               child: Row(
-              //                 children: [
-              //                   const Icon(
-              //                     Icons.display_settings,
-              //                     size: 23,
-              //                   ),
-              //                   const SizedBox(width: 6),
-              //                   Text("Display",
-              //                       style: Theme.of(context)
-              //                           .textTheme
-              //                           .titleMedium),
-              //                 ],
-              //               ),
-              //             ),
-              //           ),
-              //         );
-              //       },
-              //       body: Column(
-              //         children: [
-              //           _buildRow(
-              //             icon: Icons.abc_outlined,
-              //             label: "In-Message (NER)",
-              //             value: showInMsgNER,
-              //             future: _toggleShowInMsgNER,
-              //             notifier: displayConfigData.value.showInMessageNER,
-              //           ),
-              //           _buildAnalysisRow(
-              //             icon: Icons.abc_outlined,
-              //             label1: "Calc:",
-              //             value1: calcInMsgNER,
-              //             future1: _toggleNERCalculations,
-              //             notifier1:
-              //                 displayConfigData.value.calculateInMessageNER,
-              //             label2: "Rerun:",
-              //             value2: false,
-              //             future2: _toggleRerunNEROnConversation,
-              //             notifier2: false,
-              //           ),
-              //           _buildRow(
-              //             icon: Icons.block,
-              //             label: "Moderation Tags",
-              //             value: showModerationTags,
-              //             future: _toggleShowModerationTags,
-              //             notifier:
-              //                 displayConfigData.value.showModerationTags,
-              //           ),
-              //           _buildAnalysisRow(
-              //             icon: Icons.abc_outlined,
-              //             label1: "Calc:",
-              //             value1: calcModerationTags,
-              //             future1: _toggleModerationCalculations,
-              //             notifier1:
-              //                 displayConfigData.value.calculateModerationTags,
-              //             label2: "Rerun:",
-              //             value2: false,
-              //             future2: _toggleRerunNEROnConversation,
-              //             notifier2: false,
-              //           ),
-              //           _buildRow(
-              //             icon: Icons.image,
-              //             label: "ImageGen",
-              //             value: calcImageGen,
-              //             future: _togglecalcImageGen,
-              //             notifier: displayConfigData.value.calcImageGen,
-              //           ),
-              //         ],
-              //       ),
-              //       isExpanded: _isExpanded,
-              //     ),
-              //   ],
-              // ),
               Expanded(
                 child: ValueListenableBuilder<Conversation?>(
                     valueListenable: currentSelectedConversation,
@@ -448,7 +357,6 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                       if (conversation == null) return Container();
                       debugPrint(
                           "\t[ Loading analytics for conversation id :: ${conversation.id} ]");
-
                       return SingleChildScrollView(
                         child: Column(
                           children: [
@@ -456,11 +364,17 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                                 valueListenable: conversation.convToImagesList,
                                 builder:
                                     (context, List<ImageFile> imagesList, _) {
+                                  debugPrint(
+                                      "\t\t[ Building images list :: listlength ${imagesList.length} ]");
                                   return Column(
                                     children: [
+                                      const SizedBox(
+                                        height: 8,
+                                      ),
                                       ImagesListWidget(
                                         width: 150,
                                         height: 150,
+                                        key: Key(imagesList.length.toString()),
                                         imagesList: imagesList,
                                         regenImage: () async {
                                           ImageFile? imageFile =

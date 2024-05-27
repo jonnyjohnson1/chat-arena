@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/shared/image_viewer.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +18,7 @@ class ImagesListWidget extends StatefulWidget {
   final bool showCopyButton;
   final Function? regenImage;
 
-  ImagesListWidget(
+  const ImagesListWidget(
       {required this.imagesList,
       this.height = 150,
       this.width = 150,
@@ -30,7 +28,9 @@ class ImagesListWidget extends StatefulWidget {
       this.promptMaxLines = 2,
       this.promptFontSize = 12,
       this.showCopyButton = false,
-      this.regenImage});
+      this.regenImage,
+      Key? key})
+      : super(key: key);
 
   @override
   _ImagesListWidgetState createState() => _ImagesListWidgetState();
@@ -42,49 +42,50 @@ class _ImagesListWidgetState extends State<ImagesListWidget> {
   @override
   void initState() {
     super.initState();
-    currentIndex = widget.initialIndex;
+    currentIndex = widget.imagesList.isEmpty ? 0 : widget.initialIndex;
   }
 
-  void _downloadImage() async {
-    try {
-      final imageBytes = widget.imagesList[currentIndex].bytes;
-      String fileName =
-          widget.imagesList[currentIndex].localFile!.path ?? 'image.png';
-      if (imageBytes == null) return;
+  // TODO correct this download image function
+  // void _downloadImage() async {
+  //   try {
+  //     final imageBytes = widget.imagesList[currentIndex].bytes;
+  //     String fileName =
+  //         widget.imagesList[currentIndex].localFile!.path ?? 'image.png';
+  //     if (imageBytes == null) return;
 
-      if (Theme.of(context).platform == TargetPlatform.android ||
-          Theme.of(context).platform == TargetPlatform.iOS) {
-        final imageId = await ImageDownloader.downloadImage(
-          'data:image/jpeg;base64,${base64Encode(imageBytes)}',
-          destination: AndroidDestinationType.directoryDownloads
-            ..subDirectory("image.png"),
-        );
+  //     if (Theme.of(context).platform == TargetPlatform.android ||
+  //         Theme.of(context).platform == TargetPlatform.iOS) {
+  //       final imageId = await ImageDownloader.downloadImage(
+  //         'data:image/jpeg;base64,${base64Encode(imageBytes)}',
+  //         destination: AndroidDestinationType.directoryDownloads
+  //           ..subDirectory("image.png"),
+  //       );
 
-        if (imageId == null) {
-          return;
-        }
+  //       if (imageId == null) {
+  //         return;
+  //       }
 
-        final path = await ImageDownloader.findPath(imageId);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Image downloaded to $path')),
-        );
-      } else if (Theme.of(context).platform == TargetPlatform.fuchsia ||
-          Theme.of(context).platform == TargetPlatform.macOS ||
-          Theme.of(context).platform == TargetPlatform.windows ||
-          Theme.of(context).platform == TargetPlatform.linux) {
-        final base64data = base64Encode(imageBytes);
-        final a = html.AnchorElement(href: 'data:image/jpeg;base64,$base64data')
-          ..setAttribute('download', fileName)
-          ..click();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Image downloaded to Downloads directory')));
-      }
-    } on PlatformException catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error downloading image: $error')),
-      );
-    }
-  }
+  //       final path = await ImageDownloader.findPath(imageId);
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Image downloaded to $path')),
+  //       );
+  //     } else if (Theme.of(context).platform == TargetPlatform.fuchsia ||
+  //         Theme.of(context).platform == TargetPlatform.macOS ||
+  //         Theme.of(context).platform == TargetPlatform.windows ||
+  //         Theme.of(context).platform == TargetPlatform.linux) {
+  //       final base64data = base64Encode(imageBytes);
+  //       final a = html.AnchorElement(href: 'data:image/jpeg;base64,$base64data')
+  //         ..setAttribute('download', fileName)
+  //         ..click();
+  //       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+  //           content: Text('Image downloaded to Downloads directory')));
+  //     }
+  //   } on PlatformException catch (error) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Error downloading image: $error')),
+  //     );
+  //   }
+  // }
 
   void _copyPromptText(String text) {
     Clipboard.setData(ClipboardData(text: text));
@@ -95,7 +96,10 @@ class _ImagesListWidgetState extends State<ImagesListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.imagesList.isEmpty
+    List<ImageFile> imagesCopy =
+        List.from(widget.imagesList); // Make a copy of the list
+
+    return imagesCopy.isEmpty
         ? Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -122,9 +126,8 @@ class _ImagesListWidgetState extends State<ImagesListWidget> {
                     icon: const Icon(Icons.arrow_left),
                     onPressed: () {
                       setState(() {
-                        currentIndex =
-                            (currentIndex - 1 + widget.imagesList.length) %
-                                widget.imagesList.length;
+                        currentIndex = (currentIndex - 1 + imagesCopy.length) %
+                            imagesCopy.length;
                       });
                     },
                   ),
@@ -133,7 +136,7 @@ class _ImagesListWidgetState extends State<ImagesListWidget> {
                         ? null
                         : () async {
                             await launchImageViewerMemory(
-                                context, widget.imagesList, currentIndex);
+                                context, imagesCopy, currentIndex);
                           },
                     child: SizedBox(
                       width: widget.width,
@@ -142,7 +145,7 @@ class _ImagesListWidgetState extends State<ImagesListWidget> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8.0),
                           child: Image.memory(Uint8List.fromList(
-                              widget.imagesList[currentIndex].bytes!)),
+                              imagesCopy[currentIndex].bytes!)),
                         ),
                       ),
                     ),
@@ -151,50 +154,46 @@ class _ImagesListWidgetState extends State<ImagesListWidget> {
                     icon: const Icon(Icons.arrow_right),
                     onPressed: () {
                       setState(() {
-                        currentIndex =
-                            (currentIndex + 1) % widget.imagesList.length;
+                        currentIndex = (currentIndex + 1) % imagesCopy.length;
                       });
                     },
                   ),
                 ],
               ),
               const SizedBox(height: 2),
-              if (widget.displayPromptText)
-                if (widget.imagesList[currentIndex].description != null)
-                  SelectionArea(
-                    child: Container(
-                        constraints:
-                            BoxConstraints(maxWidth: widget.width + 26),
-                        decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(8))),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                widget.imagesList[currentIndex].description!,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: widget.promptMaxLines,
-                                style:
-                                    TextStyle(fontSize: widget.promptFontSize),
-                              ),
+              if (widget.displayPromptText &&
+                  imagesCopy[currentIndex].description != null)
+                SelectionArea(
+                  child: Container(
+                      constraints: BoxConstraints(maxWidth: widget.width + 26),
+                      decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(8))),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              imagesCopy[currentIndex].description!,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: widget.promptMaxLines,
+                              style: TextStyle(fontSize: widget.promptFontSize),
                             ),
-                            if (widget.showCopyButton)
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.copy, size: 16),
-                                    onPressed: () {
-                                      _copyPromptText(widget
-                                          .imagesList[currentIndex]
-                                          .description!);
-                                    },
-                                  ),
-                                ],
-                              ),
-                          ],
-                        )),
-                  ),
+                          ),
+                          if (widget.showCopyButton)
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.copy, size: 16),
+                                  onPressed: () {
+                                    _copyPromptText(
+                                        imagesCopy[currentIndex].description!);
+                                  },
+                                ),
+                              ],
+                            ),
+                        ],
+                      )),
+                ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

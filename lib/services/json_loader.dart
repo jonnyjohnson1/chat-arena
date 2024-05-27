@@ -17,6 +17,11 @@ Map<String, Map<String, dynamic>> unpackModels(Map<String, dynamic> inputDict) {
     Map<String, dynamic> modelMap = Map.from(model);
     resultDict[localID] = modelMap;
   }
-
   return resultDict;
+}
+
+Future<dynamic> loadSteeringJson() async {
+  String data = await rootBundle.loadString('assets/steering-suggestions.json');
+  dynamic jsonResult = json.decode(data);
+  return jsonResult;
 }

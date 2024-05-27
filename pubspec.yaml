@@ -55,3 +55,4 @@ flutter:
     # Add assets from the images directory to the application.
     - assets/images/
     - assets/app-config.json
+    - assets/steering-suggestions.json

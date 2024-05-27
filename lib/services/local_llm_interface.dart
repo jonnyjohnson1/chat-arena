@@ -325,7 +325,7 @@ class LocalLLMInterface {
                 durInSeconds; // completion time in seconds
             chatCallbackFunction(decoded);
           case 'error':
-            print(decoded['error']);
+            print(decoded['message']);
             print("handle error");
           default:
             print("CASE!!!!");
