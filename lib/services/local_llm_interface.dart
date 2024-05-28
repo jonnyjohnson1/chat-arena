@@ -18,12 +18,13 @@ import '../models/messages.dart';
 class LocalLLMInterface {
   String chatEndpoint = "websocket_chat";
   String metaChatEndpoint = "websocket_meta_chat";
+  String chatSummaryEndpoint = "websocket_chat_summary";
 
   bool get isLocal => true;
   String get wsPrefix => isLocal ? 'ws' : 'wss';
   String get getUrlStart => isLocal ? "http://" : "https://";
   WebSocketChannel? webSocket;
-  String httpAddress = "http://0.0.0.0:13341"; //15
+  String httpAddress = "http://0.0.0.0:13341";
 
   void initChatWebsocket() {
     String extractedDiAPI = httpAddress.split('/').last;
@@ -37,6 +38,13 @@ class LocalLLMInterface {
     // Use ws for debugging, and wss for
     webSocket = WebSocketChannel.connect(
         Uri.parse('$wsPrefix://$extractedDiAPI/$metaChatEndpoint'));
+  }
+
+  void initChatSummaryWebsocket() {
+    String extractedDiAPI = httpAddress.split('/').last;
+    // Use ws for debugging, and wss for
+    webSocket = WebSocketChannel.connect(
+        Uri.parse('$wsPrefix://$extractedDiAPI/$chatSummaryEndpoint'));
   }
 
   void newChatMessage(
@@ -279,7 +287,94 @@ class LocalLLMInterface {
     webSocket!.stream.listen(
       (data) {
         // print(data.runtimeType);
-        print(data);
+        Map<String, dynamic> decoded = {};
+        try {
+          decoded = json.decode(data);
+        } catch (e) {
+          print("Error here");
+          print(e);
+        }
+
+        // print(decoded['status']);
+        // decoded['status'] has 4 options
+        // started, generating, completed, error
+        switch (decoded['status']) {
+          case 'started':
+            break;
+          case 'generating':
+            if (!isStarted) {
+              isStarted = true;
+              startTime = DateTime.now();
+            }
+
+            // UPDATE MESSAGES
+            toksStr.add(decoded['response']);
+            int duration = DateTime.now().difference(startTime!).inMilliseconds;
+            double durInSeconds = duration / 1000;
+
+            if (duration != 0) {
+              toksPerSec = toksStr.length / durInSeconds;
+            }
+            decoded['completionTime'] =
+                durInSeconds; // completion time in seconds
+            decoded['toksPerSec'] = toksPerSec;
+            chatCallbackFunction(decoded);
+
+          case 'completed':
+            // UPDATE MESSAGES
+            toksStr.add(decoded['response']);
+            int duration = DateTime.now().difference(startTime!).inMilliseconds;
+            double durInSeconds = duration / 1000;
+
+            toksPerSec = toksStr.length / durInSeconds;
+
+            decoded['toksPerSec'] = toksPerSec;
+            decoded['completionTime'] =
+                durInSeconds; // completion time in seconds
+            chatCallbackFunction(decoded);
+          case 'error':
+            print(decoded['message']);
+            print("handle error");
+          default:
+            print("CASE!!!!");
+            print(decoded['status']);
+            break;
+        }
+      },
+      onError: (error) => print(error),
+      onDone: () {
+        print("WebSocket closed.");
+      },
+    );
+  }
+
+  void genChatSummary(String subjectFocus, String convId, ModelConfig model,
+      chatCallbackFunction) {
+    initChatSummaryWebsocket();
+
+    if (webSocket == null) {
+      print("You must init the class first to connect to the websocket.");
+      return null;
+    }
+
+    Map<String, dynamic> submitPkg = {
+      "conversation_id": convId,
+      "model": model.model.model,
+      "subject": subjectFocus,
+      "temperature": 0.06,
+    };
+
+    webSocket!.sink.add(json.encode(submitPkg));
+    debugPrint("\t\t[ Submitted package to websocket sink ]");
+
+    double toksPerSec = 0;
+    List<String> toksStr = [];
+    bool isStarted = false;
+    DateTime? startTime;
+
+    webSocket!.stream.listen(
+      (data) {
+        // print(data.runtimeType);
         Map<String, dynamic> decoded = {};
         try {
           decoded = json.decode(data);

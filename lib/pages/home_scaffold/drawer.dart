@@ -9,6 +9,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../theming/theming_config.dart';
+
 class PageViewDrawer extends StatefulWidget {
   final ValueNotifier<Widget> body;
   final ValueNotifier<String> title;
@@ -179,7 +181,7 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
                 child: Icon(CupertinoIcons.chat_bubble_text_fill,
                     color: 0 == bottomSelectedIndex
                         ? unselectedColor
-                        : Color.fromARGB(255, 67, 230, 255),
+                        : chatBubbleColor,
                     size: 19),
               ))),
     ];

@@ -1,4 +1,5 @@
 import 'package:chat/models/game_models/debate.dart';
+import 'package:chat/theming/theming_config.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -45,8 +46,8 @@ class _ConversationListItemState extends State<ConversationListItem> {
   Widget getGameIcon(GameType type) {
     switch (type) {
       case GameType.chat:
-        return const Icon(CupertinoIcons.chat_bubble_fill,
-            color: Color.fromARGB(255, 25, 212, 240), size: 26);
+        return Icon(CupertinoIcons.chat_bubble_fill,
+            color: chatBubbleColor, size: 26);
       case GameType.debate:
         return const Icon(CupertinoIcons.group_solid,
             color: Color.fromARGB(255, 188, 144, 249), size: 26);

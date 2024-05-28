@@ -2,6 +2,7 @@ import 'package:chat/analytics_drawer/conversation_steering_drawer.dart';
 import 'package:chat/analytics_drawer/graph_anal_drawer.dart';
 import 'package:chat/analytics_drawer/base_anal_drawer.dart';
 import 'package:chat/models/conversation.dart';
+import 'package:chat/theming/theming_config.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -108,7 +109,7 @@ class _AnalyticsViewDrawerState extends State<AnalyticsViewDrawer> {
                 child: Icon(
                   CupertinoIcons.chat_bubble_2_fill,
                   color: 1 == bottomSelectedIndex
-                      ? Color.fromARGB(255, 67, 230, 255)
+                      ? chatBubbleColor
                       : unselectedColor,
                   size: 21,
                 ),

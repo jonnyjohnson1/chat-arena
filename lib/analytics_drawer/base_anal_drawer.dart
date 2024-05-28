@@ -42,7 +42,7 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
 
     // This delay loads the items in the drawer after the animation has popped out a bit
     // It saves some jank
-    Future.delayed(const Duration(milliseconds: 300), () {
+    Future.delayed(const Duration(milliseconds: 90), () {
       if (mounted) {
         setState(() => didInit = true);
       }

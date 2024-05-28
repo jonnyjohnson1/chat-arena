@@ -163,23 +163,48 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
   Widget buildCommentsRow(Map<String, dynamic> baseAnalytics) {
     if (baseAnalytics.isNotEmpty) {
       if (baseAnalytics.containsKey('commenter')) {
-        String modName = baseAnalytics['commenter']['base_analysis']
-                ['mod_level']
-            .first['name'];
-        String modLabel = baseAnalytics['commenter']['base_analysis']
-                ['mod_level']
-            .first['label'];
-        String ternSent = baseAnalytics['commenter']['base_analysis']
-                ['tern_sent']
-            .first['label'];
-        double ternSentScore = baseAnalytics['commenter']['base_analysis']
-                ['tern_sent']
-            .first['score'];
-        String emo_27 = baseAnalytics['commenter']['base_analysis']['emo_27']
-            .first['label'];
+        String modName =
+            baseAnalytics['commenter']['base_analysis']['mod_level'] != null &&
+                    baseAnalytics['commenter']['base_analysis']['mod_level']
+                        .isNotEmpty
+                ? baseAnalytics['commenter']['base_analysis']['mod_level']
+                    .first['name']
+                : '';
+        String modLabel =
+            baseAnalytics['commenter']['base_analysis']['mod_level'] != null &&
+                    baseAnalytics['commenter']['base_analysis']['mod_level']
+                        .isNotEmpty
+                ? baseAnalytics['commenter']['base_analysis']['mod_level']
+                    .first['label']
+                : '';
+        String ternSent =
+            baseAnalytics['commenter']['base_analysis']['tern_sent'] != null &&
+                    baseAnalytics['commenter']['base_analysis']['tern_sent']
+                        .isNotEmpty
+                ? baseAnalytics['commenter']['base_analysis']['tern_sent']
+                    .first['label']
+                : '';
+        double ternSentScore =
+            baseAnalytics['commenter']['base_analysis']['tern_sent'] != null &&
+                    baseAnalytics['commenter']['base_analysis']['tern_sent']
+                        .isNotEmpty
+                ? baseAnalytics['commenter']['base_analysis']['tern_sent']
+                    .first['score']
+                : 0.0;
+        String emo_27 = baseAnalytics['commenter']['base_analysis']['emo_27'] !=
+                    null &&
+                baseAnalytics['commenter']['base_analysis']['emo_27'].isNotEmpty
+            ? baseAnalytics['commenter']['base_analysis']['emo_27']
+                .first['label']
+            : '';
         double emo_27Score = baseAnalytics['commenter']['base_analysis']
-                ['emo_27']
-            .first['score'];
+                        ['emo_27'] !=
+                    null &&
+                baseAnalytics['commenter']['base_analysis']['emo_27'].isNotEmpty
+            ? baseAnalytics['commenter']['base_analysis']['emo_27']
+                .first['score']
+            : 0.0;
+
         return Row(
           children: [
             Text(emo_27.capitalize()),

@@ -1,5 +1,4 @@
 import 'package:chat/models/suggestion_model.dart';
-import 'package:chat/services/suggestions_query.dart';
 import 'package:chat/theming/theming_config.dart';
 import 'package:flutter/material.dart';
 
@@ -114,7 +113,7 @@ class _ConversationSteeringSuggestorState
                   isDense: true,
                   elevation: 4,
                   padding: EdgeInsets.zero,
-                  itemHeight: 66,
+                  itemHeight: 74,
                   isExpanded: true,
                   items: widget.list.map<DropdownMenuItem<Suggestion>>((item) {
                     return DropdownMenuItem<Suggestion>(
@@ -132,7 +131,7 @@ class _ConversationSteeringSuggestorState
                                   child: Text(
                                     item.suggestion,
                                     style: const TextStyle(
-                                        fontSize: 12,
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w400),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 3,

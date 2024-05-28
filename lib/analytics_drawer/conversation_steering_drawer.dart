@@ -35,6 +35,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late ValueNotifier<Conversation?> currentSelectedConversation;
   late ValueNotifier<List<uiMessage.Message>> messages;
+  late ValueNotifier<List<uiMessage.Message>> summaryMessages;
   late TabController _tabController;
   int pathIndex = 0;
 
@@ -67,6 +68,8 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   @override
   void initState() {
     initSuggestionsData();
+    // TODO save/load summary messages from the Conversastion Model
+    summaryMessages = ValueNotifier([]);
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       setState(() {
@@ -104,7 +107,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   TextEditingController queryController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
-  // handles the chat response
+  // handles the meta chat response
 
   String generatedChat = "";
   double toksPerSec = 0.0;
@@ -287,7 +290,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
 
   ValueNotifier<bool> isExpanded = ValueNotifier<bool>(true);
 
-  Widget buildResponseBox() {
+  Widget buildResponseBox(ValueNotifier<List<Message>> messages) {
     return ValueListenableBuilder<bool>(
       valueListenable: isExpanded,
       builder: (context, expanded, _) {
@@ -604,50 +607,261 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   }
 
   Widget buildChatTab() {
-    return buildResponseBox();
+    return buildResponseBox(messages);
+  }
+
+  final List<String> _currencies = [
+    "People",
+    "Personalities",
+    "Knowledge",
+    "Elephant in the Room",
+    "Struggles",
+    "Emotions"
+  ];
+
+  String _currentSelectedValue = "Food";
+  final TextEditingController _textController = TextEditingController();
+  final LayerLink _layerLink = LayerLink();
+
+  void _showDropdownMenu(BuildContext context) async {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final button = context.findRenderObject() as RenderBox;
+    final position = button.localToGlobal(Offset.zero, ancestor: overlay);
+
+    final selectedValue = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(position.dx, position.dy,
+          position.dx + button.size.width, position.dy + button.size.height),
+      items: _currencies.map((String value) {
+        return PopupMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+    );
+
+    if (selectedValue != null) {
+      setState(() {
+        _currentSelectedValue = selectedValue;
+        _textController.text = selectedValue;
+      });
+    }
+  }
+
+  // handles the meta chat response
+
+  String generatedSummaryChat = "";
+  double summToksPerSec = 0.0;
+  double summCompletionTime = 0.0;
+  int currentSummIdx = 0;
+  ValueNotifier<bool> isGeneratingSumm = ValueNotifier(false);
+
+  summaryCallbackFunction(Map<String, dynamic>? event) async {
+    if (event != null) {
+      EventGenerationResponse response = EventGenerationResponse.fromMap(event);
+
+      generatedSummaryChat = response.generation;
+      print("${currentSummIdx}, ${summaryMessages.value.length}");
+      if (response.isCompleted) {
+        debugPrint("\t\t[ chat completed ]");
+        // end token is received
+        isGeneratingSumm.value = false;
+        summaryMessages.value[currentSummIdx].isGenerating = false;
+        summCompletionTime = response.completionTime;
+        summaryMessages.value[currentSummIdx].completionTime =
+            summCompletionTime;
+        isGeneratingSumm.notifyListeners();
+        print("${currentSummIdx}, ${summaryMessages.value.last.message}");
+        print("Final message: ${summaryMessages.value.last.message!.value}");
+        setState(() {});
+        // add the final message to the database
+        // ConversationDatabase.instance
+        //     .createMessage(summaryMessages.value[currentSummIdx]);
+
+        // Run follow-up functions
+        if (computeFollowUpChatOptions) {}
+      } else {
+        summToksPerSec = response.toksPerSec;
+        while (generatedSummaryChat.startsWith("\n")) {
+          generatedSummaryChat = generatedSummaryChat.substring(2);
+        }
+        summCompletionTime = response.completionTime;
+        try {
+          // print(currentSummIdx);
+          // print(summaryMessages.value);
+          summaryMessages.value[currentSummIdx].message!.value =
+              generatedSummaryChat;
+          summaryMessages.value[currentSummIdx].completionTime =
+              summCompletionTime;
+          summaryMessages.value[currentSummIdx].isGenerating = true;
+          summaryMessages.value[currentSummIdx].toksPerSec = summToksPerSec;
+
+          // Notify the value listeners
+          summaryMessages.value[currentSummIdx].message!.notifyListeners();
+        } catch (e) {
+          print(
+              "Error updating message with the latest result: ${e.toString()}");
+          print("The generation was: $generatedChat");
+        }
+        // setState(() {});
+      }
+    }
+  }
+
+  String? convSummaryConvId;
+
+  void generateConversationSummary() async {
+    // TODO Add the user info to the ConversationSummaryModel
+    // uiMessage.Message message = uiMessage.Message(
+    //     id: Tools().getRandomString(12),
+    //     conversationID: metaMessageConvId,
+    //     message: ValueNotifier(queryController.text),
+    //     documentID: '',
+    //     name: 'User',
+    //     senderID: '',
+    //     status: '',
+    //     timestamp: DateTime.now(),
+    //     type: uiMessage.MessageType.text);
+
+    // summaryMessages.value.add(message);
+    // summaryMessages.notifyListeners();
+
+    setState(() {
+      isGeneratingSumm.value = true;
+    });
+
+    debugPrint(
+        "[ Submitting: focal-point ${_textController.text} ]"); // General debug print
+    final newChatBotMsgId = Tools().getRandomString(32);
+    debugPrint("${summaryMessages.value.length}");
+    currentSummIdx = summaryMessages.value.length;
+    LocalLLMInterface().genChatSummary(
+      _textController.text,
+      currentSelectedConversation.value!.id,
+      selectedModel,
+      summaryCallbackFunction,
+    );
+    // Create message object
+    uiMessage.Message botMessage = uiMessage.Message(
+        id: newChatBotMsgId,
+        conversationID: metaMessageConvId,
+        message: ValueNotifier(""),
+        documentID: '',
+        name: 'ChatBot',
+        senderID: 'assistant',
+        status: '',
+        timestamp: DateTime.now(),
+        type: uiMessage.MessageType.text);
+    summaryMessages.value.add(botMessage);
+    summaryMessages.notifyListeners();
+    print(summaryMessages.value);
   }
 
   Widget buildCatchUpTab() {
-    return Column(
-      children: [
-        const SizedBox(
-          height: 10,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () async {
-                LocalLLMInterface().getNextMessageOptions(
-                    currentSelectedConversation.value!.id,
-                    messages.value,
-                    selectedModel.model.model,
-                    _settings);
-              },
-              child: const Text("Summarize"),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () async {
-                LocalLLMInterface().getNextMessageOptions(
-                    currentSelectedConversation.value!.id,
-                    messages.value,
-                    selectedModel.model.model,
-                    _settings);
-              },
-              child: const Text("Get Topics"),
-            ),
-          ],
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      child: Column(
+        children: [
+          const SizedBox(
+            height: 10,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton(
+                style: ButtonStyle(
+                  padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                    const EdgeInsets.symmetric(vertical: 0.0, horizontal: 12.0),
+                  ),
+                ),
+                onPressed: () async {
+                  generateConversationSummary();
+                },
+                child: const Text(
+                  "Summarize",
+                  style: TextStyle(fontSize: 14),
+                ),
+              ),
+              const SizedBox(
+                width: 12,
+              ),
+              SizedBox(
+                  height: 38,
+                  width: 150,
+                  child: FormField<String>(
+                    builder: (FormFieldState<String> state) {
+                      return InputDecorator(
+                        decoration: InputDecoration(
+                          contentPadding:
+                              const EdgeInsets.fromLTRB(10, 0, 6, 0),
+                          errorStyle: const TextStyle(
+                              color: Colors.redAccent, fontSize: 12.0),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5.0),
+                          ),
+                        ),
+                        isEmpty: _currentSelectedValue == null ||
+                            _currentSelectedValue.isEmpty,
+                        child: CompositedTransformTarget(
+                          link: _layerLink,
+                          child: Builder(builder: (formCtx) {
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _textController,
+                                    onChanged: (String newValue) {
+                                      setState(() {
+                                        _currentSelectedValue = newValue;
+                                        state.didChange(newValue);
+                                      });
+                                    },
+                                    style: const TextStyle(fontSize: 14),
+                                    decoration: const InputDecoration(
+                                        border: InputBorder.none,
+                                        hintText: 'Enter a focus',
+                                        hintStyle: TextStyle(fontSize: 14)),
+                                  ),
+                                ),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(20)),
+                                      onTap: () => _showDropdownMenu(formCtx),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(5.0),
+                                        child: SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: Center(
+                                              child: Transform.rotate(
+                                                angle: -90 *
+                                                    3.1415926535897932 /
+                                                    180,
+                                                child: const Icon(
+                                                  Icons.chevron_left,
+                                                  size: 18,
+                                                ),
+                                              ),
+                                            )),
+                                      )),
+                                ),
+                              ],
+                            );
+                          }),
+                        ),
+                      );
+                    },
+                  ))
+            ],
+          ),
+          buildResponseBox(summaryMessages)
+        ],
+      ),
     );
   }
 
-  // TODO Save the settings of the suggested items right here
   ValueNotifier<List<ConversationOptionsResponse>> suggestedNextStepIdeas =
       ValueNotifier([]);
   ValueNotifier<int> selectedIndex = ValueNotifier<int>(0);
@@ -798,7 +1012,8 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                               context: context,
                               builder: (context) {
                                 return AlertDialog(
-                                  title: Text('Conversation Voice Settings'),
+                                  title:
+                                      const Text('Conversation Voice Settings'),
                                   content: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment:
@@ -820,7 +1035,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                                       onPressed: () {
                                         Navigator.of(context).pop();
                                       },
-                                      child: Text('Close'),
+                                      child: const Text('Close'),
                                     ),
                                   ],
                                 );
