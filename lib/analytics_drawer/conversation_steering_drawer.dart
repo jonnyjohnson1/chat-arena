@@ -1,5 +1,6 @@
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/conversation_settings.dart';
+import 'package:chat/models/conversation_summary.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/llm.dart';
@@ -12,7 +13,6 @@ import 'package:chat/services/tools.dart';
 import 'package:chat/shared/chip_widget.dart';
 import 'package:chat/shared/conv_steering_selector.dart';
 import 'package:chat/shared/conversation_settings.dart';
-import 'package:chat/shared/markdown_display.dart/markdown_text.dart';
 import 'package:chat/shared/model_selector.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +35,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late ValueNotifier<Conversation?> currentSelectedConversation;
   late ValueNotifier<List<uiMessage.Message>> messages;
-  late ValueNotifier<List<uiMessage.Message>> summaryMessages;
+  late ValueNotifier<List<ConversationSummary>> summaryMessages;
   late TabController _tabController;
   int pathIndex = 0;
 
@@ -57,19 +57,27 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
       try {
         // Load the meta conversation data form the conversation data class
         messages = currentSelectedConversation.value!.metaConvMessages;
+        summaryMessages =
+            currentSelectedConversation.value!.convSummaryMessages;
       } catch (e) {
         debugPrint(e.toString());
       }
     } else {
       messages = ValueNotifier([]);
+      summaryMessages = ValueNotifier([]);
     }
   }
 
+  late ValueNotifier<bool> isGeneratingSumm;
+  late ValueNotifier<bool> isGenerating;
+
   @override
   void initState() {
+    isGeneratingSumm = ValueNotifier(false);
+    isGenerating = ValueNotifier(false);
+
     initSuggestionsData();
-    // TODO save/load summary messages from the Conversastion Model
-    summaryMessages = ValueNotifier([]);
+
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       setState(() {
@@ -113,7 +121,6 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   double toksPerSec = 0.0;
   double completionTime = 0.0;
   int currentIdx = 0;
-  ValueNotifier<bool> isGenerating = ValueNotifier(false);
 
   generationCallback(Map<String, dynamic>? event) async {
     if (event != null) {
@@ -289,6 +296,57 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   }
 
   ValueNotifier<bool> isExpanded = ValueNotifier<bool>(true);
+  Widget buildSummaryResponseBox(ConversationSummary summary) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: isExpanded,
+      builder: (context, expanded, _) {
+        return Stack(
+          alignment: Alignment.topRight,
+          children: [
+            Container(
+              constraints: expanded
+                  ? null
+                  : const BoxConstraints(
+                      minHeight: 150,
+                      maxHeight: 150,
+                    ),
+              child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
+                  child: ValueListenableBuilder<String>(
+                    valueListenable: summary.summary!.message!,
+                    builder: (context, messageText, _) {
+                      return Align(
+                          alignment: Alignment.centerLeft,
+                          child: SelectableText(messageText));
+                    },
+                  )),
+            ),
+            // This is an expansion toggle used in a prior UI version
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.end,
+            //   children: [
+            //     Padding(
+            //       padding: const EdgeInsets.only(right: 3.0),
+            //       child: IconButton(
+            //         icon: Icon(
+            //           expanded
+            //               ? CupertinoIcons.minus_rectangle
+            //               : Icons.fit_screen,
+            //           size: 20,
+            //         ),
+            //         color: const Color.fromARGB(255, 122, 11, 158),
+            //         onPressed: () {
+            //           isExpanded.value = !isExpanded.value;
+            //         },
+            //       ),
+            //     ),
+            //   ],
+            // ),
+          ],
+        );
+      },
+    );
+  }
 
   Widget buildResponseBox(ValueNotifier<List<Message>> messages) {
     return ValueListenableBuilder<bool>(
@@ -589,7 +647,29 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
             ]),
           ),
           const Tab(text: "Steer"),
-          const Tab(text: "Catch Up"),
+          Tab(
+            child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.centerRight,
+                children: [
+                  const Center(child: Text("Catch Up")),
+                  ValueListenableBuilder(
+                      valueListenable: isGeneratingSumm,
+                      builder: (_, isGen, widget) {
+                        return isGen
+                            ? Positioned(
+                                right: -16,
+                                child: const Padding(
+                                  padding: EdgeInsets.all(0),
+                                  child: CupertinoActivityIndicator(
+                                    radius: 8,
+                                  ),
+                                ),
+                              )
+                            : Container();
+                      }),
+                ]),
+          ),
         ],
       ),
     );
@@ -614,7 +694,8 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
     "People",
     "Personalities",
     "Knowledge",
-    "Elephant in the Room",
+    "the information unsaid",
+    "list implications of actions",
     "Struggles",
     "Emotions"
   ];
@@ -654,25 +735,21 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   double summToksPerSec = 0.0;
   double summCompletionTime = 0.0;
   int currentSummIdx = 0;
-  ValueNotifier<bool> isGeneratingSumm = ValueNotifier(false);
 
   summaryCallbackFunction(Map<String, dynamic>? event) async {
     if (event != null) {
       EventGenerationResponse response = EventGenerationResponse.fromMap(event);
 
       generatedSummaryChat = response.generation;
-      print("${currentSummIdx}, ${summaryMessages.value.length}");
       if (response.isCompleted) {
         debugPrint("\t\t[ chat completed ]");
         // end token is received
         isGeneratingSumm.value = false;
-        summaryMessages.value[currentSummIdx].isGenerating = false;
+        summaryMessages.value[currentSummIdx].summary!.isGenerating = false;
         summCompletionTime = response.completionTime;
-        summaryMessages.value[currentSummIdx].completionTime =
+        summaryMessages.value[currentSummIdx].summary!.completionTime =
             summCompletionTime;
         isGeneratingSumm.notifyListeners();
-        print("${currentSummIdx}, ${summaryMessages.value.last.message}");
-        print("Final message: ${summaryMessages.value.last.message!.value}");
         setState(() {});
         // add the final message to the database
         // ConversationDatabase.instance
@@ -687,17 +764,17 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
         }
         summCompletionTime = response.completionTime;
         try {
-          // print(currentSummIdx);
-          // print(summaryMessages.value);
-          summaryMessages.value[currentSummIdx].message!.value =
+          summaryMessages.value[currentSummIdx].summary!.message!.value =
               generatedSummaryChat;
-          summaryMessages.value[currentSummIdx].completionTime =
+          summaryMessages.value[currentSummIdx].summary!.completionTime =
               summCompletionTime;
-          summaryMessages.value[currentSummIdx].isGenerating = true;
-          summaryMessages.value[currentSummIdx].toksPerSec = summToksPerSec;
+          summaryMessages.value[currentSummIdx].summary!.isGenerating = true;
+          summaryMessages.value[currentSummIdx].summary!.toksPerSec =
+              summToksPerSec;
 
           // Notify the value listeners
-          summaryMessages.value[currentSummIdx].message!.notifyListeners();
+          summaryMessages.value[currentSummIdx].summary!.message!
+              .notifyListeners();
         } catch (e) {
           print(
               "Error updating message with the latest result: ${e.toString()}");
@@ -733,7 +810,6 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
     debugPrint(
         "[ Submitting: focal-point ${_textController.text} ]"); // General debug print
     final newChatBotMsgId = Tools().getRandomString(32);
-    debugPrint("${summaryMessages.value.length}");
     currentSummIdx = summaryMessages.value.length;
     LocalLLMInterface().genChatSummary(
       _textController.text,
@@ -752,11 +828,17 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
         status: '',
         timestamp: DateTime.now(),
         type: uiMessage.MessageType.text);
-    summaryMessages.value.add(botMessage);
+    summaryMessages.value.add(ConversationSummary(
+        id: Tools().getRandomString(12),
+        summary: botMessage,
+        focalPoint: _textController.text));
+    selectedSummaryIndex.value = currentSummIdx;
+    selectedSummaryIndex.notifyListeners();
     summaryMessages.notifyListeners();
-    print(summaryMessages.value);
   }
 
+  ValueNotifier<int> selectedSummaryIndex = ValueNotifier<int>(0);
+  ScrollController scrollSummaryController = ScrollController();
   Widget buildCatchUpTab() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -819,7 +901,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                                     style: const TextStyle(fontSize: 14),
                                     decoration: const InputDecoration(
                                         border: InputBorder.none,
-                                        hintText: 'Enter a focus',
+                                        hintText: 'Enter a focus...',
                                         hintStyle: TextStyle(fontSize: 14)),
                                   ),
                                 ),
@@ -856,7 +938,49 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                   ))
             ],
           ),
-          buildResponseBox(summaryMessages)
+          ValueListenableBuilder<List<ConversationSummary>>(
+              valueListenable: summaryMessages,
+              builder: (context, summaries, _) {
+                return ValueListenableBuilder<int>(
+                    valueListenable: selectedSummaryIndex,
+                    builder: (context, idx, _) {
+                      if (summaries.isEmpty) return Container();
+                      List<Widget> tabs =
+                          List.generate(summaries.length, (index) {
+                        return Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 2.0),
+                            child: Tooltip(
+                              waitDuration: const Duration(milliseconds: 250),
+                              key: UniqueKey(),
+                              message: summaries[index].focalPoint,
+                              preferBelow: false,
+                              child: CustomChip(
+                                index: index,
+                                isSelected: selectedSummaryIndex.value == index,
+                                onTap: () {
+                                  selectedSummaryIndex.value = index;
+                                },
+                              ),
+                            ));
+                      });
+                      return Column(
+                        children: [
+                          const SizedBox(height: 8),
+                          SingleChildScrollView(
+                            controller: scrollSummaryController,
+                            scrollDirection: Axis.horizontal,
+                            child: Scrollbar(
+                              controller: scrollSummaryController,
+                              thickness: 8,
+                              child: Row(children: tabs),
+                            ),
+                          ),
+                          buildSummaryResponseBox(summaries[idx]),
+                        ],
+                      );
+                    });
+              })
         ],
       ),
     );
