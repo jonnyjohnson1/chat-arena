@@ -453,7 +453,7 @@ class LocalLLMInterface {
   }
 
   Future<ConversationData?> getChatAnalysis(String conversationID) async {
-    final uri = getUrlStart + "0.0.0.0:13341/chat_conversation_analysis";
+    final uri = httpAddress + "/chat_conversation_analysis";
     final url = Uri.parse(uri);
     final headers = {
       "accept": "application/json; charset=utf-8",
@@ -489,7 +489,7 @@ class LocalLLMInterface {
       List<Message> messageHistory,
       String model,
       ConversationVoiceSettings settings) async {
-    final uri = getUrlStart + "0.0.0.0:13341/gen_next_message_options";
+    final uri = httpAddress + "/gen_next_message_options";
     final url = Uri.parse(uri);
     final headers = {
       "accept": "application/json; charset=utf-8",
@@ -535,7 +535,7 @@ class LocalLLMInterface {
   }
 
   Future<ImageFile?> getConvToImage(String conversationID) async {
-    final uri = getUrlStart + "0.0.0.0:13341/chat/conv_to_image";
+    final uri = httpAddress + "/chat/conv_to_image";
     final url = Uri.parse(uri);
     final headers = {
       "accept": "application/json; charset=utf-8",

@@ -432,7 +432,7 @@ class _SettingsDialogState extends State<SettingsDialog>
       border: OutlineInputBorder(),
       contentPadding: EdgeInsets.symmetric(horizontal: 10),
     );
-    TextStyle style = TextStyle(fontSize: 14);
+    TextStyle style = const TextStyle(fontSize: 14);
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),

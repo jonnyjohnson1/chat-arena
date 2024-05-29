@@ -1,6 +1,8 @@
+import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/services/static_queries.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ModelSelector extends StatefulWidget {
   final LanguageModel initModel;
@@ -14,17 +16,20 @@ class ModelSelector extends StatefulWidget {
 
 class _ModelSelectorState extends State<ModelSelector> {
   late LanguageModel selectedModel;
+  late ValueNotifier<DisplayConfigData> displayConfigData;
 
   @override
   void initState() {
     super.initState();
+    displayConfigData =
+        Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     selectedModel = widget.initModel;
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: getModels(),
+      future: getModels(displayConfigData.value.apiConfig),
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         return snapshot.hasData
             ? Material(
