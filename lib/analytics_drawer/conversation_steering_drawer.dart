@@ -230,7 +230,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
     debugPrint("[ Submitting: $text ]"); // General debug print
     final newChatBotMsgId = Tools().getRandomString(32);
 
-    LocalLLMInterface().newChatMetaMessage(
+    LocalLLMInterface(displayConfigData.value.apiConfig).newChatMetaMessage(
         text,
         metaMessages,
         actualConversation!,
@@ -811,7 +811,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
         "[ Submitting: focal-point ${_textController.text} ]"); // General debug print
     final newChatBotMsgId = Tools().getRandomString(32);
     currentSummIdx = summaryMessages.value.length;
-    LocalLLMInterface().genChatSummary(
+    LocalLLMInterface(displayConfigData.value.apiConfig).genChatSummary(
       _textController.text,
       currentSelectedConversation.value!.id,
       selectedModel,
@@ -1015,12 +1015,13 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                 ConversationVoiceSettings submitSettings =
                     ConversationVoiceSettings.fromJson(_settings.toJson());
                 debugPrint("\t\t[ generating conversation options ]");
-                String? nextStepResponse = await LocalLLMInterface()
-                    .getNextMessageOptions(
-                        currentSelectedConversation.value!.id,
-                        messages.value,
-                        selectedModel.model.model,
-                        submitSettings);
+                String? nextStepResponse =
+                    await LocalLLMInterface(displayConfigData.value.apiConfig)
+                        .getNextMessageOptions(
+                            currentSelectedConversation.value!.id,
+                            messages.value,
+                            selectedModel.model.model,
+                            submitSettings);
                 if (nextStepResponse != null) {
                   if (nextStepResponse.trim().isNotEmpty) {
                     suggestedNextStepIdeas.value.add(

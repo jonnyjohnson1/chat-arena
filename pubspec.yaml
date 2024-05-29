@@ -1,5 +1,5 @@
 name: chat
-description: "A new Flutter project."
+description: "Conversation games for better communication"
 
 # Prevent accidental publishing to pub.dev.
 publish_to: 'none'
@@ -35,7 +35,7 @@ dependencies:
   path: any
   aligned_dialog: ^0.0.6
   load_switch: ^2.1.0
-  extended_text: ^12.0.1
+  extended_text: ^13.0.0
   image_downloader: ^0.31.0
   universal_html: ^2.0.5  # For web download
   markdown_widget: ^2.3.2+6
@@ -43,9 +43,24 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  flutter_launcher_icons: "^0.13.1"
   flutter_lints: ^2.0.0
+  
 
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+  macos:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+  
 flutter:
   uses-material-design: true
 

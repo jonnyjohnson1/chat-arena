@@ -16,6 +16,23 @@ import 'package:http/http.dart' as http;
 import '../models/messages.dart';
 
 class LocalLLMInterface {
+  APIConfig apiConfig;
+
+  LocalLLMInterface(this.apiConfig) {
+    final urlPattern = r'^(http|https):\/\/[^\s/$.?#].[^\s]*$';
+    final regExp = RegExp(urlPattern);
+    String baseUrl = apiConfig.customEndpoint.isEmpty
+        ? apiConfig.defaultEndpoint
+        : apiConfig.customEndpoint;
+    print(baseUrl);
+    if (regExp.hasMatch(baseUrl)) {
+      httpAddress = baseUrl;
+    } else {
+      throw ArgumentError('Invalid URL format: ${baseUrl}');
+    }
+  }
+
+  late String httpAddress;
   String chatEndpoint = "websocket_chat";
   String metaChatEndpoint = "websocket_meta_chat";
   String chatSummaryEndpoint = "websocket_chat_summary";
@@ -24,7 +41,6 @@ class LocalLLMInterface {
   String get wsPrefix => isLocal ? 'ws' : 'wss';
   String get getUrlStart => isLocal ? "http://" : "https://";
   WebSocketChannel? webSocket;
-  String httpAddress = "http://0.0.0.0:13341";
 
   void initChatWebsocket() {
     String extractedDiAPI = httpAddress.split('/').last;
