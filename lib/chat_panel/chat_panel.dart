@@ -120,53 +120,87 @@ class _ConversationsListState extends State<ConversationsList> {
                           padding: const EdgeInsets.only(top: 4),
                           // physics: NeverScrollableScrollPhysics(),
                           itemBuilder: (context, index) {
-                            return ConversationListItem(
+                            return Dismissible(
                               key: Key(conversationlist[index].id),
-                              conversation: conversationlist[index],
-                              onSelected: () {
-                                widget.onTap(conversationlist[index]);
-                              },
-                              onDeleteTap: () async {
+                              direction: DismissDirection.endToStart,
+                              onDismissed: (direction) async {
                                 // delete from the conversations table
                                 await ConversationDatabase.instance
                                     .delete(conversationlist[index].id);
                                 print(
-                                    "[ deleted conversation from table : convId: ${widget.conversations.value[index].id}]");
+                                    "[ deleted conversation from table : convId: ${conversationlist[index].id}]");
+
                                 // delete from the messages table
                                 await ConversationDatabase.instance
                                     .deleteMessageByConvId(
-                                        widget.conversations.value[index].id);
+                                        conversationlist[index].id);
                                 print(
-                                    "[ deleted msgs from table with convId: convId: ${widget.conversations.value[index].id}]");
-                                print(index);
-                                try {
-                                  widget.conversations.value.removeAt(index);
-                                } catch (e) {
-                                  print(e);
-                                }
-                                widget.conversations.notifyListeners();
+                                    "[ deleted msgs from table with convId: ${conversationlist[index].id}]");
+
+                                setState(() {
+                                  conversationlist.removeAt(index);
+                                });
+
                                 widget.onDelete(true);
                               },
-                              onSettingsTap: () async {
-                                // show alert dialog to clarify delete/clear
-                                bool? deleteConfirmation =
-                                    await showAlertDialog(context);
-                                if (deleteConfirmation == true) {
-                                  print("ID: " +
-                                      widget.conversations.value[index].id);
+                              background: Container(
+                                color: const Color.fromARGB(255, 233, 56, 43),
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20.0),
+                                child: const Icon(
+                                  Icons.delete,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              child: ConversationListItem(
+                                key: Key(conversationlist[index].id),
+                                conversation: conversationlist[index],
+                                onSelected: () {
+                                  widget.onTap(conversationlist[index]);
+                                },
+                                onDeleteTap: () async {
                                   // delete from the conversations table
-                                  // await ConversationDatabase.instance.delete(
-                                  //     widget.conversations.value[index].id);
+                                  await ConversationDatabase.instance
+                                      .delete(conversationlist[index].id);
+                                  print(
+                                      "[ deleted conversation from table : convId: ${widget.conversations.value[index].id}]");
                                   // delete from the messages table
-                                  // await ConversationDatabase.instance
-                                  //     .deleteMessageByConvId(
-                                  //         widget.conversations.value[index].id);
-                                  widget.conversations.value.removeAt(index);
+                                  await ConversationDatabase.instance
+                                      .deleteMessageByConvId(
+                                          widget.conversations.value[index].id);
+                                  print(
+                                      "[ deleted msgs from table with convId: convId: ${widget.conversations.value[index].id}]");
+                                  print(index);
+                                  try {
+                                    widget.conversations.value.removeAt(index);
+                                  } catch (e) {
+                                    print(e);
+                                  }
                                   widget.conversations.notifyListeners();
                                   widget.onDelete(true);
-                                }
-                              },
-                              isMessageRead: true,
+                                },
+                                onSettingsTap: () async {
+                                  // show alert dialog to clarify delete/clear
+                                  bool? deleteConfirmation =
+                                      await showAlertDialog(context);
+                                  if (deleteConfirmation == true) {
+                                    print("ID: " +
+                                        widget.conversations.value[index].id);
+                                    // delete from the conversations table
+                                    // await ConversationDatabase.instance.delete(
+                                    //     widget.conversations.value[index].id);
+                                    // delete from the messages table
+                                    // await ConversationDatabase.instance
+                                    //     .deleteMessageByConvId(
+                                    //         widget.conversations.value[index].id);
+                                    widget.conversations.value.removeAt(index);
+                                    widget.conversations.notifyListeners();
+                                    widget.onDelete(true);
+                                  }
+                                },
+                                isMessageRead: true,
+                              ),
                             );
                           },
                         ),
@@ -179,7 +213,7 @@ class _ConversationsListState extends State<ConversationsList> {
 
   Future<String?> showGameOptions(
       BuildContext context, LayerLink layerLink) async {
-    final offset = Offset(0, -22);
+    final offset = const Offset(0, -22);
     return await showAlignedDialog(
         context: context,
         avoidOverflow: true,

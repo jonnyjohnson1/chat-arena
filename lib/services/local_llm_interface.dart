@@ -16,6 +16,22 @@ import 'package:http/http.dart' as http;
 import '../models/messages.dart';
 
 class LocalLLMInterface {
+  APIConfig apiConfig;
+
+  LocalLLMInterface(this.apiConfig) {
+    final urlPattern = r'^(http|https):\/\/[^\s/$.?#].[^\s]*$';
+    final regExp = RegExp(urlPattern);
+    String baseUrl = apiConfig.customEndpoint.isEmpty
+        ? apiConfig.defaultEndpoint
+        : apiConfig.customEndpoint;
+    if (regExp.hasMatch(baseUrl)) {
+      httpAddress = baseUrl;
+    } else {
+      throw ArgumentError('Invalid URL format: ${baseUrl}');
+    }
+  }
+
+  late String httpAddress;
   String chatEndpoint = "websocket_chat";
   String metaChatEndpoint = "websocket_meta_chat";
   String chatSummaryEndpoint = "websocket_chat_summary";
@@ -24,7 +40,6 @@ class LocalLLMInterface {
   String get wsPrefix => isLocal ? 'ws' : 'wss';
   String get getUrlStart => isLocal ? "http://" : "https://";
   WebSocketChannel? webSocket;
-  String httpAddress = "http://0.0.0.0:13341";
 
   void initChatWebsocket() {
     String extractedDiAPI = httpAddress.split('/').last;
@@ -424,7 +439,6 @@ class LocalLLMInterface {
             print(decoded['message']);
             print("handle error");
           default:
-            print("CASE!!!!");
             print(decoded['status']);
             break;
         }
@@ -437,7 +451,7 @@ class LocalLLMInterface {
   }
 
   Future<ConversationData?> getChatAnalysis(String conversationID) async {
-    final uri = getUrlStart + "0.0.0.0:13341/chat_conversation_analysis";
+    final uri = httpAddress + "/chat_conversation_analysis";
     final url = Uri.parse(uri);
     final headers = {
       "accept": "application/json; charset=utf-8",
@@ -473,7 +487,7 @@ class LocalLLMInterface {
       List<Message> messageHistory,
       String model,
       ConversationVoiceSettings settings) async {
-    final uri = getUrlStart + "0.0.0.0:13341/gen_next_message_options";
+    final uri = httpAddress + "/gen_next_message_options";
     final url = Uri.parse(uri);
     final headers = {
       "accept": "application/json; charset=utf-8",
@@ -519,7 +533,7 @@ class LocalLLMInterface {
   }
 
   Future<ImageFile?> getConvToImage(String conversationID) async {
-    final uri = getUrlStart + "0.0.0.0:13341/chat/conv_to_image";
+    final uri = httpAddress + "/chat/conv_to_image";
     final url = Uri.parse(uri);
     final headers = {
       "accept": "application/json; charset=utf-8",

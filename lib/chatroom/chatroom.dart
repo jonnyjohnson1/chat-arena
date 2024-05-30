@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'package:chat/models/custom_file.dart';
+import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/services/static_queries.dart';
 import 'package:chat/services/tools.dart';
@@ -16,6 +17,7 @@ import 'package:chat/models/conversation.dart';
 import 'package:chat/models/messages.dart' as uiMessage;
 
 import 'package:chat/services/web_specific_queries.dart';
+import 'package:provider/provider.dart';
 
 class ChatRoomPage extends StatefulWidget {
   Conversation? conversation;
@@ -52,9 +54,12 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   bool isIphone = false;
   ModelConfig? selectedModel;
+  late ValueNotifier<DisplayConfigData> displayConfigData;
 
   @override
   void initState() {
+    displayConfigData =
+        Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     if (widget.showModelSelectButton) {
       assert(widget.selectedModelConfig != null &&
           widget.onSelectedModelChange != null);
@@ -187,7 +192,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 // model selector button
                 if (widget.showModelSelectButton)
                   FutureBuilder(
-                      future: getModels(),
+                      future: getModels(displayConfigData.value.apiConfig),
                       builder: (BuildContext context, AsyncSnapshot snapshot) {
                         return snapshot.hasData
                             ? Material(

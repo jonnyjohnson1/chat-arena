@@ -378,7 +378,9 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
                                         imagesList: imagesList,
                                         regenImage: () async {
                                           ImageFile? imageFile =
-                                              await LocalLLMInterface()
+                                              await LocalLLMInterface(
+                                                      displayConfigData
+                                                          .value.apiConfig)
                                                   .getConvToImage(
                                                       currentSelectedConversation
                                                           .value!.id);

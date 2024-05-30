@@ -83,7 +83,6 @@ class _ChatGamePageState extends State<ChatGamePage> {
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     initData();
     debugPrint("\t[ Chat :: GamePage initState ]");
-    // llmInterface = LocalLLMInterface()
   }
 
   String generatedChat = "";
@@ -116,16 +115,18 @@ class _ChatGamePageState extends State<ChatGamePage> {
         // Run all the post conversation analyses here
         // run sidebar calculations if config says so
         if (displayConfigData.value.showSidebarBaseAnalytics) {
-          ConversationData? data = await LocalLLMInterface()
-              .getChatAnalysis(widget.conversation!.id);
+          ConversationData? data =
+              await LocalLLMInterface(displayConfigData.value.apiConfig)
+                  .getChatAnalysis(widget.conversation!.id);
           // return analysis to the Conversation object
           widget.conversation!.conversationAnalytics.value = data;
           widget.conversation!.conversationAnalytics.notifyListeners();
 
           // get an image depiction of the conversation
           if (displayConfigData.value.calcImageGen) {
-            ImageFile? imageFile = await LocalLLMInterface()
-                .getConvToImage(widget.conversation!.id);
+            ImageFile? imageFile =
+                await LocalLLMInterface(displayConfigData.value.apiConfig)
+                    .getConvToImage(widget.conversation!.id);
             if (imageFile != null) {
               // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
               widget.conversation!.convToImagesList.value.add(imageFile);
@@ -185,7 +186,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
   void sendMessagetoModel(String text) async {
     debugPrint("[ Submitting: $text ]"); // General debug print
     final newChatBotMsgId = Tools().getRandomString(32);
-    LocalLLMInterface().newChatMessage(
+    LocalLLMInterface(displayConfigData.value.apiConfig).newChatMessage(
         text,
         messages,
         widget.conversation!.id,
