@@ -1229,7 +1229,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                   const Icon(Icons.view_module_outlined),
                   const SizedBox(width: 5),
                   Text(
-                    "Conversation Steering",
+                    "Steering",
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],

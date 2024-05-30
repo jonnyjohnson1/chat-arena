@@ -16,7 +16,7 @@ Future<List<LanguageModel>?> getModels(APIConfig apiConfig) async {
   String baseUrl = apiConfig.customEndpoint.isEmpty
       ? apiConfig.defaultEndpoint
       : apiConfig.customEndpoint;
-  print(baseUrl);
+
   if (regExp.hasMatch(baseUrl)) {
     httpAddress = baseUrl;
   } else {

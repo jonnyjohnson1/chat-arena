@@ -18,6 +18,7 @@ buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
               onMenuTap();
             },
           ),
+    actions: [Container()],
     title: ValueListenableBuilder(
       valueListenable: title,
       builder: (ctx, tit, _) {
@@ -86,7 +87,7 @@ buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
                         context: ctx,
                         builder: (ctx) => MultiProvider(providers: [
                           ChangeNotifierProvider.value(value: displayConfigData)
-                        ], child: SettingsDialog()),
+                        ], child: SettingsDialog(isMobile: isMobile)),
                       );
                     },
                   ),
@@ -108,12 +109,27 @@ buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
                         onMenuTap();
                       },
                       icon: const Icon(Icons.menu)),
-                  IconButton(
-                      tooltip: "Chats",
-                      onPressed: () {
-                        onChatsTap();
-                      },
-                      icon: const Icon(CupertinoIcons.chat_bubble_2))
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                          tooltip: "Chats",
+                          padding: const EdgeInsets.all(6),
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            onChatsTap();
+                          },
+                          icon: const Icon(CupertinoIcons.chat_bubble_2)),
+                      IconButton(
+                          tooltip: "Chat Analytics",
+                          padding: const EdgeInsets.all(6),
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            onAnalyticsTap();
+                          },
+                          icon: const Icon(Icons.show_chart))
+                    ],
+                  ),
                 ],
               )
           ],

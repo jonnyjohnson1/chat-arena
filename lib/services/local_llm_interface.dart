@@ -24,7 +24,6 @@ class LocalLLMInterface {
     String baseUrl = apiConfig.customEndpoint.isEmpty
         ? apiConfig.defaultEndpoint
         : apiConfig.customEndpoint;
-    print(baseUrl);
     if (regExp.hasMatch(baseUrl)) {
       httpAddress = baseUrl;
     } else {
@@ -440,7 +439,6 @@ class LocalLLMInterface {
             print(decoded['message']);
             print("handle error");
           default:
-            print("CASE!!!!");
             print(decoded['status']);
             break;
         }
