@@ -6,7 +6,6 @@ import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/shared/emo27config.dart';
-import 'package:chat/shared/image_viewer.dart';
 import 'package:chat/shared/images_list_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -42,9 +41,10 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
 
     // This delay loads the items in the drawer after the animation has popped out a bit
     // It saves some jank
+
     Future.delayed(const Duration(milliseconds: 90), () {
       if (mounted) {
-        setState(() => didInit = true);
+        if (!didInit) setState(() => didInit = true);
       }
     });
 

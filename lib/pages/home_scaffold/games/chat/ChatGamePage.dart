@@ -244,6 +244,8 @@ class _ChatGamePageState extends State<ChatGamePage> {
                     .create(widget.conversation!);
                 widget.conversations.value.insert(0, widget.conversation!);
                 widget.conversations.notifyListeners();
+                currentSelectedConversation.value = widget.conversation;
+                currentSelectedConversation.notifyListeners();
               }
               if (text.trim() != "") {
                 uiMessage.Message message = uiMessage.Message(

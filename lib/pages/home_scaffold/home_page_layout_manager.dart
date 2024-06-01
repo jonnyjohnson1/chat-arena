@@ -62,7 +62,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
         });
       });
     }
-    if (!isMobile) {
+    if (!isMobile && endDrawerIsOpen) {
       // close enddrawer if it is open on mobile -> tablet view switch
       Future.delayed(Duration(milliseconds: 599), () {
         setState(() {
