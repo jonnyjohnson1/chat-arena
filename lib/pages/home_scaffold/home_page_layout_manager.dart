@@ -56,7 +56,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
     double width = MediaQuery.of(context).size.width;
     bool isMobile = width < 550;
     if (isMobile && analyticsDrawerIsOpen) {
-      Future.delayed(Duration(milliseconds: 599), () {
+      Future.delayed(const Duration(milliseconds: 599), () {
         setState(() {
           analyticsDrawerIsOpen = false;
         });
@@ -64,7 +64,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
     }
     if (!isMobile && endDrawerIsOpen) {
       // close enddrawer if it is open on mobile -> tablet view switch
-      Future.delayed(Duration(milliseconds: 599), () {
+      Future.delayed(const Duration(milliseconds: 599), () {
         setState(() {
           endDrawerIsOpen = false;
           _scaffoldKey.currentState?.closeEndDrawer();
