@@ -5,3 +5,11 @@ class DebateGame {
     this.topic,
   });
 }
+
+class P2PChatGame {
+  String? username;
+  String? serverHostAddress;
+  int? maxParticipants;
+
+  P2PChatGame({this.username, this.serverHostAddress, this.maxParticipants});
+}

@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:chat/models/display_configs.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -263,8 +265,10 @@ class _SettingsPageState extends State<SettingsPage>
       contentPadding: EdgeInsets.symmetric(horizontal: 10),
     );
     TextStyle style = const TextStyle(fontSize: 14);
+    
     _customEndpointController.text =
         displayConfigData.value.apiConfig.customEndpoint;
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),

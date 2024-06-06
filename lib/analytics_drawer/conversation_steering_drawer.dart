@@ -898,11 +898,11 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                                         state.didChange(newValue);
                                       });
                                     },
-                                    style: const TextStyle(fontSize: 14),
+                                    style: const TextStyle(fontSize: 13),
                                     decoration: const InputDecoration(
                                         border: InputBorder.none,
                                         hintText: 'Enter a focus...',
-                                        hintStyle: TextStyle(fontSize: 14)),
+                                        hintStyle: TextStyle(fontSize: 13)),
                                   ),
                                 ),
                                 Material(
