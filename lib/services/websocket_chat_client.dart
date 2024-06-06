@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 
@@ -7,13 +9,14 @@ class WebSocketChatClient {
 
   WebSocketChatClient({required this.url});
 
-  void connect(String username, Function listenerCallback,
+  void connect(Map<String, dynamic> initData, Function listenerCallback,
       Function websocketDone, Function websocketError) {
     channel = WebSocketChannel.connect(Uri.parse(url));
-    channel!.sink.add(username);
+    channel!.sink.add(json.encode(initData));
 
     channel!.stream.listen((message) {
-      listenerCallback(message);
+      // TODO process any new message coming through the server
+      listenerCallback(jsonDecode(message));
     }, onDone: () {
       String message = 'WebSocket connection closed.';
       print(message);
@@ -25,9 +28,9 @@ class WebSocketChatClient {
     });
   }
 
-  void sendMessage(String message) {
+  void sendMessage(Map<String, dynamic> message) {
     if (channel != null) {
-      channel!.sink.add(message);
+      channel!.sink.add(json.encode(message));
     } else {
       print('WebSocket is not connected.');
     }

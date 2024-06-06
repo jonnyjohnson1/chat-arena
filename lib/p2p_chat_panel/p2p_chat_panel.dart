@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chat/chat_panel/conversation_list_item.dart';
 import 'package:chat/p2p_chat_panel/conversation_list_item.dart';
+import 'package:chat/theming/theming_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/models/conversation.dart';
@@ -94,8 +95,8 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
                         // joinChat();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(
-                            255, 149, 207, 151), // Background color
+                        backgroundColor: personIconColor, // Color.fromARGB(
+                        //255, 149, 207, 151), // Background color
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,

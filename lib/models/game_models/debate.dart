@@ -13,3 +13,5 @@ class P2PChatGame {
 
   P2PChatGame({this.username, this.serverHostAddress, this.maxParticipants});
 }
+
+enum P2PMessage { user, ai, server }
