@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:chat/models/conversation.dart';
 
-class ConversationListItem extends StatefulWidget {
+class P2pConversationListItem extends StatefulWidget {
   Conversation conversation;
   bool isMessageRead;
   final onSettingsTap;
   final onDeleteTap;
   final onSelected;
-  ConversationListItem(
+  P2pConversationListItem(
       {super.key,
       required this.conversation,
       required this.isMessageRead,
@@ -19,10 +19,11 @@ class ConversationListItem extends StatefulWidget {
       this.onSelected,
       this.onSettingsTap});
   @override
-  _ConversationListItemState createState() => _ConversationListItemState();
+  _P2pConversationListItemState createState() =>
+      _P2pConversationListItemState();
 }
 
-class _ConversationListItemState extends State<ConversationListItem> {
+class _P2pConversationListItemState extends State<P2pConversationListItem> {
   String lastUsed = "";
 
   final dateformat = DateFormat("M/d/yy");
@@ -51,9 +52,6 @@ class _ConversationListItemState extends State<ConversationListItem> {
       case GameType.debate:
         return const Icon(CupertinoIcons.group_solid,
             color: Color.fromARGB(255, 188, 144, 249), size: 26);
-      case GameType.p2pchat:
-        return Icon(CupertinoIcons.person_2_fill,
-            color: personIconColor, size: 26);
       default:
         return Icon(CupertinoIcons.chat_bubble_fill,
             color: Colors.blue[200], size: 26);
@@ -63,8 +61,6 @@ class _ConversationListItemState extends State<ConversationListItem> {
   String getTitle(GameType type) {
     switch (type) {
       case GameType.chat:
-        return widget.conversation.title!;
-      case GameType.p2pchat:
         return widget.conversation.title!;
       case GameType.debate:
         if (widget.conversation.gameModel != null) {

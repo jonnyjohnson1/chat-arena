@@ -25,7 +25,7 @@ class ConversationFields {
   static const String gameType = 'gameType';
 }
 
-enum GameType { chat, debate }
+enum GameType { chat, debate, p2pchat }
 
 class Conversation {
   String? title;
