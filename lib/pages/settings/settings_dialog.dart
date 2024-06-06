@@ -1,10 +1,15 @@
-import 'package:chat/models/conversation.dart';
+import 'dart:convert';
+
 import 'package:chat/models/display_configs.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 class SettingsDialog extends StatefulWidget {
+  final bool isMobile;
+  const SettingsDialog({this.isMobile = false, super.key});
   @override
   _SettingsDialogState createState() => _SettingsDialogState();
 }
@@ -169,7 +174,8 @@ class _SettingsDialogState extends State<SettingsDialog>
                       children: [
                         _buildVerticalTab(
                             Icons.display_settings, 'Display Settings', 0),
-                        _buildVerticalTab(Icons.memory_sharp, 'Model Setup', 1),
+                        _buildVerticalTab(
+                            Icons.memory_sharp, 'Api Endpoints', 1),
                         Expanded(
                           child: Container(
                             decoration: const BoxDecoration(
@@ -180,7 +186,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                               controller: _tabController,
                               children: [
                                 _buildDisplaySettingsPage(),
-                                const Center(child: Text('Model Setup Page')),
+                                _buildAPISettingsPage()
                               ],
                             ),
                           ),
@@ -233,7 +239,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                               _buildVerticalTab(Icons.display_settings,
                                   'Display Settings', 0),
                               _buildVerticalTab(
-                                  Icons.memory_sharp, 'Model Setup', 1),
+                                  Icons.memory_sharp, 'Api Endpoints', 1),
                             ],
                           ),
                         ),
@@ -248,7 +254,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                               controller: _tabController,
                               children: [
                                 _buildDisplaySettingsPage(),
-                                const Center(child: Text('Model Setup Page')),
+                                _buildAPISettingsPage()
                               ],
                             ),
                           ),
@@ -370,6 +376,136 @@ class _SettingsDialogState extends State<SettingsDialog>
             notifier: displayConfigData.value.calcImageGen,
           ),
         ],
+      ),
+    );
+  }
+
+  String responseMessageDefault = "";
+  String responseMessageCustom = "";
+
+  Future<void> pingEndpoint(bool isDefault) async {
+    String endpoint = isDefault
+        ? displayConfigData.value.apiConfig.defaultEndpoint
+        : displayConfigData.value.apiConfig.customEndpoint;
+    if (endpoint.isEmpty) {
+      setState(() {
+        if (isDefault) {
+          responseMessageDefault = "Error: Endpoint is incomplete";
+        } else {
+          responseMessageCustom = "Error: Endpoint is incomplete";
+        }
+      });
+      return;
+    }
+
+    try {
+      final response = await http.post(Uri.parse('$endpoint/test'));
+      final body = jsonDecode(response.body);
+      if (response.statusCode == 200 && body == "hello world") {
+        setState(() {
+          if (isDefault) {
+            responseMessageDefault = body;
+          } else {
+            responseMessageCustom = body;
+          }
+        });
+      } else {
+        setState(() {
+          if (isDefault) {
+            responseMessageDefault = "Error: Invalid response";
+          } else {
+            responseMessageCustom = "Error: Invalid response";
+          }
+        });
+      }
+    } catch (e) {
+      setState(() {
+        if (isDefault) {
+          responseMessageDefault = "Error: Unable to reach endpoint";
+        } else {
+          responseMessageCustom = "Error: Unable to reach endpoint";
+        }
+      });
+    }
+  }
+
+  Widget _buildAPISettingsPage() {
+    InputDecoration inputDecoration = const InputDecoration(
+      border: OutlineInputBorder(),
+      contentPadding: EdgeInsets.symmetric(horizontal: 10),
+    );
+    TextStyle style = const TextStyle(fontSize: 14);
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Default API"),
+                SizedBox(
+                  width: 200,
+                  height: 38,
+                  child: TextField(
+                    controller:
+                        TextEditingController(text: "http://0.0.0.0:13341"),
+                    readOnly: true,
+                    decoration: inputDecoration,
+                    style: style,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                ElevatedButton(
+                  onPressed: () => pingEndpoint(true),
+                  child: Text("Test"),
+                ),
+                const SizedBox(width: 10),
+                Text(responseMessageDefault),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Divider(),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Custom API"),
+                SizedBox(
+                  width: 200,
+                  height: 38,
+                  child: TextField(
+                    style: style,
+                    decoration: inputDecoration.copyWith(
+                        hintText: "Enter your endpoint"),
+                    onSubmitted: (value) {
+                      displayConfigData.value.apiConfig.customEndpoint = value;
+                      displayConfigData.notifyListeners();
+                    },
+                    onChanged: (value) {
+                      displayConfigData.value.apiConfig.customEndpoint = value;
+                      displayConfigData.notifyListeners();
+                    },
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                ElevatedButton(
+                  onPressed: () => pingEndpoint(false),
+                  child: Text("Test"),
+                ),
+                Text(responseMessageCustom),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }

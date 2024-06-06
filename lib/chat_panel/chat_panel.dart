@@ -202,7 +202,6 @@ class _ConversationsListState extends State<ConversationsList> {
                                       setState(() {
                                         conversationlist.removeAt(index);
                                       });
-
                                       widget.onDelete(true);
                                     },
                                     background: Container(
@@ -283,7 +282,7 @@ class _ConversationsListState extends State<ConversationsList> {
 
   Future<String?> showGameOptions(
       BuildContext context, LayerLink layerLink) async {
-    final offset = Offset(0, -22);
+    final offset = const Offset(0, -22);
     return await showAlignedDialog(
         context: context,
         avoidOverflow: true,

@@ -1,6 +1,7 @@
 import 'package:chat/chat_panel/chat_panel.dart';
 import 'package:chat/p2p_chat_panel/p2p_chat_panel.dart';
 import 'package:chat/drawer/games_list_drawer.dart';
+import 'package:chat/drawer/settings_drawer.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/games_config.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
@@ -14,6 +15,7 @@ import 'package:flutter/services.dart';
 import '../../theming/theming_config.dart';
 
 class PageViewDrawer extends StatefulWidget {
+  final bool isMobile;
   final ValueNotifier<Widget> body;
   final ValueNotifier<String> title;
   final ValueNotifier<List<Conversation>> conversations;
@@ -23,6 +25,7 @@ class PageViewDrawer extends StatefulWidget {
       {required this.body,
       required this.title,
       required this.conversations,
+      this.isMobile = false,
       this.onSettingsDrawerTap,
       super.key});
 
@@ -64,13 +67,15 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
         pageChanged(index);
       },
       children: <Widget>[
-        GamesListDrawer(onGameCardTap: (GamesConfig selectedGame) {
-          widget.body.value = GamesInfoPage(game: selectedGame);
-        }, onTap: (String page) {
-          if (widget.onSettingsDrawerTap != null) {
-            widget.onSettingsDrawerTap!(page);
-          }
-        }),
+        if (!widget.isMobile)
+          GamesListDrawer(onGameCardTap: (GamesConfig selectedGame) {
+            widget.body.value = GamesInfoPage(game: selectedGame);
+          }, onTap: (String page) {
+            if (widget.onSettingsDrawerTap != null) {
+              widget.onSettingsDrawerTap!(page);
+            }
+          }),
+        if (widget.isMobile) const SettingsDrawer(),
         ConversationsList(
           conversations: widget.conversations,
           onDelete: (bool deleted) {
