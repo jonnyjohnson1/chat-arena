@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:chat/models/custom_file.dart';
 import 'package:flutter/foundation.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,7 +11,7 @@ import '../models/messages.dart';
 class ConversationDatabase {
   static final ConversationDatabase instance = ConversationDatabase._init();
   static Database? _database;
-  static String dbPath = 'test15.db';
+  static String dbPath = 'test17.db';
   ConversationDatabase._init();
 
   Future<Database> get database async {
@@ -72,6 +73,17 @@ CREATE TABLE IF NOT EXISTS $tableMessages (
   ${MessageFields.images} $textType
 )
 ''');
+
+    debugPrint("Making table $tableImages");
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS $tableImages (
+  ${ImageFields.id} $idType,
+  ${ImageFields.isWeb} $boolType,
+  ${ImageFields.bytes} Uint8List,
+  ${ImageFields.webFile} $textType,
+  ${ImageFields.localFile} $textType
+)
+''');
   }
 
   Future _resetTable() async {
@@ -127,7 +139,7 @@ CREATE TABLE IF NOT EXISTS $tableMessages (
 
   Future<int> delete(String id) async {
     final db = await instance.database;
-    readConversation(id);
+    // readConversation(id);
     return db.delete(tableConversations,
         where: '${ConversationFields.id} = ?', whereArgs: [id]);
   }
@@ -186,27 +198,47 @@ CREATE TABLE $tableMessages (
   Future<Message> createMessage(Message message) async {
     final db = await instance.database;
     try {
+      // add images to the images table
+      if (message.images != null) {
+        if (message.images!.isNotEmpty) {
+          for (ImageFile image in message.images!) {
+            // add message to the database
+            final id = await db.insert(tableImages, image.toMap());
+          }
+        }
+      }
+
+      // add message to the database
       final id = await db.insert(tableMessages, message.toMap());
     } catch (e) {
       // if table doesn't exist, make the table and try again
       await makeMessagesTable(db);
+      // add images to the images table
+      if (message.images != null) {
+        if (message.images!.isNotEmpty) {
+          for (ImageFile image in message.images!) {
+            // add message to the database
+            final id = await db.insert(tableImages, image.toMap());
+          }
+        }
+      }
+      // add message to the database
       final id = await db.insert(tableMessages, message.toMap());
     }
     return message;
   }
 
-  Future<Message> readMessage(int id) async {
+  Future<ImageFile> getImage(String id) async {
     final db = await instance.database;
 
     final maps = await db.query(
-      tableMessages,
-      columns: MessageFields.values,
-      where: '${MessageFields.id} = ?',
+      tableImages,
+      columns: ImageFields.values,
+      where: '${ImageFields.id} = ?',
       whereArgs: [id],
     );
-
     if (maps.isNotEmpty) {
-      return Message.fromMap(maps.first);
+      return ImageFile.fromJson(maps.first);
     } else {
       throw Exception('ID $id not found');
     }
@@ -215,13 +247,30 @@ CREATE TABLE $tableMessages (
   Future<List<Message>> readAllMessages(String conversationID) async {
     final db = await instance.database;
 
-    final orderBy = '${MessageFields.timestamp} ASC';
+    const orderBy = '${MessageFields.timestamp} ASC';
     debugPrint("\t\t[ Fetching all messages for ${conversationID} ]");
     final result = await db.query(tableMessages,
         where: '${MessageFields.conversationID} = ?',
         whereArgs: [conversationID],
         orderBy: orderBy);
-    return result.map((json) => Message.fromMap(json)).toList();
+
+    var newResult = result.map((json) => Message.fromMap(json)).toList();
+
+    for (var msg in newResult) {
+      if (msg.images != null) {
+        if (msg.images!.isNotEmpty) {
+          List<ImageFile>? loadedImages = [];
+          for (var imgFile in msg.images!) {
+            ImageFile file =
+                await ConversationDatabase.instance.getImage(imgFile.id);
+            loadedImages.add(file);
+          }
+          msg.images = loadedImages;
+        }
+      }
+    }
+
+    return newResult;
   }
 
   Future<int> updateMessage(Message message) async {

@@ -1,5 +1,6 @@
 import 'package:chat/model_widget/game_manager.dart';
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/games_config.dart';
 import 'package:chat/models/model_loaded_states.dart';
 import 'package:chat/models/sys_resources.dart';
@@ -26,6 +27,14 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
   ValueNotifier<MemoryConfig> sysResources =
       ValueNotifier(MemoryConfig(totalMemory: 17, usedMemory: 0.0));
 
+  late ValueNotifier<DisplayConfigData> displayConfigData;
+  @override
+  void initState() {
+    super.initState();
+    displayConfigData =
+        Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -35,14 +44,33 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
       ValueNotifier(ModelLoadedState.isEmpty);
 
   bool drawerIsOpen = true;
+  bool endDrawerIsOpen = false;
   int bottomSelectedIndex = 1;
 
   bool analyticsDrawerIsOpen = false;
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     bool isMobile = width < 550;
+    if (isMobile && analyticsDrawerIsOpen) {
+      Future.delayed(const Duration(milliseconds: 599), () {
+        setState(() {
+          analyticsDrawerIsOpen = false;
+        });
+      });
+    }
+    if (!isMobile && endDrawerIsOpen) {
+      // close enddrawer if it is open on mobile -> tablet view switch
+      Future.delayed(const Duration(milliseconds: 599), () {
+        setState(() {
+          endDrawerIsOpen = false;
+          _scaffoldKey.currentState?.closeEndDrawer();
+        });
+      });
+    }
     return MultiProvider(
       providers: [
         Provider.value(value: true)
@@ -50,6 +78,27 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
       ],
       child: SelectionArea(
         child: Scaffold(
+          key: _scaffoldKey,
+          endDrawer: Drawer(
+              child: AnalyticsViewDrawer(
+            isMobile: isMobile,
+            onSettingsDrawerTap: (String page) {
+              if (page == "gamemanager") {
+                widget.title.value = "Game Manager";
+                widget.title.notifyListeners();
+                widget.body.value = GamesListPage(
+                  duration: 90,
+                  selectedGame: (GamesConfig selected) {
+                    // TODO Update home page to game viewer page
+                  },
+                );
+                widget.body.notifyListeners();
+              }
+            },
+            body: widget.body,
+            conversations: widget.conversations,
+            title: widget.title,
+          )),
           appBar: buildAppBar(isMobile, widget.title, bottomSelectedIndex,
               onMenuTap: () {
             !isMobile
@@ -94,7 +143,11 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                 ? setState(() {
                     analyticsDrawerIsOpen = !analyticsDrawerIsOpen;
                   })
-                : null;
+                :
+                // TODO open analyticsDrawer
+                endDrawerIsOpen
+                    ? _scaffoldKey.currentState?.closeEndDrawer()
+                    : _scaffoldKey.currentState?.openEndDrawer();
           }, onChatsTap: () {
             debugPrint("Chats");
             showModalBottomSheet<void>(
@@ -108,18 +161,15 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                 builder: (BuildContext context) {
                   return MultiProvider(
                     providers: [
-                      Provider.value(value: true)
-                      // Provider<
-                      //     SwiftFunctionsInterface>.value(
-                      //   value: swiftInterface,
-                      // ),
+                      ChangeNotifierProvider.value(value: displayConfigData)
                     ],
                     child: Container(
                         padding: EdgeInsets.only(
                             bottom: MediaQuery.of(context).viewInsets.bottom),
                         constraints: const BoxConstraints(maxHeight: 700),
-                        height: MediaQuery.of(context).size.height * .5,
+                        height: MediaQuery.of(context).size.height - 85,
                         child: PageViewDrawer(
+                          isMobile: isMobile,
                           onSettingsDrawerTap: (String page) {
                             if (page == "gamemanager") {
                               widget.title.value = "Game Manager";
@@ -127,7 +177,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                               widget.body.value = GamesListPage(
                                 duration: 90,
                                 selectedGame: (GamesConfig selected) {
-                                  // TODO Update hoem page to game viewer page
+                                  // TODO Update home page to game viewer page
                                 },
                                 // homePage: widget.body,
                               );
@@ -170,7 +220,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                             duration: 90,
                                             selectedGame:
                                                 (GamesConfig selected) {
-                                              // TODO Update hoem page to game viewer page
+                                              // TODO Update home page to game viewer page
                                             },
                                             // homePage: widget.body,
                                           );
@@ -220,7 +270,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                         widget.body.value = GamesListPage(
                                           duration: 90,
                                           selectedGame: (GamesConfig selected) {
-                                            // TODO Update hoem page to game viewer page
+                                            // TODO Update home page to game viewer page
                                           },
                                         );
                                         widget.body.notifyListeners();

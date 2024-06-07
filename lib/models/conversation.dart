@@ -1,3 +1,9 @@
+import 'package:chat/models/conversation_analytics.dart';
+import 'package:chat/models/conversation_summary.dart';
+import 'package:chat/models/custom_file.dart';
+import 'package:chat/models/messages.dart';
+import 'package:flutter/material.dart';
+
 const String tableConversations = 'conversations';
 
 class ConversationFields {
@@ -5,7 +11,6 @@ class ConversationFields {
     id,
     title,
     lastMessage,
-    image,
     primaryModel,
     time,
     gameType
@@ -32,6 +37,10 @@ class Conversation {
   GameType? gameType;
   dynamic gameModel;
   Map<String, dynamic>? gameSettings;
+  ValueNotifier<ConversationData?> conversationAnalytics;
+  ValueNotifier<List<ImageFile>> convToImagesList;
+  ValueNotifier<List<Message>> metaConvMessages;
+  ValueNotifier<List<ConversationSummary>> convSummaryMessages;
   Map<String, dynamic>? gameAnalytics;
 
   Conversation(
@@ -44,7 +53,11 @@ class Conversation {
       this.gameModel,
       this.gameSettings,
       this.gameAnalytics,
-      required this.id});
+      required this.id})
+      : conversationAnalytics = ValueNotifier<ConversationData?>(null),
+        convToImagesList = ValueNotifier<List<ImageFile>>([]),
+        metaConvMessages = ValueNotifier<List<Message>>([]),
+        convSummaryMessages = ValueNotifier<List<ConversationSummary>>([]);
 
   // Convert the Conversation instance to a Map
   Map<String, dynamic> toMap() {

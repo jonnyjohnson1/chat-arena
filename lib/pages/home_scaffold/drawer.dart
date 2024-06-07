@@ -1,5 +1,6 @@
 import 'package:chat/chat_panel/chat_panel.dart';
 import 'package:chat/drawer/games_list_drawer.dart';
+import 'package:chat/drawer/settings_drawer.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/games_config.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
@@ -9,7 +10,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../theming/theming_config.dart';
+
 class PageViewDrawer extends StatefulWidget {
+  final bool isMobile;
   final ValueNotifier<Widget> body;
   final ValueNotifier<String> title;
   final ValueNotifier<List<Conversation>> conversations;
@@ -19,6 +23,7 @@ class PageViewDrawer extends StatefulWidget {
       {required this.body,
       required this.title,
       required this.conversations,
+      this.isMobile = false,
       this.onSettingsDrawerTap,
       super.key});
 
@@ -55,16 +60,17 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
       controller: pageController,
       onPageChanged: (index) {
         pageChanged(index);
-        // FirebaseAnalytics.instance.logEvent(name: getScreenName(index));
       },
       children: <Widget>[
-        GamesListDrawer(onGameCardTap: (GamesConfig selectedGame) {
-          widget.body.value = GamesInfoPage(game: selectedGame);
-        }, onTap: (String page) {
-          if (widget.onSettingsDrawerTap != null) {
-            widget.onSettingsDrawerTap!(page);
-          }
-        }),
+        if (!widget.isMobile)
+          GamesListDrawer(onGameCardTap: (GamesConfig selectedGame) {
+            widget.body.value = GamesInfoPage(game: selectedGame);
+          }, onTap: (String page) {
+            if (widget.onSettingsDrawerTap != null) {
+              widget.onSettingsDrawerTap!(page);
+            }
+          }),
+        if (widget.isMobile) const SettingsDrawer(),
         ConversationsList(
           conversations: widget.conversations,
           onDelete: (bool deleted) {
@@ -73,11 +79,11 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
               conversation: null,
               conversations: widget.conversations,
             );
-
             widget.body.notifyListeners();
           },
           onTap: (Conversation chatSelected) {
-            debugPrint("\t[ Switching to conversation id :: ${chatSelected.id} ]");
+            debugPrint(
+                "\t[ Switching to conversation id :: ${chatSelected.id} ]");
             // set title
             String title = setTitle(chatSelected);
             widget.title.value = title;
@@ -180,7 +186,7 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
                 child: Icon(CupertinoIcons.chat_bubble_text_fill,
                     color: 0 == bottomSelectedIndex
                         ? unselectedColor
-                        : Colors.blue[200],
+                        : chatBubbleColor,
                     size: 19),
               ))),
     ];

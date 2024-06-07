@@ -10,27 +10,12 @@ import 'package:chat/models/custom_file.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:chat/services/static_queries.dart';
+import 'package:chat/services/tools.dart';
+import 'package:chat/shared/image_utils.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:html' as html if (dart.library.html) '';
+import 'package:universal_html/html.dart' as html;
 import 'package:http/http.dart' as http if (dart.library.html) '';
 
-List<int> convertDynamicListToIntList(List<dynamic> dynamicList) {
-  // Use map to convert each dynamic item to int
-  return dynamicList.map((item) => int.parse(item.toString())).toList();
-}
-
-String buildString(List<dynamic> characters) {
-  // a poor attempt at handling weird encoding returned from fastapi api
-  String result = '';
-  for (var char in characters) {
-    if (char.runes.any((rune) => rune < 32 || rune > 126)) {
-      result += ' '; // Replace weird character with space
-    } else {
-      result += char;
-    }
-  }
-  return result;
-}
 Future<List<ImageFile>?> getLocalFilePaths() async {
   // Uses the backend flask api to get image name and bytes to render in web
   // but then pass the directory name back to the local machine to use the file
@@ -55,14 +40,16 @@ Future<List<ImageFile>?> getLocalFilePaths() async {
     // Create a link element
     var anchorElement =
         html.AnchorElement(href: html.Url.createObjectUrlFromBlob(blob));
-    List<ImageFile> models = [
+    List<ImageFile> files = [
       ImageFile(
+          id: Tools().getRandomString(32),
           bytes: bytes,
+          isWeb: true,
           webFile: File(anchorElement.href!),
           localFile: localFile)
     ];
 
-    return models;
+    return files;
   } catch (e) {
     debugPrint('Error: $e');
     return null;

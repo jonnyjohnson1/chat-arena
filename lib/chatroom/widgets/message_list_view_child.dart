@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:chat/chatroom/widgets/deleted_type_message/deleted_type.dart';
 import 'package:chat/chatroom/widgets/text_type_message/message_type.dart';
 import '../../../../models/messages.dart';
 
@@ -7,10 +6,7 @@ class MessageListViewChild extends StatelessWidget {
   final _isOurMessage;
   final _message;
 
-  const MessageListViewChild(
-    this._isOurMessage,
-    this._message,
-  );
+  const MessageListViewChild(this._isOurMessage, this._message, {super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -41,11 +41,15 @@ class _MessageListViewState extends State<MessageListView> {
                     padding: const EdgeInsets.fromLTRB(1, 2, 1, 2),
                     itemCount:
                         widget.messages.length, //_conversationData.length,
-                    itemBuilder: (BuildContext _context, int _index) {
-                      var _message =
-                          reversedList[_index]; //_conversationData[_index];
-                      bool _isOurMessage = _message.senderID == ""; //_uid;
-                      return MessageListViewChild(_isOurMessage, _message);
+                    itemBuilder: (BuildContext context, int index) {
+                      var message =
+                          reversedList[index]; //_conversationData[_index];
+                      bool isOurMessage = message.senderID == ""; //_uid;
+                      return MessageListViewChild(
+                        isOurMessage,
+                        message,
+                        key: Key(message.id),
+                      );
                     },
                   ),
                 ),

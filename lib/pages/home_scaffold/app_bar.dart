@@ -1,5 +1,8 @@
+import 'package:chat/models/display_configs.dart';
+import 'package:chat/pages/settings/settings_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
     {required Function onMenuTap,
@@ -15,6 +18,7 @@ buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
               onMenuTap();
             },
           ),
+    actions: [Container()],
     title: ValueListenableBuilder(
       valueListenable: title,
       builder: (ctx, tit, _) {
@@ -74,7 +78,21 @@ buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   IconButton(
-                      tooltip: "Analytics",
+                    icon: const Icon(Icons.settings),
+                    onPressed: () {
+                      ValueNotifier<DisplayConfigData> displayConfigData =
+                          Provider.of<ValueNotifier<DisplayConfigData>>(ctx,
+                              listen: false);
+                      showDialog(
+                        context: ctx,
+                        builder: (ctx) => MultiProvider(providers: [
+                          ChangeNotifierProvider.value(value: displayConfigData)
+                        ], child: SettingsDialog(isMobile: isMobile)),
+                      );
+                    },
+                  ),
+                  IconButton(
+                      tooltip: "Chat Analytics",
                       onPressed: () {
                         onAnalyticsTap();
                       },
@@ -91,12 +109,27 @@ buildAppBar(bool isMobile, ValueNotifier<String> title, int bottomSelectedIndex,
                         onMenuTap();
                       },
                       icon: const Icon(Icons.menu)),
-                  IconButton(
-                      tooltip: "Chats",
-                      onPressed: () {
-                        onChatsTap();
-                      },
-                      icon: const Icon(CupertinoIcons.chat_bubble_2))
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                          tooltip: "Chats",
+                          padding: const EdgeInsets.all(6),
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            onChatsTap();
+                          },
+                          icon: const Icon(CupertinoIcons.chat_bubble_2)),
+                      IconButton(
+                          tooltip: "Chat Analytics",
+                          padding: const EdgeInsets.all(6),
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            onAnalyticsTap();
+                          },
+                          icon: const Icon(Icons.show_chart))
+                    ],
+                  ),
                 ],
               )
           ],

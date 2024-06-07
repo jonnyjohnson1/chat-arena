@@ -1,6 +1,4 @@
-import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/messages.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/chatroom/widgets/text_type_message/text_message_bubble.dart';
 

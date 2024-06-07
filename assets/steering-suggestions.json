@@ -1,0 +1,54 @@
+{
+  "relationship": {
+    "topic_emoji": "👫",
+    "suggestions": [
+      {
+        "suggestion": "Help me find ways to defend myself here. I want to maintain my stance, without coming across as defensive or really aggressive.",
+        "purpose": "Sometimes, out of your own self-respect, you do need to push back, maintain your stance, and that is exactly what we are trying to achieve with this line of prompting."
+      },
+      {
+        "suggestion": "How can I hold space so the other person continues to feel comfortable speaking further?",
+        "purpose": "It's wonderful they have shared this with you, it shows a sign of trust, and how can you respond in kind showing you are capable of receiving what they have given?"
+      },
+      {
+        "suggestion": "I want to talk about <topic>. I feel ready to say something, but I'm not sure how to start the conversation.",
+        "purpose": "Sometimes the thoughts build up and speaking something at all feels too heavy, so how can you begin to entertain the concept with your partner?"
+      }
+    ]
+  },
+  "education": {
+    "topic_emoji": "🎓",
+    "suggestions": [
+      {
+        "suggestion": "How can I get more intriguing information?",
+        "purpose": "You find this topic interesting, but don't want the straight-forward responses. Let's get to the exciting material!"
+      },
+      {
+        "suggestion": "I want to challenge the teacher here. What are ways I can do so?",
+        "purpose": "Just looking to have some fun, or you seriously want to put your teacher's knowledge to the test? Let's find ways to make your teacher think."
+      },
+      {
+        "suggestion": "How can I show I have some basic knowledge in the space too?",
+        "purpose": "Demonstrate your interest and curiosity by mirroring you share knowledge of he subject, too."
+      }
+    ]
+  },
+  "debate": {
+    "topic_emoji": "🗣️",
+    "suggestions": [
+      {
+        "suggestion": "Options coming soon!",
+        "purpose": "Purpose 2"
+      }
+    ]
+  },
+  "summarize": {
+    "topic_emoji": "⑂",
+    "suggestions": [
+      {
+        "suggestion": "Options coming soon!",
+        "purpose": "Purpose 2"
+      }
+    ]
+  }
+}

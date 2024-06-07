@@ -1,4 +1,5 @@
 import 'package:chat/models/game_models/debate.dart';
+import 'package:chat/theming/theming_config.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -46,7 +47,7 @@ class _ConversationListItemState extends State<ConversationListItem> {
     switch (type) {
       case GameType.chat:
         return Icon(CupertinoIcons.chat_bubble_fill,
-            color: Colors.blue[200], size: 26);
+            color: chatBubbleColor, size: 26);
       case GameType.debate:
         return const Icon(CupertinoIcons.group_solid,
             color: Color.fromARGB(255, 188, 144, 249), size: 26);
@@ -93,6 +94,7 @@ class _ConversationListItemState extends State<ConversationListItem> {
           widget.onSelected();
         },
         child: Container(
+          height: 85,
           padding:
               const EdgeInsets.only(left: 6, right: 6, top: 10, bottom: 10),
           child: Row(
@@ -171,12 +173,16 @@ class _ConversationListItemState extends State<ConversationListItem> {
                                   const SizedBox(
                                     height: 0,
                                   ),
-                                  Text(
-                                    widget.conversation.lastMessage ?? "",
-                                    style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.normal),
+                                  Expanded(
+                                    child: Text(
+                                      widget.conversation.lastMessage ?? "",
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade600,
+                                          fontWeight: FontWeight.normal),
+                                    ),
                                   ),
                                 ],
                               ),
