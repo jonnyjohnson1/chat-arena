@@ -1,6 +1,6 @@
 String makeWebSocketAddress(String url) {
   if (url.contains("https")) {
-    return url.replaceFirst("https", "wss");
+    return url.replaceFirst("https", "ws");
   } else if (url.contains("http")) {
     return url.replaceFirst("http", "ws");
   }

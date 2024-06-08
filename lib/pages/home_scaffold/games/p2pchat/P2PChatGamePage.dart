@@ -97,9 +97,12 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
       Future.delayed(const Duration(milliseconds: 400), () async {
         P2PChatGame gameSettings = await getP2PChatSettings(context);
         widget.conversation!.gameModel = gameSettings;
-        client.url = gameSettings.serverHostAddress != null
+
+        String url = gameSettings.serverHostAddress != null
             ? makeWebSocketAddress(gameSettings.serverHostAddress!)
             : 'ws://127.0.0.1:13349';
+        print("[ using url $url to connect to server ]");
+        client.url = url;
 
         // here we must create a conversation id on init so the server has a reference to it
         if (widget.conversation == null) {
@@ -129,17 +132,22 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
 
         print("\t[ connecting to :: url ${client.url} ]");
         client.connect(data, listenerCallback, websocketDisconnectListener,
-            websocketErrorListener); // replace 'username' with the actual username
+            websocketErrorListener);
         setState(() {
           clientIsConnected =
-              true; // set slient to connected. If it fails to connect, one of the listeners will trigger, and its function will set the bool val to false
+              true; // set client to connected. If it fails to connect, one of the listeners will trigger, and its function will set the bool val to false
         });
       });
     } else {
       // this path is the join chat option
-      // TODO implement the join server command from here
       print('\t[ joining server ]');
       P2PChatGame gameSettings = widget.conversation!.gameModel;
+
+      String url = gameSettings.serverHostAddress != null
+          ? makeWebSocketAddress(gameSettings.serverHostAddress!)
+          : 'ws://127.0.0.1:13349';
+      print("[ using url $url to connect to server ]");
+      client.url = url;
       if (gameSettings.initState != null) {
         if (gameSettings.initState == P2PServerInitState.join) {
           Map<String, dynamic> data = {
@@ -177,7 +185,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
         timestamp: DateTime.parse(listenerMessage["timestamp"]),
         type: uiMessage.MessageType.server);
     messages.add(message);
-    print("added server message to messages");
+    print("[ added server message to messages ]");
     sessionId = listenerMessage['session_id'];
     setState(() {});
   }

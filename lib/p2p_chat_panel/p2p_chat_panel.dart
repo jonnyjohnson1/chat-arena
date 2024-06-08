@@ -187,7 +187,7 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
                             return (Platform.isMacOS ||
                                     kIsWeb ||
                                     Platform.isWindows)
-                                ? ConversationListItem(
+                                ? P2pConversationListItem(
                                     key: Key(conversationlist[index].id),
                                     conversation: conversationlist[index],
                                     onSelected: () {
