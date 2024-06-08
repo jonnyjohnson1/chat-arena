@@ -7,6 +7,7 @@ import 'package:chat/models/conversation_settings.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/llm.dart';
+import 'package:chat/models/user.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/shared/image_utils.dart';
 import 'package:flutter/foundation.dart';
@@ -69,6 +70,7 @@ class LocalLLMInterface {
       String chatBotMsgId,
       ModelConfig model,
       DisplayConfigData displayConfigData,
+      User user,
       chatCallbackFunction,
       analysisCallBackFunction) {
     initChatWebsocket();
@@ -82,6 +84,7 @@ class LocalLLMInterface {
     List<Map<String, dynamic>> msgHist = [];
 
     for (Message msg in messageHistory) {
+      bool isUserMessage = msg.senderID! == user.uid;
       if (msg.images != null) {
         if (msg.images!.isNotEmpty) {
           try {
@@ -99,7 +102,7 @@ class LocalLLMInterface {
               images.add(path);
             }
             msgHist.add({
-              'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+              'role': isUserMessage ? "user" : msg.senderID!,
               'content': msg.message!.value,
               'images': images,
             });
@@ -108,13 +111,13 @@ class LocalLLMInterface {
           }
         } else {
           msgHist.add({
-            'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+            'role': isUserMessage ? "user" : msg.senderID!,
             'content': msg.message!.value
           });
         }
       } else {
         msgHist.add({
-          'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+          'role': isUserMessage ? "user" : msg.senderID!,
           'content': msg.message!.value
         });
       }

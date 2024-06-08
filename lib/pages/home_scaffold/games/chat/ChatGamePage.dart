@@ -7,6 +7,7 @@ import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/llm.dart';
+import 'package:chat/models/user.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/tools.dart';
@@ -73,7 +74,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late ValueNotifier<Conversation?> currentSelectedConversation;
-
+  late ValueNotifier<User> userModel;
   @override
   void initState() {
     super.initState();
@@ -81,6 +82,8 @@ class _ChatGamePageState extends State<ChatGamePage> {
         Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
+    userModel = Provider.of<ValueNotifier<User>>(context, listen: false);
+
     initData();
     debugPrint("\t[ Chat :: GamePage initState ]");
   }
@@ -193,6 +196,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
         newChatBotMsgId,
         selectedModel,
         displayConfigData.value,
+        userModel.value,
         generationCallback,
         analysisCallBackFunction);
 
@@ -255,7 +259,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
                     images: images,
                     documentID: '',
                     name: 'User',
-                    senderID: '',
+                    senderID: userModel.value.uid,
                     status: '',
                     timestamp: DateTime.now(),
                     type: uiMessage.MessageType.text);

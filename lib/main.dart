@@ -1,5 +1,4 @@
 import 'package:chat/pages/home_scaffold/home_page.dart';
-import 'package:chat/pages/home_scaffold/home_page_layout_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';

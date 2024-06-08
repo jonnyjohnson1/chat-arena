@@ -1,7 +1,11 @@
 import 'dart:io';
 
 import 'package:chat/chat_panel/conversation_list_item.dart';
+import 'package:chat/models/game_models/debate.dart';
+import 'package:chat/models/games_config.dart';
 import 'package:chat/p2p_chat_panel/conversation_list_item.dart';
+import 'package:chat/p2p_chat_panel/join_chat_dialog.dart';
+import 'package:chat/services/websocket_chat_client.dart';
 import 'package:chat/theming/theming_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +36,7 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
     super.initState();
   }
 
-  addConversation() {
+  hostChat() {
     Conversation newConversation = Conversation(
         id: Tools().getRandomString(10),
         title: "Untitled",
@@ -50,6 +54,41 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
     });
   }
 
+  Future<void> joinChat(P2PChatGame gameSettings, context) async {
+    debugPrint("[ joinChat ]");
+    String checkUrl = gameSettings.serverHostAddress!;
+    WebSocketChatClient client = WebSocketChatClient(url: checkUrl);
+    bool serverIsUp = await client.testEndpoint();
+    if (!serverIsUp) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('\t[ could not connect :: URL{$checkUrl} ]'),
+        ),
+      );
+    }
+    if (serverIsUp) {
+      debugPrint("\t[ server check good :: connecting to $checkUrl ]");
+
+      // create the conversation with the game settings option
+      Conversation newConversation = Conversation(
+          id: Tools().getRandomString(10),
+          title: "Untitled",
+          lastMessage: "",
+          image: "images/userImage1.jpeg",
+          time: DateTime.now(),
+          gameModel: gameSettings,
+          gameType: GameType.p2pchat,
+          primaryModel: 'Chat');
+      widget.conversations.value.insert(
+        0,
+        newConversation,
+      );
+      setState(() {
+        widget.onTap(widget.conversations.value[0]);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return !didInit
@@ -62,10 +101,10 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        addConversation();
+                        hostChat();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(
+                        backgroundColor: const Color.fromARGB(
                             255, 255, 196, 196), // Background color
                       ),
                       child: Row(
@@ -91,8 +130,15 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
                     ),
                     const SizedBox(width: 4),
                     ElevatedButton(
-                      onPressed: () {
-                        // joinChat();
+                      onPressed: () async {
+                        P2PChatGame? gameSettings = await joinP2PChat(context);
+
+                        if (gameSettings != null) {
+                          // switch to the game page and start as
+                          gameSettings.initState = P2PServerInitState
+                              .join; // sets init state so GamePage knows to join another chat
+                          await joinChat(gameSettings, context);
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: personIconColor, // Color.fromARGB(

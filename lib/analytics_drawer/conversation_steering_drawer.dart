@@ -269,27 +269,33 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
               metaMessageConvId = messages.value.isEmpty
                   ? Tools().getRandomString(12)
                   : messages.value.first.id;
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          buildGenerationSuggestions(context),
-                          const SizedBox(height: 8),
-                          buildQueryInput(context),
-                          const SizedBox(height: 4),
-                          buildModelSelector(context),
-                          buildTabBar(),
-                          buildTabContent(),
-                        ],
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  FocusScope.of(context).requestFocus(FocusNode());
+                },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            buildGenerationSuggestions(context),
+                            const SizedBox(height: 8),
+                            buildQueryInput(context),
+                            const SizedBox(height: 4),
+                            buildModelSelector(context),
+                            buildTabBar(),
+                            buildTabContent(),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  buildFooter(context),
-                ],
+                    buildFooter(context),
+                  ],
+                ),
               );
             },
           );

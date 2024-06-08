@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:chat/chatroom/widgets/message_list_view_child.dart';
 import 'package:chat/models/messages.dart';
+import 'package:provider/provider.dart';
+import 'package:chat/models/user.dart';
 
 class MessageListView extends StatefulWidget {
   final parent;
@@ -17,10 +19,12 @@ class MessageListView extends StatefulWidget {
 
 class _MessageListViewState extends State<MessageListView> {
   late ScrollController _listViewController;
+  late ValueNotifier<User> userModel;
 
   @override
   void initState() {
     _listViewController = ScrollController();
+    userModel = Provider.of<ValueNotifier<User>>(context, listen: false);
     super.initState();
   }
 
@@ -44,7 +48,8 @@ class _MessageListViewState extends State<MessageListView> {
                     itemBuilder: (BuildContext context, int index) {
                       var message =
                           reversedList[index]; //_conversationData[_index];
-                      bool isOurMessage = message.senderID == ""; //_uid;
+                      bool isOurMessage =
+                          message.senderID == userModel.value.uid; //_uid;
                       return MessageListViewChild(
                         isOurMessage,
                         message,

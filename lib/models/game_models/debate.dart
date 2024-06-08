@@ -10,8 +10,20 @@ class P2PChatGame {
   String? username;
   String? serverHostAddress;
   int? maxParticipants;
+  String? sessionID;
+  P2PServerInitState? initState;
 
-  P2PChatGame({this.username, this.serverHostAddress, this.maxParticipants});
+  P2PChatGame(
+      {this.username,
+      this.serverHostAddress,
+      this.maxParticipants,
+      this.sessionID,
+      this.initState});
+
+  @override
+  String toString() {
+    return 'P2PChatGame{username: $username, url: $serverHostAddress}';
+  }
 }
 
-enum P2PMessage { user, ai, server }
+enum P2PServerInitState { create, join }

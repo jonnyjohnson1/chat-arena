@@ -10,9 +10,11 @@ import 'package:chat/pages/home_scaffold/games/p2pchat/chat_status_row.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/services/websocket_chat_client.dart';
+import 'package:chat/shared/string_conversion.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/models/messages.dart' as uiMessage;
 import 'package:provider/provider.dart';
+import 'package:chat/models/user.dart';
 
 late final dynamic
     llmInterface; // Can be LocalLLMInterface or DebateLLMInterface
@@ -42,6 +44,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
         messages = await ConversationDatabase.instance
             .readAllMessages(widget.conversation!.id);
       } catch (e) {
+        print("ERROR INITING DATA FOR DATABASE");
         print(e);
       }
       // set the current conversation value to the loaded conversation
@@ -73,8 +76,8 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late ValueNotifier<Conversation?> currentSelectedConversation;
-  WebSocketChatClient client =
-      WebSocketChatClient(url: 'ws://127.0.0.1:13349/ws/chat');
+  late ValueNotifier<User> userModel;
+  WebSocketChatClient client = WebSocketChatClient(url: 'ws://127.0.0.1:13349');
 
   bool clientIsConnected = false;
 
@@ -85,14 +88,18 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
         Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
+    userModel = Provider.of<ValueNotifier<User>>(context, listen: false);
     initData();
     debugPrint("\t[ P2PChat :: GamePage initState ]");
 
     if (widget.conversation!.gameModel == null ||
         widget.conversation!.gameModel.serverHostAddress.isEmpty) {
       Future.delayed(const Duration(milliseconds: 400), () async {
-        P2PChatGame serverHostAddress = await getP2PChatSettings(context);
-        widget.conversation!.gameModel = serverHostAddress;
+        P2PChatGame gameSettings = await getP2PChatSettings(context);
+        widget.conversation!.gameModel = gameSettings;
+        client.url = gameSettings.serverHostAddress != null
+            ? makeWebSocketAddress(gameSettings.serverHostAddress!)
+            : 'ws://127.0.0.1:13349';
 
         // here we must create a conversation id on init so the server has a reference to it
         if (widget.conversation == null) {
@@ -112,13 +119,15 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
         }
         Map<String, dynamic> data = {
           "message_type": "create_server", // OPTIONS: user, ai, server
-          "conversation_id": widget.conversation!.id,
-          "num_participants": serverHostAddress.maxParticipants,
-          "host_name": serverHostAddress.username,
+          // "conversation_id": widget.conversation!.id, // I don't think we need this. This conversation Id will be used to save the user's data. THe session ID will be used so users can reference the same conversation.
+          "num_participants": gameSettings.maxParticipants,
+          "host_name": gameSettings.username,
+          "user_id": userModel.value.uid,
           "created_at": DateTime.now().toIso8601String(),
-          "username": serverHostAddress.username,
+          "username": gameSettings.username,
         };
 
+        print("\t[ connecting to :: url ${client.url} ]");
         client.connect(data, listenerCallback, websocketDisconnectListener,
             websocketErrorListener); // replace 'username' with the actual username
         setState(() {
@@ -126,6 +135,30 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
               true; // set slient to connected. If it fails to connect, one of the listeners will trigger, and its function will set the bool val to false
         });
       });
+    } else {
+      // this path is the join chat option
+      // TODO implement the join server command from here
+      print('\t[ joining server ]');
+      P2PChatGame gameSettings = widget.conversation!.gameModel;
+      if (gameSettings.initState != null) {
+        if (gameSettings.initState == P2PServerInitState.join) {
+          Map<String, dynamic> data = {
+            "message_type": "join_server",
+            "host_name": gameSettings.username,
+            "user_id": userModel.value.uid,
+            'session_id': gameSettings.sessionID,
+            "created_at": DateTime.now().toIso8601String(),
+            "username": gameSettings.username,
+          };
+
+          client.connect(data, listenerCallback, websocketDisconnectListener,
+              websocketErrorListener); // replace 'username' with the actual username
+          setState(() {
+            clientIsConnected =
+                true; // set slient to connected. If it fails to connect, one of the listeners will trigger, and its function will set the bool val to false
+          });
+        }
+      }
     }
   }
 
@@ -154,7 +187,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     String messageId = listenerMessage['message_id'];
     String username = listenerMessage["content"]["username"];
     String text = listenerMessage["content"]["text"];
-    String senderID = listenerMessage["content"]["sender_id"];
+    String senderID = listenerMessage["content"]["user_id"];
     DateTime timestamp = DateTime.parse(listenerMessage["timestamp"]);
     uiMessage.Message message = uiMessage.Message(
         id: messageId,
@@ -167,13 +200,13 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
         timestamp: timestamp,
         type: uiMessage.MessageType.text);
     messages.add(message);
-    print("added message to messages");
+    print("added user message to messages");
     setState(() {});
   }
 
   listenerCallback(Map<String, dynamic> listenerMessage) {
     // message received over broadcast
-    print('[ ChageGamePage :: Received: $listenerMessage ]');
+    print('[ ChatGamePage :: Received: $listenerMessage ]');
 
     String messageType = listenerMessage["message_type"];
     if (messageType == "server") {
@@ -192,8 +225,8 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
       "message_type": "user", // OPTIONS: user, ai, server
       "num_participants": 1,
       "content": {
-        "sender_id": message.senderID,
-        "conversation_id": conversation.id,
+        "user_id": message.senderID,
+        "session_id": sessionId,
         "username": gameModel.username,
         "text": message.message!.value
       },
@@ -211,14 +244,14 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
 
   websocketDisconnectListener(String message) {
     print(
-        '[ Received message in ChageGamePage :: WebSocket connection closed. ]');
+        '[ Received message in ChatGamePage :: WebSocket connection closed. ]');
     clientIsConnected = false;
     setState(() {});
   }
 
   websocketErrorListener(String message) {
     print(
-        '[ Received message in ChageGamePage :: WebSocket connection closed. ]');
+        '[ Received message in ChatGamePage :: WebSocket connection closed. ]');
     clientIsConnected = false;
     setState(() {});
   }
@@ -312,10 +345,10 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     debugPrint("\t\t[ Max Participants: ${maxParticipantsController.text} ]");
 
     return P2PChatGame(
-      username: username,
-      serverHostAddress: serverHostAddressController.text,
-      maxParticipants: int.tryParse(maxParticipantsController.text) ?? 0,
-    );
+        username: username,
+        serverHostAddress: serverHostAddressController.text,
+        maxParticipants: int.tryParse(maxParticipantsController.text) ?? 0,
+        initState: P2PServerInitState.create);
   }
 
   String generateRandom4Digits() {
@@ -370,12 +403,12 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
                           images: images,
                           documentID: '',
                           name: widget.conversation!.gameModel!.username,
-                          senderID: "", // TODO add the senderID here
+                          senderID: userModel.value.uid,
                           status: '',
                           timestamp: DateTime.now(),
                           type: uiMessage.MessageType.text);
                       messages.add(message);
-
+                      setState(() {});
                       await ConversationDatabase.instance
                           .createMessage(message);
 

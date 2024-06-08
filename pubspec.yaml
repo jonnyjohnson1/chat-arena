@@ -4,7 +4,7 @@ description: "Conversation games for better communication"
 # Prevent accidental publishing to pub.dev.
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.1+1
 
 environment:
   sdk: '>=3.2.6 <4.0.0'
@@ -27,7 +27,7 @@ dependencies:
   path_provider: ^2.1.1 # reads file path
   url_launcher: ^6.1.14
   device_info_plus: ^9.1.1 # detect device type
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.2.3
   sqflite: ^2.3.1 # for local database
   sqflite_common_ffi: any
   sqflite_common_ffi_web: ^0.4.2+3
