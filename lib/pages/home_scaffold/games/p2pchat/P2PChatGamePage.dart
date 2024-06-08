@@ -8,6 +8,7 @@ import 'package:chat/models/game_models/debate.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/pages/home_scaffold/games/p2pchat/chat_status_row.dart';
 import 'package:chat/services/conversation_database.dart';
+import 'package:chat/services/message_processor.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/services/websocket_chat_client.dart';
 import 'package:chat/shared/string_conversion.dart';
@@ -80,10 +81,12 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
   WebSocketChatClient client = WebSocketChatClient(url: 'ws://127.0.0.1:13349');
 
   bool clientIsConnected = false;
+  late MessageProcessor messageProcessor;
 
   @override
   void initState() {
     super.initState();
+    messageProcessor = MessageProcessor();
     currentSelectedConversation =
         Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
     displayConfigData =
@@ -97,8 +100,9 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
       Future.delayed(const Duration(milliseconds: 400), () async {
         P2PChatGame gameSettings = await getP2PChatSettings(context);
         widget.conversation!.gameModel = gameSettings;
-
-        String url = gameSettings.serverHostAddress != null
+        print(
+            "${gameSettings.serverHostAddress} IS :: ${gameSettings.serverHostAddress.runtimeType}");
+        String url = gameSettings.serverHostAddress!.isNotEmpty
             ? makeWebSocketAddress(gameSettings.serverHostAddress!)
             : 'ws://127.0.0.1:13349';
         print("[ using url $url to connect to server ]");
@@ -172,6 +176,25 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
 
   String sessionId = "";
 
+  Future<Map<String, dynamic>> processMessage(
+      uiMessage.Message message, Conversation conversation) async {
+    // Simulate sending message to the backend and getting a response
+    await Future.delayed(const Duration(seconds: 1));
+    print(
+        "[ sending message to analytics function :: ${message.message!.value}]");
+    return {'processedData': 'Processed: ${message.message!.value}'};
+  }
+
+  void sendMessageForProcessing(MessageProcessor processor,
+      uiMessage.Message message, Conversation conversation) {
+    processor.addProcess(QueueProcess(
+      function: processMessage,
+      args: {'message': message, 'conversation': conversation},
+    ));
+    // processor.messageQueue.add(message);
+    // processor.controller.add(message);
+  }
+
   void _processServerMessage(Map<String, dynamic> listenerMessage) {
     final newChatBotMsgId = Tools().getRandomString(32);
     uiMessage.Message message = uiMessage.Message(
@@ -188,6 +211,8 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     print("[ added server message to messages ]");
     sessionId = listenerMessage['session_id'];
     setState(() {});
+    // send received server message for processing
+    sendMessageForProcessing(messageProcessor, message, widget.conversation!);
   }
 
   void _processUserMessage(Map<String, dynamic> listenerMessage) {
@@ -210,12 +235,13 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     messages.add(message);
     print("added user message to messages");
     setState(() {});
+    // send received user's message for processing
+    sendMessageForProcessing(messageProcessor, message, widget.conversation!);
   }
 
   listenerCallback(Map<String, dynamic> listenerMessage) {
     // message received over broadcast
     print('[ ChatGamePage :: Received: $listenerMessage ]');
-
     String messageType = listenerMessage["message_type"];
     if (messageType == "server") {
       _processServerMessage(listenerMessage);
@@ -248,6 +274,8 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
       ]
     };
     client.sendMessage(data);
+    // send user message for processing
+    sendMessageForProcessing(messageProcessor, message, widget.conversation!);
   }
 
   websocketDisconnectListener(String message) {
@@ -394,11 +422,11 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
                       : Key(DateTime.now().toIso8601String()),
                   messages: messages,
                   conversation: widget.conversation,
-                  showModelSelectButton: true,
-                  selectedModelConfig: selectedModel,
-                  onSelectedModelChange: (LanguageModel? newValue) {
-                    selectedModel.model = newValue!;
-                  },
+                  showModelSelectButton: false,
+                  // selectedModelConfig: selectedModel,
+                  // onSelectedModelChange: (LanguageModel? newValue) {
+                  //   selectedModel.model = newValue!;
+                  // },
                   showTopTitle: false,
                   isGenerating: null,
                   onNewMessage: (Conversation? conv, String text,

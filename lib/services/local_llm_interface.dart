@@ -485,6 +485,12 @@ class LocalLLMInterface {
     }
   }
 
+  Future<void> getMessageAnalysis(Message message) async {
+    // TODO pass text message into the backend
+    // do this by managing a queue
+    // On each return, update the message data, and set its state so that it become visible in the UI
+  }
+
   Future<String?> getNextMessageOptions(
       String conversationID,
       List<Message> messageHistory,
