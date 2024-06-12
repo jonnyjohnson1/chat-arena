@@ -118,6 +118,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
             gameType: GameType.p2pchat,
             time: DateTime.now(),
             primaryModel: selectedModel.model.name,
+            gameModel: gameSettings,
             title: "Chat",
           );
           await ConversationDatabase.instance.create(widget.conversation!);
@@ -199,7 +200,6 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     // proces the whole chat analytics
     // Run all the post conversation analyses here
     // run sidebar calculations if config says so
-    print("SHOWING SIDEBAR ANALYTICS");
     if (displayConfigData.value.showSidebarBaseAnalytics) {
       print("GET CHAT ANALYSIS");
       await Future.delayed(const Duration(seconds: 3), () async {
@@ -242,6 +242,8 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     print("[ added server message to messages ]");
     sessionId = listenerMessage['session_id'];
     setState(() {});
+    // TODO iF Server message is to say new person has joined, then add participant to game model
+    //
   }
 
   void _processUserMessage(Map<String, dynamic> listenerMessage) {
@@ -457,6 +459,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
                   //   selectedModel.model = newValue!;
                   // },
                   showTopTitle: false,
+                  showGeneratingText: false,
                   isGenerating: null,
                   onNewMessage: (Conversation? conv, String text,
                       List<ImageFile> images) async {

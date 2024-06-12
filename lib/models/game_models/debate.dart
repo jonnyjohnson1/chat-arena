@@ -12,12 +12,15 @@ class P2PChatGame {
   int? maxParticipants;
   String? sessionID;
   P2PServerInitState? initState;
+  Map<String, String>?
+      participants; // random string id (eventually use as userID, but keep anon for now), and the Username
 
   P2PChatGame(
       {this.username,
       this.serverHostAddress,
       this.maxParticipants,
       this.sessionID,
+      this.participants,
       this.initState});
 
   @override

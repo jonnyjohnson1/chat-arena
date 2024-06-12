@@ -226,6 +226,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
                 : Key(DateTime.now().toIso8601String()),
             messages: messages,
             conversation: widget.conversation,
+            showGeneratingText: true,
             showModelSelectButton: true,
             selectedModelConfig: selectedModel,
             onSelectedModelChange: (LanguageModel? newValue) {

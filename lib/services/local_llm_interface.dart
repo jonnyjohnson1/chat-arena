@@ -504,6 +504,7 @@ class LocalLLMInterface {
         "message_id": message.id,
         "message": message.message!.value,
         "current_topic": null,
+        "user_id": message.senderID,
         "processing_config": {}
       });
       var response = await http.post(url, headers: headers, body: body);

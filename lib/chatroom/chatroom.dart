@@ -29,6 +29,7 @@ class ChatRoomPage extends StatefulWidget {
   String topTitleHeading;
   String topTitleText;
   ValueNotifier<bool>? isGenerating;
+  bool showGeneratingText;
   List<uiMessage.Message> messages;
 
   ChatRoomPage(
@@ -38,6 +39,7 @@ class ChatRoomPage extends StatefulWidget {
       this.onSelectedModelChange,
       this.isGenerating,
       this.onNewMessage,
+      this.showGeneratingText = true,
       this.showModelSelectButton = true,
       this.showTopTitle = true,
       this.topTitleHeading = "Topic:",
@@ -127,10 +129,13 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         Expanded(
             child: Stack(
           children: [
-            MessageListView(
-              this,
-              _listViewController,
-              widget.messages,
+            MultiProvider(
+              providers: [Provider.value(value: widget.showGeneratingText)],
+              child: MessageListView(
+                this,
+                _listViewController,
+                widget.messages,
+              ),
             ),
             // reset chat button
             // Positioned(

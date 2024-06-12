@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ChatStatusRow extends StatelessWidget {
   String sessionId;
@@ -27,14 +28,23 @@ class ChatStatusRow extends StatelessWidget {
         children: [
           // Start Chat Button
           if (isConnected)
-            Row(
-              children: [
-                const Text("Session ID: "),
-                Text(
-                  sessionId,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
+            InkWell(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: sessionId));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text("Session ID copied to clipboard")),
+                );
+              },
+              child: Row(
+                children: [
+                  const Text("Session ID: "),
+                  Text(
+                    sessionId,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
           if (!isConnected) // start available if not connected
             ElevatedButton(

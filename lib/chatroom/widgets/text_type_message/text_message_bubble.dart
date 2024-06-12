@@ -11,6 +11,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/models/messages.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -34,6 +35,7 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
   Map<String, WordHighlight> highlights = {};
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
+  bool showGeneratingText = true;
 
   @override
   void initState() {
@@ -42,7 +44,9 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
     images = widget._message.images ?? [];
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
-
+    showGeneratingText = Provider.of<bool>(context,
+        listen:
+            false); // TODO this could be converted into a chatroom settings model that gets passed through a provider at the top of the chatroom
     // for (var i in images!) {
     //   print("LOADING IMAGES IN MSG BUBBLE");
     //   print(i.id);
@@ -242,6 +246,8 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
   TextStyle secondary =
       const TextStyle(fontSize: 12, fontWeight: FontWeight.w300);
 
+  ValueNotifier<double?> textWidth = ValueNotifier(null);
+
   @override
   Widget build(BuildContext context) {
     Color themeColorContainer = Theme.of(context).primaryColor;
@@ -378,146 +384,217 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: <Widget>[
-                                                Container(
-                                                  constraints: BoxConstraints(
-                                                      maxWidth: maxMesageWidth),
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Row(
-                                                        children: [
-                                                          Text(
-                                                            widget._message
-                                                                    .name ??
-                                                                'anon',
-                                                            style: TextStyle(
-                                                                // color: getColor(widget._message.nameColor!),
-                                                                fontWeight: widget
-                                                                        ._isOurMessage
-                                                                    ? FontWeight
-                                                                        .bold
-                                                                    : FontWeight
-                                                                        .w500),
-                                                          ),
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    left: 6.0),
-                                                            child: widget
-                                                                    ._message
-                                                                    .isGenerating
-                                                                ? const CupertinoActivityIndicator()
-                                                                : Container(),
-                                                          ),
-                                                          // Text(
-                                                          //     DateFormat('jm').format(
-                                                          //         widget._message.timestamp!),
-                                                          //     style: const TextStyle(
-                                                          //         color: Colors.black45,
-                                                          //         fontSize: 13),
-                                                          //   ),
-                                                          if (widget._message
-                                                                  .completionTime !=
-                                                              null)
-                                                            Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                      left:
-                                                                          5.0),
-                                                              child: Text(
-                                                                  "${widget._message.completionTime!.toStringAsFixed(2)}s",
-                                                                  style: const TextStyle(
-                                                                      fontSize:
-                                                                          12,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w300)),
+                                                ValueListenableBuilder<double?>(
+                                                    valueListenable: textWidth,
+                                                    builder:
+                                                        (context, width, _) {
+                                                      print(
+                                                          "textWidth: $width");
+                                                      return Container(
+                                                        width: width,
+                                                        constraints: BoxConstraints(
+                                                            minWidth: 350,
+                                                            maxWidth:
+                                                                maxMesageWidth),
+                                                        child: Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
+                                                          children: [
+                                                            Row(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .end,
+                                                              children: [
+                                                                Text(
+                                                                  widget._message
+                                                                          .name ??
+                                                                      'anon',
+                                                                  style:
+                                                                      TextStyle(
+                                                                          // color: getColor(widget._message.nameColor!),
+                                                                          fontWeight: widget._isOurMessage
+                                                                              ? FontWeight.bold
+                                                                              : FontWeight.w500),
+                                                                ),
+                                                                if (showGeneratingText)
+                                                                  Padding(
+                                                                    padding: const EdgeInsets
+                                                                        .only(
+                                                                        left:
+                                                                            6.0),
+                                                                    child: widget
+                                                                            ._message
+                                                                            .isGenerating
+                                                                        ? const CupertinoActivityIndicator()
+                                                                        : Container(),
+                                                                  ),
+                                                                // Text(
+                                                                //     DateFormat('jm').format(
+                                                                //         widget._message.timestamp!),
+                                                                //     style: const TextStyle(
+                                                                //         color: Colors.black45,
+                                                                //         fontSize: 13),
+                                                                //   ),
+                                                                if (widget._message
+                                                                            .completionTime !=
+                                                                        null &&
+                                                                    showGeneratingText)
+                                                                  Padding(
+                                                                    padding: const EdgeInsets
+                                                                        .only(
+                                                                        left:
+                                                                            5.0),
+                                                                    child: Text(
+                                                                        "${widget._message.completionTime!.toStringAsFixed(2)}s",
+                                                                        style: const TextStyle(
+                                                                            fontSize:
+                                                                                12,
+                                                                            fontWeight:
+                                                                                FontWeight.w300)),
+                                                                  ),
+                                                                if (showGeneratingText)
+                                                                  Column(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .end,
+                                                                    children: [
+                                                                      if (width !=
+                                                                          null)
+                                                                        if (width <
+                                                                            400)
+                                                                          ValueListenableBuilder<Map<String, dynamic>>(
+                                                                              valueListenable: widget._message.baseAnalytics,
+                                                                              builder: (context, baseAnalytics, _) {
+                                                                                if (baseAnalytics.isEmpty || !displayConfig.showModerationTags) {
+                                                                                  return Container();
+                                                                                }
+                                                                                return buildCommentsRow(baseAnalytics);
+                                                                              }),
+                                                                      Padding(
+                                                                        padding: const EdgeInsets
+                                                                            .only(
+                                                                            left:
+                                                                                5.0),
+                                                                        child: Text(
+                                                                            "@ ${widget._message.toksPerSec.toStringAsFixed(2)} toks/sec.",
+                                                                            style:
+                                                                                const TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                              ],
                                                             ),
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    left: 5.0),
-                                                            child: Text(
-                                                                "@ ${widget._message.toksPerSec.toStringAsFixed(2)} toks/sec.",
-                                                                style: const TextStyle(
-                                                                    fontSize:
-                                                                        12,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .w300)),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      Expanded(
-                                                          child: Container()),
-                                                      ValueListenableBuilder<
-                                                              Map<String,
-                                                                  dynamic>>(
-                                                          valueListenable: widget
-                                                              ._message
-                                                              .baseAnalytics,
-                                                          builder: (context,
-                                                              baseAnalytics,
-                                                              _) {
-                                                            if (baseAnalytics
-                                                                    .isEmpty ||
-                                                                !displayConfig
-                                                                    .showModerationTags) {
-                                                              return Container();
-                                                            }
-                                                            return buildCommentsRow(
-                                                                baseAnalytics);
-                                                          })
-                                                    ],
-                                                  ),
-                                                ),
+                                                            // Expanded(
+                                                            //     child: Container()),
+                                                            if (!showGeneratingText)
+                                                              ValueListenableBuilder<
+                                                                      Map<String,
+                                                                          dynamic>>(
+                                                                  valueListenable: widget
+                                                                      ._message
+                                                                      .baseAnalytics,
+                                                                  builder: (context,
+                                                                      baseAnalytics,
+                                                                      _) {
+                                                                    if (baseAnalytics
+                                                                            .isEmpty ||
+                                                                        !displayConfig
+                                                                            .showModerationTags) {
+                                                                      return Container();
+                                                                    }
+                                                                    return buildCommentsRow(
+                                                                        baseAnalytics);
+                                                                  }),
+                                                            if (width != null &&
+                                                                showGeneratingText)
+                                                              if (width >= 400)
+                                                                ValueListenableBuilder<
+                                                                        Map<String,
+                                                                            dynamic>>(
+                                                                    valueListenable: widget
+                                                                        ._message
+                                                                        .baseAnalytics,
+                                                                    builder:
+                                                                        (context,
+                                                                            baseAnalytics,
+                                                                            _) {
+                                                                      if (baseAnalytics
+                                                                              .isEmpty ||
+                                                                          !displayConfig
+                                                                              .showModerationTags) {
+                                                                        return Container();
+                                                                      }
+                                                                      return buildCommentsRow(
+                                                                          baseAnalytics);
+                                                                    })
+                                                          ],
+                                                        ),
+                                                      );
+                                                    }),
                                                 Container(
                                                   height: 2,
                                                 ),
-                                                Container(
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.black
-                                                        .withOpacity(.73),
-                                                    borderRadius:
-                                                        const BorderRadius.all(
-                                                      Radius.circular(15.0),
-                                                    ),
-                                                  ),
-                                                  constraints: BoxConstraints(
-                                                      maxWidth: maxMesageWidth),
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child:
-                                                        DynamicTextHighlighting(
-                                                      key: Key(displayConfig
-                                                          .showInMessageNER
-                                                          .toString()),
-                                                      text: message,
-                                                      highlights: displayConfig
-                                                              .showInMessageNER
-                                                          ? highlights
-                                                          : {},
-                                                      caseSensitive: false,
-                                                      style: TextStyle(
-                                                        color: ThemeData.estimateBrightnessForColor(
-                                                                    themeColorContainer) ==
-                                                                Brightness.light
-                                                            ? Colors.black87
-                                                            : Colors.white,
+                                                LayoutBuilder(builder:
+                                                    (context, constraints) {
+                                                  WidgetsBinding.instance
+                                                      .addPostFrameCallback(
+                                                          (_) {
+                                                    // print(context.size!.width);
+                                                    setState(() {
+                                                      if (context.size!.width >
+                                                          300) {}
+                                                      textWidth.value =
+                                                          context.size!.width;
+                                                      textWidth
+                                                          .notifyListeners();
+                                                    });
+                                                  });
+                                                  return Container(
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.black
+                                                          .withOpacity(.73),
+                                                      borderRadius:
+                                                          const BorderRadius
+                                                              .all(
+                                                        Radius.circular(15.0),
                                                       ),
-                                                      textAlign: TextAlign.left,
-                                                      textWidthBasis:
-                                                          TextWidthBasis.parent,
                                                     ),
-                                                  ),
-                                                ),
+                                                    constraints: BoxConstraints(
+                                                        maxWidth:
+                                                            maxMesageWidth),
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8.0),
+                                                      child:
+                                                          DynamicTextHighlighting(
+                                                        key: Key(displayConfig
+                                                            .showInMessageNER
+                                                            .toString()),
+                                                        text: message,
+                                                        highlights: displayConfig
+                                                                .showInMessageNER
+                                                            ? highlights
+                                                            : {},
+                                                        caseSensitive: false,
+                                                        style: TextStyle(
+                                                          color: ThemeData.estimateBrightnessForColor(
+                                                                      themeColorContainer) ==
+                                                                  Brightness
+                                                                      .light
+                                                              ? Colors.black87
+                                                              : Colors.white,
+                                                        ),
+                                                        textAlign:
+                                                            TextAlign.left,
+                                                        textWidthBasis:
+                                                            TextWidthBasis
+                                                                .parent,
+                                                      ),
+                                                    ),
+                                                  );
+                                                }),
                                                 Container(
                                                   height: 2,
                                                 ),

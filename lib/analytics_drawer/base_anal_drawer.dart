@@ -7,7 +7,6 @@ import 'package:chat/models/display_configs.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/shared/emo27config.dart';
 import 'package:chat/shared/images_list_widget.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
@@ -41,7 +40,13 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
 
     // This delay loads the items in the drawer after the animation has popped out a bit
     // It saves some jank
-
+    if (currentSelectedConversation.value != null) {
+      if (currentSelectedConversation.value!.gameType == GameType.p2pchat) {
+        debugPrint(
+            "\t[ Loading p2pchat analytics for conversation id :: ${currentSelectedConversation.value!.id} ]");
+        // TODO load participant data from this game type
+      }
+    }
     Future.delayed(const Duration(milliseconds: 90), () {
       if (mounted) {
         if (!didInit) setState(() => didInit = true);
@@ -72,16 +77,16 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
 
   final int futureWaitDuration = 900;
 
-  Future<bool> _togglecalcImageGen() async {
-    await Future.delayed(Duration(milliseconds: futureWaitDuration));
-    final newValue = !displayConfigData.value.calcImageGen;
-    displayConfigData.value.calcImageGen = newValue;
-    displayConfigData.notifyListeners();
-    setState(() {
-      calcImageGen = newValue;
-    });
-    return newValue;
-  }
+  // Future<bool> _togglecalcImageGen() async {
+  //   await Future.delayed(Duration(milliseconds: futureWaitDuration));
+  //   final newValue = !displayConfigData.value.calcImageGen;
+  //   displayConfigData.value.calcImageGen = newValue;
+  //   displayConfigData.notifyListeners();
+  //   setState(() {
+  //     calcImageGen = newValue;
+  //   });
+  //   return newValue;
+  // }
 
   Future<bool> _toggleShowSidebarBaseAnalytics() async {
     await Future.delayed(Duration(milliseconds: futureWaitDuration));
@@ -94,49 +99,49 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
     return newValue;
   }
 
-  Future<bool> _toggleNERCalculations() async {
-    await Future.delayed(Duration(milliseconds: futureWaitDuration));
-    final newValue = !displayConfigData.value.calculateInMessageNER;
-    displayConfigData.value.calculateInMessageNER = newValue;
-    displayConfigData.notifyListeners();
-    setState(() {
-      calcInMsgNER = newValue;
-    });
-    return newValue;
-  }
+  // Future<bool> _toggleNERCalculations() async {
+  //   await Future.delayed(Duration(milliseconds: futureWaitDuration));
+  //   final newValue = !displayConfigData.value.calculateInMessageNER;
+  //   displayConfigData.value.calculateInMessageNER = newValue;
+  //   displayConfigData.notifyListeners();
+  //   setState(() {
+  //     calcInMsgNER = newValue;
+  //   });
+  //   return newValue;
+  // }
 
-  Future<bool> _toggleModerationCalculations() async {
-    await Future.delayed(Duration(milliseconds: futureWaitDuration));
-    final newValue = !displayConfigData.value.calculateModerationTags;
-    displayConfigData.value.calculateModerationTags = newValue;
-    displayConfigData.notifyListeners();
-    setState(() {
-      calcModerationTags = newValue;
-    });
-    return newValue;
-  }
+  // Future<bool> _toggleModerationCalculations() async {
+  //   await Future.delayed(Duration(milliseconds: futureWaitDuration));
+  //   final newValue = !displayConfigData.value.calculateModerationTags;
+  //   displayConfigData.value.calculateModerationTags = newValue;
+  //   displayConfigData.notifyListeners();
+  //   setState(() {
+  //     calcModerationTags = newValue;
+  //   });
+  //   return newValue;
+  // }
 
-  Future<bool> _toggleShowModerationTags() async {
-    await Future.delayed(Duration(milliseconds: futureWaitDuration));
-    final newValue = !displayConfigData.value.showModerationTags;
-    displayConfigData.value.showModerationTags = newValue;
-    displayConfigData.notifyListeners();
-    setState(() {
-      showModerationTags = newValue;
-    });
-    return newValue;
-  }
+  // Future<bool> _toggleShowModerationTags() async {
+  //   await Future.delayed(Duration(milliseconds: futureWaitDuration));
+  //   final newValue = !displayConfigData.value.showModerationTags;
+  //   displayConfigData.value.showModerationTags = newValue;
+  //   displayConfigData.notifyListeners();
+  //   setState(() {
+  //     showModerationTags = newValue;
+  //   });
+  //   return newValue;
+  // }
 
-  Future<bool> _toggleShowInMsgNER() async {
-    await Future.delayed(Duration(milliseconds: futureWaitDuration));
-    final newValue = !displayConfigData.value.showInMessageNER;
-    displayConfigData.value.showInMessageNER = newValue;
-    displayConfigData.notifyListeners();
-    setState(() {
-      showInMsgNER = newValue;
-    });
-    return newValue;
-  }
+  // Future<bool> _toggleShowInMsgNER() async {
+  //   await Future.delayed(Duration(milliseconds: futureWaitDuration));
+  //   final newValue = !displayConfigData.value.showInMessageNER;
+  //   displayConfigData.value.showInMessageNER = newValue;
+  //   displayConfigData.notifyListeners();
+  //   setState(() {
+  //     showInMsgNER = newValue;
+  //   });
+  //   return newValue;
+  // }
 
   Widget _buildRow({
     required IconData icon,
@@ -210,139 +215,139 @@ class _BaseAnalyticsDrawerState extends State<BaseAnalyticsDrawer> {
     );
   }
 
-  Widget _buildAnalysisRow(
-      {required IconData icon,
-      required String label1,
-      required String label2,
-      required bool value1,
-      required bool value2,
-      required Future<bool> Function() future1,
-      required Future<bool> Function() future2,
-      required bool notifier1,
-      required bool notifier2}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Container(),
-        Row(
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(left: 18.0),
-              child: SizedBox(
-                height: 45,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.analytics_outlined,
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(label1),
-            const SizedBox(width: 10),
-            SizedBox(
-              width: 36,
-              child: LoadSwitch(
-                height: 20,
-                width: 28,
-                value: value1,
-                future: future1,
-                style: SpinStyle.material,
-                switchDecoration: (isActive, isPressed) => BoxDecoration(
-                  color: isActive
-                      ? const Color.fromARGB(255, 122, 11, 158)
-                      : const Color.fromARGB(255, 193, 193, 193),
-                  borderRadius: BorderRadius.circular(30),
-                  shape: BoxShape.rectangle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: isActive
-                          ? const Color.fromARGB(255, 222, 222, 222)
-                          : const Color.fromARGB(255, 213, 213, 213),
-                      spreadRadius: 3,
-                      blurRadius: 5,
-                      offset: const Offset(0, 3), // changes position of shadow
-                    ),
-                  ],
-                ),
-                spinColor: (isActive) =>
-                    const Color.fromARGB(255, 125, 73, 182),
-                onChange: (v) {
-                  setState(() {
-                    notifier1 = v;
-                  });
-                },
-                onTap: (v) {
-                  // print('Tapping while value is $v');
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              label2,
-              style: const TextStyle(
-                decoration: TextDecoration.lineThrough,
-              ),
-            ),
-            const SizedBox(width: 10),
-            SizedBox(
-              width: 36,
-              height: 20,
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                    (Set<MaterialState> states) {
-                      if (states.contains(MaterialState.pressed)) {
-                        return const Color.fromARGB(
-                            255, 122, 11, 158); // Color when pressed
-                      }
-                      return value2
-                          ? const Color.fromARGB(
-                              255, 122, 11, 158) // Active color
-                          : const Color.fromARGB(
-                              255, 193, 193, 193); // Inactive color
-                    },
-                  ),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  elevation: MaterialStateProperty.all<double>(
-                      5), // Elevation for shadow
-                  shadowColor: MaterialStateProperty.resolveWith<Color>(
-                    (Set<MaterialState> states) {
-                      return value2
-                          ? const Color.fromARGB(
-                              255, 222, 222, 222) // Active shadow color
-                          : const Color.fromARGB(
-                              255, 213, 213, 213); // Inactive shadow color
-                    },
-                  ),
-                ),
-                onPressed: () {
-                  setState(() {
-                    notifier2 = !value2; // Toggle value2
-                  });
-                },
-                child: Text(
-                  label2,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    decoration: TextDecoration.lineThrough,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-      ],
-    );
-  }
+  // Widget _buildAnalysisRow(
+  //     {required IconData icon,
+  //     required String label1,
+  //     required String label2,
+  //     required bool value1,
+  //     required bool value2,
+  //     required Future<bool> Function() future1,
+  //     required Future<bool> Function() future2,
+  //     required bool notifier1,
+  //     required bool notifier2}) {
+  //   return Row(
+  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //     children: [
+  //       Container(),
+  //       Row(
+  //         children: [
+  //           const Padding(
+  //             padding: EdgeInsets.only(left: 18.0),
+  //             child: SizedBox(
+  //               height: 45,
+  //               child: Row(
+  //                 children: [
+  //                   Icon(
+  //                     Icons.analytics_outlined,
+  //                     size: 20,
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //           const SizedBox(width: 10),
+  //           Text(label1),
+  //           const SizedBox(width: 10),
+  //           SizedBox(
+  //             width: 36,
+  //             child: LoadSwitch(
+  //               height: 20,
+  //               width: 28,
+  //               value: value1,
+  //               future: future1,
+  //               style: SpinStyle.material,
+  //               switchDecoration: (isActive, isPressed) => BoxDecoration(
+  //                 color: isActive
+  //                     ? const Color.fromARGB(255, 122, 11, 158)
+  //                     : const Color.fromARGB(255, 193, 193, 193),
+  //                 borderRadius: BorderRadius.circular(30),
+  //                 shape: BoxShape.rectangle,
+  //                 boxShadow: [
+  //                   BoxShadow(
+  //                     color: isActive
+  //                         ? const Color.fromARGB(255, 222, 222, 222)
+  //                         : const Color.fromARGB(255, 213, 213, 213),
+  //                     spreadRadius: 3,
+  //                     blurRadius: 5,
+  //                     offset: const Offset(0, 3), // changes position of shadow
+  //                   ),
+  //                 ],
+  //               ),
+  //               spinColor: (isActive) =>
+  //                   const Color.fromARGB(255, 125, 73, 182),
+  //               onChange: (v) {
+  //                 setState(() {
+  //                   notifier1 = v;
+  //                 });
+  //               },
+  //               onTap: (v) {
+  //                 // print('Tapping while value is $v');
+  //               },
+  //             ),
+  //           ),
+  //           const SizedBox(width: 12),
+  //           Text(
+  //             label2,
+  //             style: const TextStyle(
+  //               decoration: TextDecoration.lineThrough,
+  //             ),
+  //           ),
+  //           const SizedBox(width: 10),
+  //           SizedBox(
+  //             width: 36,
+  //             height: 20,
+  //             child: ElevatedButton(
+  //               style: ButtonStyle(
+  //                 backgroundColor: MaterialStateProperty.resolveWith<Color>(
+  //                   (Set<MaterialState> states) {
+  //                     if (states.contains(MaterialState.pressed)) {
+  //                       return const Color.fromARGB(
+  //                           255, 122, 11, 158); // Color when pressed
+  //                     }
+  //                     return value2
+  //                         ? const Color.fromARGB(
+  //                             255, 122, 11, 158) // Active color
+  //                         : const Color.fromARGB(
+  //                             255, 193, 193, 193); // Inactive color
+  //                   },
+  //                 ),
+  //                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+  //                   RoundedRectangleBorder(
+  //                     borderRadius: BorderRadius.circular(30),
+  //                   ),
+  //                 ),
+  //                 elevation: MaterialStateProperty.all<double>(
+  //                     5), // Elevation for shadow
+  //                 shadowColor: MaterialStateProperty.resolveWith<Color>(
+  //                   (Set<MaterialState> states) {
+  //                     return value2
+  //                         ? const Color.fromARGB(
+  //                             255, 222, 222, 222) // Active shadow color
+  //                         : const Color.fromARGB(
+  //                             255, 213, 213, 213); // Inactive shadow color
+  //                   },
+  //                 ),
+  //               ),
+  //               onPressed: () {
+  //                 setState(() {
+  //                   notifier2 = !value2; // Toggle value2
+  //                 });
+  //               },
+  //               child: Text(
+  //                 label2,
+  //                 style: const TextStyle(
+  //                   color: Colors.black,
+  //                   decoration: TextDecoration.lineThrough,
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //           const SizedBox(width: 8),
+  //         ],
+  //       ),
+  //     ],
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
