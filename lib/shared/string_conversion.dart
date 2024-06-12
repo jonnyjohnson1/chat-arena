@@ -6,3 +6,12 @@ String makeWebSocketAddress(String url) {
   }
   return url; // return the original URL if neither https nor http is found
 }
+
+String makeHTTPSAddress(String url) {
+  if (url.contains("wss")) {
+    return url.replaceFirst("wss", "https");
+  } else if (url.contains("ws")) {
+    return url.replaceFirst("ws", "http");
+  }
+  return url; // return the original URL if neither https nor http is found
+}

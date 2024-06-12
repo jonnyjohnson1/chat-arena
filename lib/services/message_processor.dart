@@ -1,19 +1,4 @@
 import 'dart:async';
-import 'package:chat/models/messages.dart';
-
-class BackendService {
-  Future<Map<String, dynamic>> sendMessage(Message message) async {
-    // Simulate sending message to the backend and getting a response
-    await Future.delayed(Duration(seconds: 1));
-    return {'processedData': 'Processed: ${message.message!.value}'};
-  }
-
-  Future<Map<String, dynamic>> receiveMessage(Message message) async {
-    // Simulate receiving message from the backend and getting a response
-    await Future.delayed(Duration(seconds: 1));
-    return {'processedData': 'Received: ${message.message!.value}'};
-  }
-}
 
 class QueueProcess {
   Function function; // function to process
@@ -24,13 +9,13 @@ class QueueProcess {
     this.args,
   });
 
-  dynamic execute() {
+  Future<dynamic> execute() {
     print("[ executing function ]");
     if (args != null) {
       // Convert the map of arguments to a list of values
       final positionalArgs = args!.values.toList();
       // final symbolArgs =
-      //     args!.map((key, value) => MapEntry(Symbol(key), value));
+      //     args!.map((key, value) => MapEntry(Symbol(key), value)); // Use to pass the symbolic args into method
       return Function.apply(function, positionalArgs, {});
     } else {
       return function();
@@ -39,7 +24,6 @@ class QueueProcess {
 }
 
 class MessageProcessor {
-  // final BackendService backendService;
   final StreamController<QueueProcess> _processingQueueController =
       StreamController();
   int _numberOfProcesses = 0;

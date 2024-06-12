@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/messages.dart';
+import 'package:chat/shared/string_conversion.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
@@ -65,12 +66,5 @@ class WebSocketChatClient {
       debugPrint(e.toString());
       return false;
     }
-  }
-
-  Future<String> processChatAnalytics(
-      Message message, Conversation conversation) async {
-    String route = "/p2p/process_message";
-
-    return "String";
   }
 }

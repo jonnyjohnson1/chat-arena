@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'package:chat/models/conversation.dart';
 import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/conversation_settings.dart';
 import 'package:chat/models/custom_file.dart';
@@ -10,6 +11,7 @@ import 'package:chat/models/llm.dart';
 import 'package:chat/models/user.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/shared/image_utils.dart';
+import 'package:chat/shared/string_conversion.dart';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
@@ -485,10 +487,44 @@ class LocalLLMInterface {
     }
   }
 
-  Future<void> getMessageAnalysis(Message message) async {
-    // TODO pass text message into the backend
-    // do this by managing a queue
-    // On each return, update the message data, and set its state so that it become visible in the UI
+  Future<String> getMessageAnalytics(
+      Message message, Conversation conversation) async {
+    String route = "/p2p/process_message";
+
+    try {
+      final httpEnforced = makeHTTPSAddress("${httpAddress}$route");
+      final url = Uri.parse(httpEnforced); // Replace with your server address
+
+      final headers = {
+        "accept": "application/json; charset=utf-8",
+        "Content-Type": "application/json; charset=utf-8"
+      };
+      final body = json.encode({
+        "conversation_id": conversation.id,
+        "message_id": message.id,
+        "message": message.message!.value,
+        "current_topic": null,
+        "processing_config": {}
+      });
+      var response = await http.post(url, headers: headers, body: body);
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        print(body);
+        print(body.runtimeType);
+        // Set the message's analytics value
+        print(
+            "\t[ response has key :: ${body['user_message'].containsKey(message.id)} ]");
+        message.baseAnalytics.value = body['user_message'][message.id];
+        message.baseAnalytics.notifyListeners();
+        return "True";
+      } else {
+        return "False";
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+      return "False";
+    }
   }
 
   Future<String?> getNextMessageOptions(

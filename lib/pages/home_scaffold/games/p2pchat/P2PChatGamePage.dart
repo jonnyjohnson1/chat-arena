@@ -2,12 +2,14 @@ import 'dart:math';
 
 import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/game_models/debate.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/pages/home_scaffold/games/p2pchat/chat_status_row.dart';
 import 'package:chat/services/conversation_database.dart';
+import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/message_processor.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/services/websocket_chat_client.dart';
@@ -176,23 +178,52 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
 
   String sessionId = "";
 
-  Future<Map<String, dynamic>> processMessage(
-      uiMessage.Message message, Conversation conversation) async {
-    // Simulate sending message to the backend and getting a response
-    await Future.delayed(const Duration(seconds: 1));
-    print(
-        "[ sending message to analytics function :: ${message.message!.value}]");
-    return {'processedData': 'Processed: ${message.message!.value}'};
-  }
+  // Future<Map<String, dynamic>> processMessage(
+  //     uiMessage.Message message, Conversation conversation) async {
+  //   // Simulate sending message to the backend and getting a response
+  //   await Future.delayed(const Duration(seconds: 1));
+  //   print(
+  //       "[ sending message to analytics function :: ${message.message!.value}]");
+  //   return {'processedData': 'Processed: ${message.message!.value}'};
+  // }
 
   void sendMessageForProcessing(MessageProcessor processor,
-      uiMessage.Message message, Conversation conversation) {
+      uiMessage.Message message, Conversation conversation) async {
+    // process single message analytics
     processor.addProcess(QueueProcess(
-      function: processMessage,
+      function: LocalLLMInterface(displayConfigData.value.apiConfig)
+          .getMessageAnalytics,
       args: {'message': message, 'conversation': conversation},
     ));
-    // processor.messageQueue.add(message);
-    // processor.controller.add(message);
+
+    // proces the whole chat analytics
+    // Run all the post conversation analyses here
+    // run sidebar calculations if config says so
+    print("SHOWING SIDEBAR ANALYTICS");
+    if (displayConfigData.value.showSidebarBaseAnalytics) {
+      print("GET CHAT ANALYSIS");
+      await Future.delayed(const Duration(seconds: 3), () async {
+        print("EXECUTING");
+        ConversationData? data =
+            await LocalLLMInterface(displayConfigData.value.apiConfig)
+                .getChatAnalysis(widget.conversation!.id);
+        // return analysis to the Conversation object
+        widget.conversation!.conversationAnalytics.value = data;
+        widget.conversation!.conversationAnalytics.notifyListeners();
+      });
+
+      // get an image depiction of the conversation
+      if (displayConfigData.value.calcImageGen) {
+        ImageFile? imageFile =
+            await LocalLLMInterface(displayConfigData.value.apiConfig)
+                .getConvToImage(widget.conversation!.id);
+        if (imageFile != null) {
+          // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
+          widget.conversation!.convToImagesList.value.add(imageFile);
+          widget.conversation!.convToImagesList.notifyListeners();
+        }
+      }
+    }
   }
 
   void _processServerMessage(Map<String, dynamic> listenerMessage) {
@@ -211,8 +242,6 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     print("[ added server message to messages ]");
     sessionId = listenerMessage['session_id'];
     setState(() {});
-    // send received server message for processing
-    sendMessageForProcessing(messageProcessor, message, widget.conversation!);
   }
 
   void _processUserMessage(Map<String, dynamic> listenerMessage) {
