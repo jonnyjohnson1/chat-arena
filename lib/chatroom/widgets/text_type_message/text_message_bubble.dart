@@ -388,8 +388,6 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                                     valueListenable: textWidth,
                                                     builder:
                                                         (context, width, _) {
-                                                      print(
-                                                          "textWidth: $width");
                                                       return Container(
                                                         width: width,
                                                         constraints: BoxConstraints(

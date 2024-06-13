@@ -487,8 +487,8 @@ class LocalLLMInterface {
     }
   }
 
-  Future<String> getMessageAnalytics(
-      Message message, Conversation conversation) async {
+  Future<String> getMessageAnalytics(Message message, Conversation conversation,
+      String username, String role) async {
     String route = "/p2p/process_message";
 
     try {
@@ -505,17 +505,17 @@ class LocalLLMInterface {
         "message": message.message!.value,
         "current_topic": null,
         "user_id": message.senderID,
+        "role": role,
+        "user_name": username,
         "processing_config": {}
       });
       var response = await http.post(url, headers: headers, body: body);
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
-        print(body);
-        print(body.runtimeType);
         // Set the message's analytics value
-        print(
-            "\t[ response has key :: ${body['user_message'].containsKey(message.id)} ]");
+        // print(
+        //     "\t[ response has key :: ${body['user_message'].containsKey(message.id)} ]");
         message.baseAnalytics.value = body['user_message'][message.id];
         message.baseAnalytics.notifyListeners();
         return "True";

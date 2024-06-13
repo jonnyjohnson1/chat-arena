@@ -10,7 +10,6 @@ class QueueProcess {
   });
 
   Future<dynamic> execute() {
-    print("[ executing function ]");
     if (args != null) {
       // Convert the map of arguments to a list of values
       final positionalArgs = args!.values.toList();
@@ -35,7 +34,6 @@ class MessageProcessor {
   int get numberOfProcesses => _numberOfProcesses;
 
   void addProcess(QueueProcess process) {
-    print("Adding process");
     _processingQueueController.add(process);
     _numberOfProcesses++;
     print("Processes remain: $_numberOfProcesses");
@@ -68,9 +66,9 @@ class MessageProcessor {
       _numberOfProcesses--;
       print("Processes remain: $_numberOfProcesses");
       if (_numberOfProcesses == 0) {
-        print("Setting delay for progress bar to close");
+        // print("Setting delay for progress bar to close");
         Future.delayed(const Duration(seconds: 1), () {
-          print("Setting progress bar to close");
+          // print("Setting progress bar to close");
           // Add your progress bar logic here if necessary
         });
       }

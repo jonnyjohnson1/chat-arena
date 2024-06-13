@@ -102,8 +102,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
       Future.delayed(const Duration(milliseconds: 400), () async {
         P2PChatGame gameSettings = await getP2PChatSettings(context);
         widget.conversation!.gameModel = gameSettings;
-        print(
-            "${gameSettings.serverHostAddress} IS :: ${gameSettings.serverHostAddress.runtimeType}");
+
         String url = gameSettings.serverHostAddress!.isNotEmpty
             ? makeWebSocketAddress(gameSettings.serverHostAddress!)
             : 'ws://127.0.0.1:13349';
@@ -194,16 +193,20 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     processor.addProcess(QueueProcess(
       function: LocalLLMInterface(displayConfigData.value.apiConfig)
           .getMessageAnalytics,
-      args: {'message': message, 'conversation': conversation},
+      args: {
+        'message': message,
+        'conversation': conversation,
+        'user_name': message.name,
+        'role': "user"
+      },
     ));
 
     // proces the whole chat analytics
     // Run all the post conversation analyses here
     // run sidebar calculations if config says so
     if (displayConfigData.value.showSidebarBaseAnalytics) {
-      print("GET CHAT ANALYSIS");
-      await Future.delayed(const Duration(seconds: 3), () async {
-        print("EXECUTING");
+      // TODO the execution of this function could be more precise
+      await Future.delayed(const Duration(seconds: 2), () async {
         ConversationData? data =
             await LocalLLMInterface(displayConfigData.value.apiConfig)
                 .getChatAnalysis(widget.conversation!.id);
