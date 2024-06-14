@@ -40,7 +40,7 @@ class _DebateGamePageState extends State<DebateGamePage> {
       numGenerations: 1);
 
   Future<void> initData() async {
-    print("[ init data ]");
+    debugPrint("[ init data ]");
     if (widget.conversation != null) {
       try {
         messages = await ConversationDatabase.instance

@@ -3,6 +3,7 @@ import 'package:chat/chatroom/widgets/message_list_view_child.dart';
 import 'package:chat/models/messages.dart';
 import 'package:provider/provider.dart';
 import 'package:chat/models/user.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class MessageListView extends StatefulWidget {
   final parent;
@@ -20,17 +21,31 @@ class MessageListView extends StatefulWidget {
 class _MessageListViewState extends State<MessageListView> {
   late ScrollController _listViewController;
   late ValueNotifier<User> userModel;
+  late List<Message> reversedList;
 
   @override
   void initState() {
     _listViewController = ScrollController();
     userModel = Provider.of<ValueNotifier<User>>(context, listen: false);
+    reversedList = widget.messages.reversed.toList();
     super.initState();
+  }
+
+  void _handleVisibilityChanged(VisibilityInfo visibilityInfo, int index) {
+    var visiblePercentage = visibilityInfo.visibleFraction * 100;
+    if (visiblePercentage == 0) {
+      // Detect when server message loses visibility to control topic and title display
+      Message message = reversedList[index];
+      if (message.type == MessageType.server) {
+        String? senderID = reversedList[index].senderID;
+        String? name = reversedList[index].name;
+        debugPrint("$name-$senderID :: ${visibilityInfo.key} lost visibility");
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    List<Message> reversedList = widget.messages.reversed.toList();
     return Container(
         color: Colors.white,
         child: widget.messages.isNotEmpty
@@ -50,10 +65,18 @@ class _MessageListViewState extends State<MessageListView> {
                           reversedList[index]; //_conversationData[_index];
                       bool isOurMessage =
                           message.senderID == userModel.value.uid; //_uid;
-                      return MessageListViewChild(
-                        isOurMessage,
-                        message,
-                        key: Key(message.id),
+                      return VisibilityDetector(
+                        key: Key("$index"),
+                        onVisibilityChanged: (
+                          VisibilityInfo visibilityInfo,
+                        ) {
+                          _handleVisibilityChanged(visibilityInfo, index);
+                        },
+                        child: MessageListViewChild(
+                          isOurMessage,
+                          message,
+                          key: Key(message.id),
+                        ),
                       );
                     },
                   ),

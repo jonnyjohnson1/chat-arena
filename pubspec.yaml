@@ -39,6 +39,7 @@ dependencies:
   image_downloader: ^0.31.0
   universal_html: ^2.0.5  # For web download
   markdown_widget: ^2.3.2+6
+  visibility_detector: ^0.4.0+2
   
 dev_dependencies:
   flutter_test:

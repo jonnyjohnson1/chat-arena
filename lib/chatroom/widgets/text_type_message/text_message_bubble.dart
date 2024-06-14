@@ -539,14 +539,17 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                                       .addPostFrameCallback(
                                                           (_) {
                                                     // print(context.size!.width);
-                                                    setState(() {
-                                                      if (context.size!.width >
-                                                          300) {}
-                                                      textWidth.value =
-                                                          context.size!.width;
-                                                      textWidth
-                                                          .notifyListeners();
-                                                    });
+                                                    if (mounted) {
+                                                      setState(() {
+                                                        if (context
+                                                                .size!.width >
+                                                            300) {}
+                                                        textWidth.value =
+                                                            context.size!.width;
+                                                        textWidth
+                                                            .notifyListeners();
+                                                      });
+                                                    }
                                                   });
                                                   return Container(
                                                     decoration: BoxDecoration(
