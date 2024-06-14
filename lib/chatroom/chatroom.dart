@@ -111,19 +111,27 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   Widget _chatroomPageUI(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         if (widget.showTopTitle)
           Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 3, top: 3),
-            child: Row(
-              children: [
-                Text(widget.topTitleHeading),
-                const SizedBox(
-                  width: 4,
-                ),
-                Text(widget.topTitleText)
-              ],
+            child: InkWell(
+              onTap: () {
+                if (widget.topTitleText == "insert topic") {
+                  print("change title");
+                }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(widget.topTitleHeading),
+                  const SizedBox(
+                    width: 4,
+                  ),
+                  Text(widget.topTitleText)
+                ],
+              ),
             ),
           ),
         Expanded(
