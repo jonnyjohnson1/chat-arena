@@ -67,11 +67,11 @@ class _AnalyticsViewDrawerState extends State<AnalyticsViewDrawer> {
             widget.onSettingsDrawerTap!(page);
           }
         }),
-        // GraphAnalyticsDrawer(onTap: (String page) {
-        //   if (widget.onSettingsDrawerTap != null) {
-        //     widget.onSettingsDrawerTap!(page);
-        //   }
-        // })
+        GraphAnalyticsDrawer(onTap: (String page) {
+          if (widget.onSettingsDrawerTap != null) {
+            widget.onSettingsDrawerTap!(page);
+          }
+        })
       ],
     );
   }
@@ -123,23 +123,23 @@ class _AnalyticsViewDrawerState extends State<AnalyticsViewDrawer> {
                   size: 21,
                 ),
               ))),
-      // const SizedBox(
-      //   width: 7,
-      // ),
-      // AnimatedScale(
-      //     duration: const Duration(milliseconds: 160),
-      //     scale: 2 == bottomSelectedIndex ? 1.15 : 1,
-      //     child: InkWell(
-      //         borderRadius: const BorderRadius.all(Radius.circular(5)),
-      //         onTap: () => bottomTapped(2),
-      //         child: Padding(
-      //           padding: const EdgeInsets.all(8.0),
-      //           child: Icon(Icons.bubble_chart,
-      //               color: 2 == bottomSelectedIndex
-      //                   ? const Color.fromARGB(255, 249, 144, 195)
-      //                   : unselectedColor,
-      //               size: 19),
-      //         ))),
+      const SizedBox(
+        width: 7,
+      ),
+      AnimatedScale(
+          duration: const Duration(milliseconds: 160),
+          scale: 2 == bottomSelectedIndex ? 1.15 : 1,
+          child: InkWell(
+              borderRadius: const BorderRadius.all(Radius.circular(5)),
+              onTap: () => bottomTapped(2),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Icon(Icons.bubble_chart,
+                    color: 2 == bottomSelectedIndex
+                        ? const Color.fromARGB(255, 249, 144, 195)
+                        : unselectedColor,
+                    size: 19),
+              ))),
     ];
   }
 

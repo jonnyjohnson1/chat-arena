@@ -502,9 +502,9 @@ class _SettingsPageState extends State<SettingsPage>
               height: 20,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                    (Set<WidgetState> states) {
-                      if (states.contains(WidgetState.pressed)) {
+                  backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                    (Set<MaterialState> states) {
+                      if (states.contains(MaterialState.pressed)) {
                         return const Color.fromARGB(255, 122, 11, 158);
                       }
                       return value2
@@ -512,14 +512,14 @@ class _SettingsPageState extends State<SettingsPage>
                           : const Color.fromARGB(255, 193, 193, 193);
                     },
                   ),
-                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  elevation: WidgetStateProperty.all<double>(5),
-                  shadowColor: WidgetStateProperty.resolveWith<Color>(
-                    (Set<WidgetState> states) {
+                  elevation: MaterialStateProperty.all<double>(5),
+                  shadowColor: MaterialStateProperty.resolveWith<Color>(
+                    (Set<MaterialState> states) {
                       return value2
                           ? const Color.fromARGB(255, 222, 222, 222)
                           : const Color.fromARGB(255, 213, 213, 213);

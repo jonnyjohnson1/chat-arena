@@ -1,3 +1,4 @@
+import 'package:chat/analytics_drawer/mermaid_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:load_switch/load_switch.dart';
 
@@ -32,16 +33,15 @@ class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
     return !didInit
         ? Container()
         : Column(children: [
-            Expanded(
+            const Expanded(
               child: Column(
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     height: 3,
                   ),
-                  SingleChildScrollView(
-                      child: Column(
-                    children: [Container()],
-                  ))
+                  Expanded(
+                    child: SingleChildScrollView(child: MermaidWidget()),
+                  )
                 ],
               ),
             ),
