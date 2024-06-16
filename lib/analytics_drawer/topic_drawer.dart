@@ -1,6 +1,10 @@
+import 'package:chat/analytics_drawer/eval_bar.dart';
 import 'package:chat/analytics_drawer/mermaid_widget.dart';
+import 'package:chat/models/conversation.dart';
+import 'package:chat/models/display_configs.dart';
 import 'package:flutter/material.dart';
 import 'package:load_switch/load_switch.dart';
+import 'package:provider/provider.dart';
 
 class GraphAnalyticsDrawer extends StatefulWidget {
   final onTap;
@@ -12,14 +16,30 @@ class GraphAnalyticsDrawer extends StatefulWidget {
 
 class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
   bool didInit = false;
+  late ValueNotifier<Conversation?> currentSelectedConversation;
+  late ValueNotifier<DisplayConfigData> displayConfigData;
 
   @override
   void initState() {
+    currentSelectedConversation =
+        Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
+
     Future.delayed(const Duration(milliseconds: 90),
         () => mounted ? setState((() => didInit = true)) : null);
+    debugPrint(
+        "\t[ Loading topic analytics for conversation id :: ${currentSelectedConversation.value!.id} ]");
+
+    displayConfigData =
+        Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
 
     super.initState();
   }
+
+  Map<String, Map<String, int>> dummyData = {
+    "jonny": {"present_score": 240},
+    "ChatBot": {"present_score": 180},
+    "tony": {"present_score": 195},
+  };
 
   bool value = false;
 
@@ -33,6 +53,10 @@ class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
     return !didInit
         ? Container()
         : Column(children: [
+            const SizedBox(
+              height: 5,
+            ),
+            TopicEvalBar(data: dummyData),
             const Expanded(
               child: Column(
                 children: [
@@ -61,7 +85,7 @@ class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
                           const SizedBox(
                             width: 5,
                           ),
-                          Text("Graph Analytics",
+                          Text("Topics Generator",
                               style: Theme.of(context).textTheme.titleMedium),
                         ],
                       ),

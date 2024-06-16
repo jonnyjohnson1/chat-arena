@@ -47,6 +47,7 @@ class _VerticalDialogueChartState extends State<VerticalDialogueChart> {
   void didUpdateWidget(covariant VerticalDialogueChart oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.data != widget.data) {
+      debugPrint(widget.data.toString());
       _initializeState();
     }
   }
