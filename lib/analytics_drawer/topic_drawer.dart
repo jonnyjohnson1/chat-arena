@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:chat/analytics_drawer/eval_bar.dart';
 import 'package:chat/analytics_drawer/mermaid_widget.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +22,8 @@ class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
   late ValueNotifier<Conversation?> currentSelectedConversation;
   late ValueNotifier<DisplayConfigData> displayConfigData;
 
+  late List<String> participants;
+
   @override
   void initState() {
     currentSelectedConversation =
@@ -26,12 +31,13 @@ class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
 
     Future.delayed(const Duration(milliseconds: 90),
         () => mounted ? setState((() => didInit = true)) : null);
-    debugPrint(
-        "\t[ Loading topic analytics for conversation id :: ${currentSelectedConversation.value!.id} ]");
-
+    _getParticipants();
+    if (currentSelectedConversation.value != null) {
+      debugPrint(
+          "\t[ Loading topic analytics for conversation id :: ${currentSelectedConversation.value!.id} ]");
+    }
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
-
     super.initState();
   }
 
@@ -40,6 +46,16 @@ class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
     "ChatBot": {"present_score": 180},
     "tony": {"present_score": 195},
   };
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _getParticipants();
+  }
+
+  void _getParticipants() {
+    participants = dummyData.keys.toList();
+  }
 
   bool value = false;
 
@@ -54,17 +70,80 @@ class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
         ? Container()
         : Column(children: [
             const SizedBox(
-              height: 5,
+              height: 12,
             ),
             TopicEvalBar(data: dummyData),
-            const Expanded(
+            Expanded(
               child: Column(
                 children: [
-                  SizedBox(
-                    height: 3,
+                  const SizedBox(
+                    height: 20,
                   ),
+                  SizedBox(
+                    width: 280,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6.0, vertical: 2.0),
+                          child: InkWell(
+                            onTap: () {},
+                            child: const Text(
+                              "All",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                        if (participants.isNotEmpty) const Text("|"),
+                        if (participants.isNotEmpty)
+                          Expanded(
+                            child: SizedBox(
+                              height: 25,
+                              child: ListView.builder(
+                                itemCount: participants.length,
+                                scrollDirection: Axis.horizontal,
+                                shrinkWrap: true,
+                                itemBuilder: (ctx, idx) {
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      InkWell(
+                                        onTap: () {},
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6.0, vertical: 2.0),
+                                          child: Text(participants[idx]),
+                                        ),
+                                      ),
+                                      if (participants[idx] !=
+                                          participants.last)
+                                        const Text("|")
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 26),
+                      height: 1,
+                      color: Theme.of(context).colorScheme.primary),
                   Expanded(
-                    child: SingleChildScrollView(child: MermaidWidget()),
+                    child: SingleChildScrollView(
+                        child: Builder(builder: (context) {
+                      if (kIsWeb) {
+                        return const MermaidWidget();
+                      } else if (Platform.isMacOS || Platform.isWindows) {
+                        return Container();
+                      } else if (Platform.isIOS || Platform.isAndroid) {
+                        return const MermaidWidget();
+                      }
+                      return Container();
+                    })),
                   )
                 ],
               ),
@@ -109,8 +188,8 @@ class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
                       style: SpinStyle.material,
                       switchDecoration: (value, isActive) => BoxDecoration(
                         color: value
-                            ? Color.fromARGB(255, 122, 11, 158)
-                            : Color.fromARGB(255, 193, 193, 193),
+                            ? const Color.fromARGB(255, 122, 11, 158)
+                            : const Color.fromARGB(255, 193, 193, 193),
                         borderRadius: BorderRadius.circular(30),
                         shape: BoxShape.rectangle,
                         boxShadow: [
@@ -118,10 +197,10 @@ class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
                             color: value
                                 ? const Color.fromARGB(255, 222, 222, 222)
                                 : const Color.fromARGB(255, 213, 213, 213),
-                            spreadRadius: 5,
-                            blurRadius: 7,
+                            spreadRadius: 3,
+                            blurRadius: 5,
                             offset: const Offset(
-                                0, 3), // changes position of shadow
+                                0, 2), // changes position of shadow
                           ),
                         ],
                       ),

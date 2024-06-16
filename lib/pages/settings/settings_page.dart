@@ -265,7 +265,7 @@ class _SettingsPageState extends State<SettingsPage>
       contentPadding: EdgeInsets.symmetric(horizontal: 10),
     );
     TextStyle style = const TextStyle(fontSize: 14);
-    
+
     _customEndpointController.text =
         displayConfigData.value.apiConfig.customEndpoint;
 
@@ -393,9 +393,9 @@ class _SettingsPageState extends State<SettingsPage>
                       color: isActive
                           ? const Color.fromARGB(255, 222, 222, 222)
                           : const Color.fromARGB(255, 213, 213, 213),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: const Offset(0, 3),
+                      spreadRadius: 3,
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -473,7 +473,7 @@ class _SettingsPageState extends State<SettingsPage>
                           : const Color.fromARGB(255, 213, 213, 213),
                       spreadRadius: 3,
                       blurRadius: 5,
-                      offset: const Offset(0, 3),
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),

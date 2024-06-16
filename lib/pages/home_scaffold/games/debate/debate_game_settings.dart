@@ -108,9 +108,9 @@ class _DebateGameSettingsState extends State<DebateGameSettings> {
                       color: isActive
                           ? const Color.fromARGB(255, 222, 222, 222)
                           : const Color.fromARGB(255, 213, 213, 213),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: const Offset(0, 3),
+                      spreadRadius: 3,
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),

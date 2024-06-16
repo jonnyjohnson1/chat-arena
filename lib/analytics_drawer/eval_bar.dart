@@ -16,8 +16,6 @@ class TopicEvalBar extends StatefulWidget {
   State<TopicEvalBar> createState() => _TopicEvalBarState();
 }
 
-// TODO upgrade this entire widget to be able to click through and compare all the participants
-
 class _TopicEvalBarState extends State<TopicEvalBar> {
   late List<String> participants;
   late List<String> sortedKeys;
@@ -127,60 +125,172 @@ class _TopicEvalBarState extends State<TopicEvalBar> {
     return Column(
       children: [
         Container(
-          width: 210,
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [Text("User1"), Text("User2")],
-          ),
-        ),
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 180,
-              height: 30,
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.all(Radius.circular(7)),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.grey[200]!,
-                        offset: const Offset(0, 0),
-                        blurRadius: 1,
-                        spreadRadius: 2)
-                  ],
-                  border: Border.all(
-                      color: const Color.fromARGB(255, 169, 111, 223))),
-            ),
-            SizedBox(
-              width: 180,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 1.0),
+          width: 220,
+          child: Row(children: [
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    isFirstSortedMaxToMin = !isFirstSortedMaxToMin;
+                    _sortKeysByFirstDataSet(isFirstSortedMaxToMin);
+                  });
+                },
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      flex: 240, // user 1 score,
-                      child: Container(),
+                    Tooltip(
+                      message: firstDataSetKey.isEmpty ? null : firstDataSetKey,
+                      preferBelow: false,
+                      child: Text(
+                        firstDataSetKey,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    Container(
-                        width: 2,
-                        height: 35,
-                        color: const Color.fromARGB(255, 113, 49, 174)),
-                    Expanded(
-                        flex: 180, // user 2 score,
-                        child: Container(
-                          height: 28,
-                          decoration: const BoxDecoration(
-                            color: Color.fromARGB(255, 239, 225, 251),
-                            borderRadius: BorderRadius.only(
-                                bottomRight: Radius.circular(7),
-                                topRight: Radius.circular(7)),
-                          ),
-                        )),
                   ],
                 ),
               ),
             ),
+            SizedBox(
+              height: 20,
+              width: 60,
+              child: Focus(
+                focusNode: _focusNode,
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedPair,
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedPair = newValue;
+                          _setSelectedPairKeys(newValue);
+                          sortedKeys = _getAllKeys(widget.data);
+                          _sortKeysByFirstDataSet(isFirstSortedMaxToMin);
+                        });
+                      }
+                    },
+                    alignment: Alignment.center,
+                    isDense: true,
+                    icon: const Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(Icons.arrow_left),
+                        Icon(Icons.arrow_right),
+                        SizedBox(width: 7)
+                      ],
+                    ),
+                    underline: const SizedBox.shrink(),
+                    selectedItemBuilder: (BuildContext context) {
+                      return pairs.map<Widget>((String value) {
+                        return Container();
+                        // isFocused
+                        //     ? Text(value.split(' & ').join(' vs '))
+                        //     : ;
+                      }).toList();
+                    },
+                    items: pairs.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: SizedBox(
+                          width: 250, // Set the width of the popup menu
+                          child: Text(value.split(' & ').join(' vs ')),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    isSecondSortedMaxToMin = !isSecondSortedMaxToMin;
+                    _sortKeysBySecondDataSet(isSecondSortedMaxToMin);
+                  });
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Tooltip(
+                      message:
+                          secondDataSetKey.isEmpty ? null : secondDataSetKey,
+                      preferBelow: false,
+                      child: Text(
+                        secondDataSetKey,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ]),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("${dummyData[firstDataSetKey]!['present_score']!}"),
+            const SizedBox(
+              width: 5,
+            ),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 180,
+                  height: 30,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.all(Radius.circular(7)),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.grey[200]!,
+                            offset: const Offset(0, 0),
+                            blurRadius: 1,
+                            spreadRadius: 2)
+                      ],
+                      border: Border.all(
+                          color: const Color.fromARGB(255, 169, 111, 223))),
+                ),
+                SizedBox(
+                  width: 180,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 1.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: dummyData[firstDataSetKey]![
+                              'present_score']!, // user 1 score,
+                          child: Container(),
+                        ),
+                        Container(
+                            width: 2,
+                            height: 35,
+                            color: const Color.fromARGB(255, 113, 49, 174)),
+                        Expanded(
+                            flex: dummyData[secondDataSetKey]![
+                                'present_score']!, // user 2 score,
+                            child: Container(
+                              height: 28,
+                              decoration: const BoxDecoration(
+                                color: Color.fromARGB(255, 239, 225, 251),
+                                borderRadius: BorderRadius.only(
+                                    bottomRight: Radius.circular(7),
+                                    topRight: Radius.circular(7)),
+                              ),
+                            )),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(
+              width: 5,
+            ),
+            Text("${dummyData[secondDataSetKey]!['present_score']!}"),
           ],
         ),
       ],

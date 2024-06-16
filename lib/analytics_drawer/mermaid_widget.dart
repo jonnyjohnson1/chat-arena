@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webviewx_plus/webviewx_plus.dart';
 
 class MermaidWidget extends StatefulWidget {
@@ -68,6 +66,7 @@ graph TD
         child: WebViewX(
           width: 280,
           height: 450,
+          ignoreAllGestures: true,
           initialContent: getHtmlString(),
           initialSourceType: SourceType.html,
           onWebViewCreated: (controller) => webviewController = controller,
