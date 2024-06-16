@@ -112,172 +112,142 @@ class _ConversationsListState extends State<ConversationsList> {
               ),
               Expanded(
                 child: ValueListenableBuilder(
-                    valueListenable: widget.conversations,
-                    builder: (context, conversationlist, _) {
-                      return Scrollbar(
+                  valueListenable: widget.conversations,
+                  builder: (context, conversationlist, _) {
+                    return Scrollbar(
+                      controller: controller,
+                      child: ListView.builder(
                         controller: controller,
-                        child: ListView.builder(
-                          controller: controller,
-                          itemCount: conversationlist.length,
-                          shrinkWrap: true,
-                          padding: const EdgeInsets.only(top: 4),
-                          // physics: NeverScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            if (conversationlist[index].gameType ==
-                                GameType.p2pchat) return Container();
-                            return (Platform.isMacOS ||
-                                    kIsWeb ||
-                                    Platform.isWindows)
-                                ? ConversationListItem(
-                                    key: Key(conversationlist[index].id),
-                                    conversation: conversationlist[index],
-                                    onSelected: () {
-                                      widget.onTap(conversationlist[index]);
-                                    },
-                                    onDeleteTap: () async {
-                                      // delete from the conversations table
-                                      await ConversationDatabase.instance
-                                          .delete(conversationlist[index].id);
-                                      print(
-                                          "[ deleted conversation from table : convId: ${widget.conversations.value[index].id}]");
-                                      // delete from the messages table
-                                      await ConversationDatabase.instance
-                                          .deleteMessageByConvId(widget
-                                              .conversations.value[index].id);
-                                      print(
-                                          "[ deleted msgs from table with convId: convId: ${widget.conversations.value[index].id}]");
-                                      print(index);
-                                      try {
-                                        widget.conversations.value
-                                            .removeAt(index);
-                                      } catch (e) {
-                                        print(e);
-                                      }
-                                      widget.conversations.notifyListeners();
-                                      widget.onDelete(true);
-                                    },
-                                    onSettingsTap: () async {
-                                      // show alert dialog to clarify delete/clear
-                                      bool? deleteConfirmation =
-                                          await showAlertDialog(context);
-                                      if (deleteConfirmation == true) {
-                                        print("ID: " +
-                                            widget
-                                                .conversations.value[index].id);
-                                        // delete from the conversations table
-                                        await ConversationDatabase.instance
-                                            .delete(widget
-                                                .conversations.value[index].id);
-                                        // delete from the messages table
-                                        await ConversationDatabase.instance
-                                            .deleteMessageByConvId(widget
-                                                .conversations.value[index].id);
-                                        widget.conversations.value
-                                            .removeAt(index);
-                                        widget.conversations.notifyListeners();
-                                        widget.onDelete(true);
-                                      }
-                                    },
-                                    isMessageRead: true,
-                                  )
-                                :
-                                // use dismissable for mobile devices to swipe to delete
-                                Dismissible(
-                                    key: Key(conversationlist[index].id),
-                                    direction: DismissDirection.endToStart,
-                                    onDismissed: (direction) async {
-                                      // delete from the conversations table
-                                      await ConversationDatabase.instance
-                                          .delete(conversationlist[index].id);
-                                      print(
-                                          "[ deleted conversation from table : convId: ${conversationlist[index].id}]");
-
-                                      // delete from the messages table
-                                      await ConversationDatabase.instance
-                                          .deleteMessageByConvId(
-                                              conversationlist[index].id);
-                                      print(
-                                          "[ deleted msgs from table with convId: ${conversationlist[index].id}]");
-
-                                      setState(() {
-                                        conversationlist.removeAt(index);
-                                      });
-                                      widget.onDelete(true);
-                                    },
-                                    background: Container(
-                                      color: const Color.fromARGB(
-                                          255, 233, 56, 43),
-                                      alignment: Alignment.centerRight,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 20.0),
-                                      child: const Icon(
-                                        Icons.delete,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    child: ConversationListItem(
-                                      key: Key(conversationlist[index].id),
-                                      conversation: conversationlist[index],
-                                      onSelected: () {
-                                        widget.onTap(conversationlist[index]);
-                                      },
-                                      onDeleteTap: () async {
-                                        // delete from the conversations table
-                                        await ConversationDatabase.instance
-                                            .delete(conversationlist[index].id);
-                                        print(
-                                            "[ deleted conversation from table : convId: ${widget.conversations.value[index].id}]");
-                                        // delete from the messages table
-                                        await ConversationDatabase.instance
-                                            .deleteMessageByConvId(widget
-                                                .conversations.value[index].id);
-                                        print(
-                                            "[ deleted msgs from table with convId: convId: ${widget.conversations.value[index].id}]");
-                                        print(index);
-                                        try {
-                                          widget.conversations.value
-                                              .removeAt(index);
-                                        } catch (e) {
-                                          print(e);
-                                        }
-                                        widget.conversations.notifyListeners();
-                                        widget.onDelete(true);
-                                      },
-                                      onSettingsTap: () async {
-                                        // show alert dialog to clarify delete/clear
-                                        bool? deleteConfirmation =
-                                            await showAlertDialog(context);
-                                        if (deleteConfirmation == true) {
-                                          debugPrint("ID: " +
-                                              widget.conversations.value[index]
-                                                  .id);
-                                          // delete from the conversations table
-                                          await ConversationDatabase.instance
-                                              .delete(widget.conversations
-                                                  .value[index].id);
-                                          // delete from the messages table
-                                          await ConversationDatabase.instance
-                                              .deleteMessageByConvId(widget
-                                                  .conversations
-                                                  .value[index]
-                                                  .id);
-                                          widget.conversations.value
-                                              .removeAt(index);
-                                          widget.conversations
-                                              .notifyListeners();
-                                          widget.onDelete(true);
-                                        }
-                                      },
-                                      isMessageRead: true,
-                                    ),
-                                  );
-                          },
-                        ),
-                      );
-                    }),
+                        itemCount: conversationlist.length,
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.only(top: 4),
+                        itemBuilder: (context, index) {
+                          if (conversationlist[index].gameType ==
+                              GameType.p2pchat) return Container();
+                          if (kIsWeb) {
+                            return _buildWebConversationItem(
+                                context, conversationlist[index], index);
+                          } else if (Platform.isMacOS || Platform.isWindows) {
+                            return _buildDesktopConversationItem(
+                                context, conversationlist[index], index);
+                          } else {
+                            return _buildMobileConversationItem(
+                                context, conversationlist[index], index);
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
           );
+  }
+
+  Widget _buildDesktopConversationItem(
+      BuildContext context, Conversation conversation, int index) {
+    return ConversationListItem(
+      key: Key(conversation.id),
+      conversation: conversation,
+      onSelected: () {
+        widget.onTap(conversation);
+      },
+      onDeleteTap: () async {
+        await _deleteConversation(index);
+        widget.onDelete(true);
+      },
+      onSettingsTap: () async {
+        bool? deleteConfirmation = await showAlertDialog(context);
+        if (deleteConfirmation == true) {
+          await _deleteConversation(index);
+          widget.onDelete(true);
+        }
+      },
+      isMessageRead: true,
+    );
+  }
+
+  Widget _buildWebConversationItem(
+      BuildContext context, Conversation conversation, int index) {
+    return ConversationListItem(
+      key: Key(conversation.id),
+      conversation: conversation,
+      onSelected: () {
+        widget.onTap(conversation);
+      },
+      onDeleteTap: () async {
+        await _deleteConversation(index);
+        widget.onDelete(true);
+      },
+      onSettingsTap: () async {
+        bool? deleteConfirmation = await showAlertDialog(context);
+        if (deleteConfirmation == true) {
+          await _deleteConversation(index);
+          widget.onDelete(true);
+        }
+      },
+      isMessageRead: true,
+    );
+  }
+
+  Widget _buildMobileConversationItem(
+      BuildContext context, Conversation conversation, int index) {
+    return Dismissible(
+      key: Key(conversation.id),
+      direction: DismissDirection.endToStart,
+      onDismissed: (direction) async {
+        await _deleteConversation(index);
+        setState(() {
+          widget.conversations.value.removeAt(index);
+        });
+        widget.onDelete(true);
+      },
+      background: Container(
+        color: const Color.fromARGB(255, 233, 56, 43),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: const Icon(
+          Icons.delete,
+          color: Colors.white,
+        ),
+      ),
+      child: ConversationListItem(
+        key: Key(conversation.id),
+        conversation: conversation,
+        onSelected: () {
+          widget.onTap(conversation);
+        },
+        onDeleteTap: () async {
+          await _deleteConversation(index);
+          widget.onDelete(true);
+        },
+        onSettingsTap: () async {
+          bool? deleteConfirmation = await showAlertDialog(context);
+          if (deleteConfirmation == true) {
+            await _deleteConversation(index);
+            widget.onDelete(true);
+          }
+        },
+        isMessageRead: true,
+      ),
+    );
+  }
+
+  Future<void> _deleteConversation(int index) async {
+    await ConversationDatabase.instance
+        .delete(widget.conversations.value[index].id);
+    print(
+        "[ deleted conversation from table : convId: ${widget.conversations.value[index].id}]");
+    await ConversationDatabase.instance
+        .deleteMessageByConvId(widget.conversations.value[index].id);
+    print(
+        "[ deleted msgs from table with convId: ${widget.conversations.value[index].id}]");
+    try {
+      widget.conversations.value.removeAt(index);
+    } catch (e) {
+      print(e);
+    }
+    widget.conversations.notifyListeners();
   }
 
   Future<String?> showGameOptions(

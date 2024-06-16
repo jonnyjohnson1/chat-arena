@@ -7,7 +7,6 @@ import 'package:chat/models/games_config.dart';
 import 'package:chat/p2p_chat_panel/conversation_list_item.dart';
 import 'package:chat/p2p_chat_panel/join_chat_dialog.dart';
 import 'package:chat/services/websocket_chat_client.dart';
-import 'package:chat/shared/markdown_display.dart/markdown_text.dart';
 import 'package:chat/theming/theming_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

@@ -84,8 +84,8 @@ class _ChatGamePageState extends State<ChatGamePage> {
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     userModel = Provider.of<ValueNotifier<User>>(context, listen: false);
 
-    initData();
     debugPrint("\t[ Chat :: GamePage initState ]");
+    initData();
   }
 
   String generatedChat = "";

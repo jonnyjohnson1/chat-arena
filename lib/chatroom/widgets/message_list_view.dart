@@ -21,13 +21,11 @@ class MessageListView extends StatefulWidget {
 class _MessageListViewState extends State<MessageListView> {
   late ScrollController _listViewController;
   late ValueNotifier<User> userModel;
-  late List<Message> reversedList;
 
   @override
   void initState() {
     _listViewController = ScrollController();
     userModel = Provider.of<ValueNotifier<User>>(context, listen: false);
-    reversedList = widget.messages.reversed.toList();
     super.initState();
   }
 
@@ -44,8 +42,11 @@ class _MessageListViewState extends State<MessageListView> {
     }
   }
 
+  List<Message> reversedList = [];
+
   @override
   Widget build(BuildContext context) {
+    reversedList = widget.messages.reversed.toList();
     return Container(
         color: Colors.white,
         child: widget.messages.isNotEmpty

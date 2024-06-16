@@ -61,14 +61,16 @@ graph TD
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-        height: 600,
-        child: WebViewX(
-          width: 280,
+    return IgnorePointer(
+      child: SizedBox(
           height: 600,
-          initialContent: getHtmlString(),
-          initialSourceType: SourceType.html,
-          onWebViewCreated: (controller) => webviewController = controller,
-        ));
+          child: WebViewX(
+            width: 280,
+            height: 600,
+            initialContent: getHtmlString(),
+            initialSourceType: SourceType.html,
+            onWebViewCreated: (controller) => webviewController = controller,
+          )),
+    );
   }
 }

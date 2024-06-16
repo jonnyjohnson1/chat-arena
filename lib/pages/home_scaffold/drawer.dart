@@ -34,11 +34,11 @@ class PageViewDrawer extends StatefulWidget {
 }
 
 class _PageViewDrawerState extends State<PageViewDrawer> {
-  int bottomSelectedIndex = 2;
+  int bottomSelectedIndex = 1;
   bool drawerIsOpen = true;
 
   PageController pageController = PageController(
-    initialPage: 2,
+    initialPage: 1,
     keepPage: true,
   );
 
