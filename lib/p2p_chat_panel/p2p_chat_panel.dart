@@ -1,12 +1,10 @@
 import 'dart:io';
 
-import 'package:chat/analytics_drawer/mermaid_widget.dart';
-import 'package:chat/chat_panel/conversation_list_item.dart';
 import 'package:chat/models/game_models/debate.dart';
-import 'package:chat/models/games_config.dart';
 import 'package:chat/p2p_chat_panel/conversation_list_item.dart';
 import 'package:chat/p2p_chat_panel/join_chat_dialog.dart';
 import 'package:chat/services/websocket_chat_client.dart';
+import 'package:chat/shared/string_conversion.dart';
 import 'package:chat/theming/theming_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -57,18 +55,26 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
 
   Future<void> joinChat(P2PChatGame gameSettings, context) async {
     debugPrint("[ joinChat ]");
-    String checkUrl = gameSettings.serverHostAddress!;
-    WebSocketChatClient client = WebSocketChatClient(url: checkUrl);
-    bool serverIsUp = await client.testEndpoint();
+    String httpsUrl = gameSettings.serverHostAddress!.isNotEmpty
+        ? makeHTTPSAddress(gameSettings.serverHostAddress!)
+        : 'http://127.0.0.1:13394';
+    print("\t[ using host address $httpsUrl to check server ]");
+    WebSocketChatClient testClient = WebSocketChatClient(url: httpsUrl);
+    bool serverIsUp = await testClient.testEndpoint();
     if (!serverIsUp) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('\t[ could not connect :: URL{$checkUrl} ]'),
+          content: Text('\t[ could not connect :: URL{$httpsUrl} ]'),
         ),
       );
     }
+
     if (serverIsUp) {
-      debugPrint("\t[ server check good :: connecting to $checkUrl ]");
+      String wssUrl = gameSettings.serverHostAddress!.isNotEmpty
+          ? makeWebSocketAddress(gameSettings.serverHostAddress!)
+          : 'ws://127.0.0.1:13394';
+      var host = Uri.parse(wssUrl).host;
+      debugPrint("\t[ server check good :: connecting to $host ]");
 
       // create the conversation with the game settings option
       Conversation newConversation = Conversation(
@@ -169,8 +175,6 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
                   ],
                 ),
               ),
-              // WebViewWidget(),
-              // MermaidWidget(),
               Expanded(
                 child: ValueListenableBuilder(
                     valueListenable: widget.conversations,

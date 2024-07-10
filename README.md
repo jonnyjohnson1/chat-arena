@@ -5,6 +5,8 @@
   <em>An App to Host Dialogues' Games</em>
 </p>
 
+If you are using this project, we want to hear from you!
+[feedback](https://tally.so/r/3yyQQ6)
 
 # Dialogues Games
 

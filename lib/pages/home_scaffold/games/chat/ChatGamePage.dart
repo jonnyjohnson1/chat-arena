@@ -138,6 +138,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
           }
         }
       } else {
+        // debugPrint(generatedChat);
         toksPerSec = response.toksPerSec;
         while (generatedChat.startsWith("\n")) {
           generatedChat = generatedChat.substring(2);

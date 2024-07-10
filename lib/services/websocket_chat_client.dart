@@ -1,8 +1,5 @@
 import 'dart:convert';
 
-import 'package:chat/models/conversation.dart';
-import 'package:chat/models/messages.dart';
-import 'package:chat/shared/string_conversion.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
@@ -17,11 +14,17 @@ class WebSocketChatClient {
   void connect(Map<String, dynamic> initData, Function listenerCallback,
       Function websocketDone, Function websocketError) {
     String path = "/ws/chat";
+    print("\t[ attempting to connect to ${url + path}]");
     channel = WebSocketChannel.connect(Uri.parse(url + path));
+    if (channel == null) {
+      print("You must init the class first to connect to the websocket.");
+      return null;
+    }
     channel!.sink.add(json.encode(initData));
 
     channel!.stream.listen((message) {
       dynamic decoded = jsonDecode(message);
+      print(decoded);
       listenerCallback(decoded);
     }, onDone: () {
       String message = 'WebSocket connection closed.';
@@ -50,7 +53,7 @@ class WebSocketChatClient {
   }
 
   Future<bool> testEndpoint() async {
-    // local endpoint: http://127.0.0.1:13349
+    // local endpoint: http://127.0.0.1:13394
     try {
       final url =
           Uri.parse("${this.url}/test"); // Replace with your server address

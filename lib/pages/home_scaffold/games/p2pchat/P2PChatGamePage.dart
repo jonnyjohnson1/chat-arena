@@ -80,7 +80,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late ValueNotifier<Conversation?> currentSelectedConversation;
   late ValueNotifier<User> userModel;
-  WebSocketChatClient client = WebSocketChatClient(url: 'ws://127.0.0.1:13349');
+  WebSocketChatClient client = WebSocketChatClient(url: 'ws://0.0.0.0:13394');
 
   bool clientIsConnected = false;
   late MessageProcessor messageProcessor;
@@ -105,8 +105,10 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
 
         String url = gameSettings.serverHostAddress!.isNotEmpty
             ? makeWebSocketAddress(gameSettings.serverHostAddress!)
-            : 'ws://127.0.0.1:13349';
-        print("[ using url $url to connect to server ]");
+            : 'ws://0.0.0.0:13394';
+        // var host = Uri.parse(url).host;
+
+        debugPrint("\t[ using url $url to connect to server ]");
         client.url = url;
 
         // here we must create a conversation id on init so the server has a reference to it
@@ -136,7 +138,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
           "username": gameSettings.username,
         };
 
-        print("\t[ connecting to :: url ${client.url} ]");
+        debugPrint("\t[ connecting to :: url ${client.url} ]");
         client.connect(data, listenerCallback, websocketDisconnectListener,
             websocketErrorListener);
         setState(() {
@@ -146,13 +148,13 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
       });
     } else {
       // this path is the join chat option
-      print('\t[ joining server ]');
+      debugPrint('\t[ joining server ]');
       P2PChatGame gameSettings = widget.conversation!.gameModel;
 
       String url = gameSettings.serverHostAddress != null
           ? makeWebSocketAddress(gameSettings.serverHostAddress!)
-          : 'ws://127.0.0.1:13349';
-      print("[ using url $url to connect to server ]");
+          : 'wss://0.0.0.0:13394';
+
       client.url = url;
       if (gameSettings.initState != null) {
         if (gameSettings.initState == P2PServerInitState.join) {
@@ -244,9 +246,9 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     messages.add(message);
     print("[ added server message to messages ]");
     sessionId = listenerMessage['session_id'];
-    setState(() {});
-    // TODO iF Server message is to say new person has joined, then add participant to game model
-    //
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _processUserMessage(Map<String, dynamic> listenerMessage) {
@@ -268,7 +270,9 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
         type: uiMessage.MessageType.text);
     messages.add(message);
     print("added user message to messages");
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
     // send received user's message for processing
     sendMessageForProcessing(messageProcessor, message, widget.conversation!);
   }
@@ -431,7 +435,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     // For now, let's assume it returns a dummy address after some delay.
     await Future.delayed(const Duration(seconds: 2));
     return P2PChatGame(
-        serverHostAddress: "http://127.0.0.1:13349",
+        serverHostAddress: "http://0.0.0.0:13394",
         maxParticipants: 5,
         username: username);
   }
