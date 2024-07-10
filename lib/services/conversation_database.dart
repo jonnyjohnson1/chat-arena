@@ -248,7 +248,7 @@ CREATE TABLE $tableMessages (
     final db = await instance.database;
 
     const orderBy = '${MessageFields.timestamp} ASC';
-    debugPrint("\t\t[ Fetching all messages for ${conversationID} ]");
+    debugPrint("\t\t[ Fetching all messages for $conversationID ]");
     final result = await db.query(tableMessages,
         where: '${MessageFields.conversationID} = ?',
         whereArgs: [conversationID],

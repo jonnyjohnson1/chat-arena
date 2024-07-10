@@ -5,12 +5,7 @@ import 'package:flutter/material.dart';
 
 const String tableMessages = 'messages';
 
-enum MessageType {
-  text,
-  image,
-  poll,
-  deleted,
-}
+enum MessageType { text, image, poll, deleted, server }
 
 class MessageFields {
   static const List<String> values = [

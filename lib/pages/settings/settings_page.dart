@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:chat/models/display_configs.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -263,8 +265,10 @@ class _SettingsPageState extends State<SettingsPage>
       contentPadding: EdgeInsets.symmetric(horizontal: 10),
     );
     TextStyle style = const TextStyle(fontSize: 14);
+
     _customEndpointController.text =
         displayConfigData.value.apiConfig.customEndpoint;
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
@@ -389,9 +393,9 @@ class _SettingsPageState extends State<SettingsPage>
                       color: isActive
                           ? const Color.fromARGB(255, 222, 222, 222)
                           : const Color.fromARGB(255, 213, 213, 213),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: const Offset(0, 3),
+                      spreadRadius: 3,
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -469,7 +473,7 @@ class _SettingsPageState extends State<SettingsPage>
                           : const Color.fromARGB(255, 213, 213, 213),
                       spreadRadius: 3,
                       blurRadius: 5,
-                      offset: const Offset(0, 3),
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -498,9 +502,9 @@ class _SettingsPageState extends State<SettingsPage>
               height: 20,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                    (Set<WidgetState> states) {
-                      if (states.contains(WidgetState.pressed)) {
+                  backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                    (Set<MaterialState> states) {
+                      if (states.contains(MaterialState.pressed)) {
                         return const Color.fromARGB(255, 122, 11, 158);
                       }
                       return value2
@@ -508,14 +512,14 @@ class _SettingsPageState extends State<SettingsPage>
                           : const Color.fromARGB(255, 193, 193, 193);
                     },
                   ),
-                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  elevation: WidgetStateProperty.all<double>(5),
-                  shadowColor: WidgetStateProperty.resolveWith<Color>(
-                    (Set<WidgetState> states) {
+                  elevation: MaterialStateProperty.all<double>(5),
+                  shadowColor: MaterialStateProperty.resolveWith<Color>(
+                    (Set<MaterialState> states) {
                       return value2
                           ? const Color.fromARGB(255, 222, 222, 222)
                           : const Color.fromARGB(255, 213, 213, 213);

@@ -5,6 +5,8 @@
   <em>An App to Host Dialogues' Games</em>
 </p>
 
+If you are using this project, we want to hear from you!
+[feedback](https://tally.so/r/3yyQQ6)
 
 # Dialogues Games
 
@@ -24,5 +26,6 @@ Ask questions on your images. Be sure to have a vision model installed. (We use 
 - Install Flutter
 - Install ollama
 
-2. For running web or iOS/macOS/android:
-  1. follow the commenting instructions in this file: `lib/services/web_specific_queries.dart.`. We need a better way of doing this, but it's the way for now.
+2. Run the project 
+`flutter run`
+

@@ -4,7 +4,7 @@ import '../../../../models/messages.dart';
 
 class MessageListViewChild extends StatelessWidget {
   final _isOurMessage;
-  final _message;
+  final Message _message;
 
   const MessageListViewChild(this._isOurMessage, this._message, {super.key});
 
@@ -13,6 +13,14 @@ class MessageListViewChild extends StatelessWidget {
     switch (_message.type) {
       case MessageType.text:
         return MessageTypeBubble(_isOurMessage, _message);
+
+      case MessageType.server:
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("[ server :: ${_message.message!.value} ]"),
+          ],
+        );
 
       case MessageType.deleted:
       // return DeletedMessageTypeBubble(

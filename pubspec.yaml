@@ -4,7 +4,7 @@ description: "Conversation games for better communication"
 # Prevent accidental publishing to pub.dev.
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.2+1
 
 environment:
   sdk: '>=3.2.6 <4.0.0'
@@ -27,7 +27,7 @@ dependencies:
   path_provider: ^2.1.1 # reads file path
   url_launcher: ^6.1.14
   device_info_plus: ^9.1.1 # detect device type
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.2.3
   sqflite: ^2.3.1 # for local database
   sqflite_common_ffi: any
   sqflite_common_ffi_web: ^0.4.2+3
@@ -39,6 +39,13 @@ dependencies:
   image_downloader: ^0.31.0
   universal_html: ^2.0.5  # For web download
   markdown_widget: ^2.3.2+6
+  visibility_detector: ^0.4.0+2
+  # webview_flutter: ^2.0.9
+  webview_flutter: ^4.8.0
+  webviewx_plus: ^0.5.0
+  # flutter_inappwebview: ^6.0.0
+  # flutter_webview_plugin: ^0.4.0
+  # webview_all: ^0.1.3
   
 dev_dependencies:
   flutter_test:

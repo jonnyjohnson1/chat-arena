@@ -6,6 +6,9 @@ import 'package:chat/pages/home_scaffold/home_page_layout_manager.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:chat/services/tools.dart';
+import 'package:chat/models/user.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,12 +25,25 @@ class _HomePageState extends State<HomePage> {
       ValueNotifier(MemoryConfig(totalMemory: 17, usedMemory: 0.0));
 
   ValueNotifier<List<Conversation>> conversations = ValueNotifier([]);
+  ValueNotifier<User> userId = ValueNotifier(User(uid: ""));
 
   @override
   void initState() {
     _loadModelListFromAppConfig;
     refreshConversationDatabase();
+    getUserID();
+    // load senderID from sharedPrefs if none: ,
     super.initState();
+  }
+
+  void getUserID() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? _uid = prefs.getString('userId');
+    if (_uid == null) {
+      _uid = Tools().getRandomString(12);
+      await prefs.setString('userId', _uid);
+    }
+    userId.value.uid = _uid;
   }
 
   bool isLoadingConversations = false;
@@ -65,7 +81,8 @@ class _HomePageState extends State<HomePage> {
         ChangeNotifierProvider<ValueNotifier<Conversation?>>.value(
             value: currentSelectedConversation),
         ChangeNotifierProvider<ValueNotifier<DisplayConfigData>>.value(
-            value: displayConfigData)
+            value: displayConfigData),
+        ChangeNotifierProvider<ValueNotifier<User>>.value(value: userId),
       ],
       child: HomePageLayoutManager(
         title: title,

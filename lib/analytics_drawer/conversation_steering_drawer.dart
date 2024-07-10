@@ -269,27 +269,33 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
               metaMessageConvId = messages.value.isEmpty
                   ? Tools().getRandomString(12)
                   : messages.value.first.id;
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          buildGenerationSuggestions(context),
-                          const SizedBox(height: 8),
-                          buildQueryInput(context),
-                          const SizedBox(height: 4),
-                          buildModelSelector(context),
-                          buildTabBar(),
-                          buildTabContent(),
-                        ],
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  FocusScope.of(context).requestFocus(FocusNode());
+                },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            buildGenerationSuggestions(context),
+                            const SizedBox(height: 8),
+                            buildQueryInput(context),
+                            const SizedBox(height: 4),
+                            buildModelSelector(context),
+                            buildTabBar(),
+                            buildTabContent(),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  buildFooter(context),
-                ],
+                    buildFooter(context),
+                  ],
+                ),
               );
             },
           );
@@ -898,11 +904,11 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                                         state.didChange(newValue);
                                       });
                                     },
-                                    style: const TextStyle(fontSize: 14),
+                                    style: const TextStyle(fontSize: 13),
                                     decoration: const InputDecoration(
                                         border: InputBorder.none,
                                         hintText: 'Enter a focus...',
-                                        hintStyle: TextStyle(fontSize: 14)),
+                                        hintStyle: TextStyle(fontSize: 13)),
                                   ),
                                 ),
                                 Material(
@@ -1261,9 +1267,9 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                       color: value
                           ? const Color.fromARGB(255, 222, 222, 222)
                           : const Color.fromARGB(255, 213, 213, 213),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: const Offset(0, 3),
+                      spreadRadius: 3,
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),

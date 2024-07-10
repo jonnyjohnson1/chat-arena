@@ -1,4 +1,5 @@
 import 'package:chat/chat_panel/chat_panel.dart';
+import 'package:chat/p2p_chat_panel/p2p_chat_panel.dart';
 import 'package:chat/drawer/games_list_drawer.dart';
 import 'package:chat/drawer/settings_drawer.dart';
 import 'package:chat/models/conversation.dart';
@@ -6,6 +7,7 @@ import 'package:chat/models/games_config.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:chat/pages/home_scaffold/games/debate/DebateGamePage.dart';
 import 'package:chat/pages/home_scaffold/games/info_page.dart';
+import 'package:chat/pages/home_scaffold/games/p2pchat/P2PChatGamePage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -51,6 +53,9 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
     if (index == 1) {
       widget.title.value = "Chat Arena";
     }
+    if (index == 2) {
+      widget.title.value = "Chat Arena";
+    }
     widget.title.notifyListeners();
   }
 
@@ -93,6 +98,29 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
             widget.body.value = buildGamePage(chatSelected);
             widget.body.notifyListeners();
           },
+        ),
+        P2pConversationsList(
+          conversations: widget.conversations,
+          onDelete: (bool deleted) {
+            widget.body.value = ChatGamePage(
+              key: UniqueKey(),
+              conversation: null,
+              conversations: widget.conversations,
+            );
+            widget.body.notifyListeners();
+          },
+          onTap: (Conversation chatSelected) {
+            debugPrint(
+                "\t[ Switching to p2p conversation id :: ${chatSelected.id} ]");
+            // set title
+            String title = setTitle(chatSelected);
+            widget.title.value = title;
+            widget.title.notifyListeners();
+
+            // set homepage
+            widget.body.value = buildGamePage(chatSelected);
+            widget.body.notifyListeners();
+          },
         )
       ],
     );
@@ -105,6 +133,8 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
           return "Chat"; //conversation.title! ??
         case GameType.debate:
           return "Debate";
+        case GameType.p2pchat:
+          return "Chat";
         default:
           return "Chat";
       }
@@ -116,7 +146,15 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
   Widget buildGamePage(Conversation? conversation) {
     if (conversation != null) {
       switch (conversation.gameType) {
+        case GameType.p2pchat:
+          print("buildGamePage P2PChat");
+          return P2PChatGamePage(
+            key: Key("${conversation.id}-home"),
+            conversation: conversation,
+            conversations: widget.conversations,
+          );
         case GameType.chat:
+          print("buildGamePage Chat");
           return ChatGamePage(
             key: Key("${conversation.id}-home"),
             conversation: conversation,
@@ -166,9 +204,9 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
                 padding: const EdgeInsets.all(8.0),
                 child: Icon(
                   Icons.settings,
-                  color: 1 == bottomSelectedIndex
-                      ? unselectedColor
-                      : Colors.grey[800],
+                  color: 0 == bottomSelectedIndex
+                      ? Colors.grey[800]
+                      : unselectedColor,
                   size: 21,
                 ),
               ))),
@@ -184,9 +222,26 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Icon(CupertinoIcons.chat_bubble_text_fill,
-                    color: 0 == bottomSelectedIndex
-                        ? unselectedColor
-                        : chatBubbleColor,
+                    color: 1 == bottomSelectedIndex
+                        ? chatBubbleColor
+                        : unselectedColor,
+                    size: 19),
+              ))),
+      const SizedBox(
+        width: 7,
+      ),
+      AnimatedScale(
+          duration: const Duration(milliseconds: 160),
+          scale: 2 == bottomSelectedIndex ? 1.15 : 1,
+          child: InkWell(
+              borderRadius: const BorderRadius.all(Radius.circular(5)),
+              onTap: () => bottomTapped(2),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Icon(CupertinoIcons.person_2_fill,
+                    color: 2 == bottomSelectedIndex
+                        ? personIconColor
+                        : unselectedColor,
                     size: 19),
               ))),
     ];

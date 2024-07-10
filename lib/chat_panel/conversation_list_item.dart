@@ -51,6 +51,9 @@ class _ConversationListItemState extends State<ConversationListItem> {
       case GameType.debate:
         return const Icon(CupertinoIcons.group_solid,
             color: Color.fromARGB(255, 188, 144, 249), size: 26);
+      case GameType.p2pchat:
+        return Icon(CupertinoIcons.person_2_fill,
+            color: personIconColor, size: 26);
       default:
         return Icon(CupertinoIcons.chat_bubble_fill,
             color: Colors.blue[200], size: 26);
@@ -60,6 +63,8 @@ class _ConversationListItemState extends State<ConversationListItem> {
   String getTitle(GameType type) {
     switch (type) {
       case GameType.chat:
+        return widget.conversation.title!;
+      case GameType.p2pchat:
         return widget.conversation.title!;
       case GameType.debate:
         if (widget.conversation.gameModel != null) {

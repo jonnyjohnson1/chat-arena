@@ -47,20 +47,34 @@ class _VerticalDialogueChartState extends State<VerticalDialogueChart> {
   void didUpdateWidget(covariant VerticalDialogueChart oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.data != widget.data) {
+      debugPrint(widget.data.toString());
       _initializeState();
     }
   }
 
   void _initializeState() {
     participants = widget.data.keys.toList();
-    pairs = _generatePairs(participants);
-    selectedPair = pairs[0];
-    _setSelectedPairKeys(selectedPair);
+    if (participants.length >= 2) {
+      pairs = _generatePairs(participants);
+      selectedPair = pairs[0];
+      _setSelectedPairKeys(selectedPair);
 
-    sortedKeys = _getAllKeys(widget.data);
-    isFirstSortedMaxToMin = true;
-    isSecondSortedMaxToMin = false;
-    _sortKeysByFirstDataSet(isFirstSortedMaxToMin);
+      sortedKeys = _getAllKeys(widget.data);
+      isFirstSortedMaxToMin = true;
+      isSecondSortedMaxToMin = false;
+      _sortKeysByFirstDataSet(isFirstSortedMaxToMin);
+    } else if (participants.length == 1) {
+      String participant = participants.first;
+      pairs = [
+        "$participant & NA"
+      ]; // set default other user until another person joins the chat
+      selectedPair = pairs[0];
+      _setSelectedPairKeys(selectedPair);
+      sortedKeys = _getAllKeys(widget.data);
+
+      isFirstSortedMaxToMin = true;
+      isSecondSortedMaxToMin = false;
+    }
   }
 
   List<String> _generatePairs(List<String> participants) {

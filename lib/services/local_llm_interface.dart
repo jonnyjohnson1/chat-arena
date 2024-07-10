@@ -2,13 +2,16 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'package:chat/models/conversation.dart';
 import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/conversation_settings.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/llm.dart';
+import 'package:chat/models/user.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/shared/image_utils.dart';
+import 'package:chat/shared/string_conversion.dart';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
@@ -69,6 +72,7 @@ class LocalLLMInterface {
       String chatBotMsgId,
       ModelConfig model,
       DisplayConfigData displayConfigData,
+      User user,
       chatCallbackFunction,
       analysisCallBackFunction) {
     initChatWebsocket();
@@ -82,6 +86,7 @@ class LocalLLMInterface {
     List<Map<String, dynamic>> msgHist = [];
 
     for (Message msg in messageHistory) {
+      bool isUserMessage = msg.senderID! == user.uid;
       if (msg.images != null) {
         if (msg.images!.isNotEmpty) {
           try {
@@ -99,7 +104,7 @@ class LocalLLMInterface {
               images.add(path);
             }
             msgHist.add({
-              'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+              'role': isUserMessage ? "user" : msg.senderID!,
               'content': msg.message!.value,
               'images': images,
             });
@@ -108,13 +113,13 @@ class LocalLLMInterface {
           }
         } else {
           msgHist.add({
-            'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+            'role': isUserMessage ? "user" : msg.senderID!,
             'content': msg.message!.value
           });
         }
       } else {
         msgHist.add({
-          'role': msg.senderID!.isEmpty ? "user" : msg.senderID!,
+          'role': isUserMessage ? "user" : msg.senderID!,
           'content': msg.message!.value
         });
       }
@@ -479,6 +484,47 @@ class LocalLLMInterface {
     } catch (e) {
       debugPrint('Error: $e');
       return null;
+    }
+  }
+
+  Future<String> getMessageAnalytics(Message message, Conversation conversation,
+      String username, String role) async {
+    String route = "/p2p/process_message";
+
+    try {
+      final httpEnforced = makeHTTPSAddress("${httpAddress}$route");
+      final url = Uri.parse(httpEnforced); // Replace with your server address
+
+      final headers = {
+        "accept": "application/json; charset=utf-8",
+        "Content-Type": "application/json; charset=utf-8"
+      };
+      final body = json.encode({
+        "conversation_id": conversation.id,
+        "message_id": message.id,
+        "message": message.message!.value,
+        "current_topic": null,
+        "user_id": message.senderID,
+        "role": role,
+        "user_name": username,
+        "processing_config": {}
+      });
+      var response = await http.post(url, headers: headers, body: body);
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        // Set the message's analytics value
+        // print(
+        //     "\t[ response has key :: ${body['user_message'].containsKey(message.id)} ]");
+        message.baseAnalytics.value = body['user_message'][message.id];
+        message.baseAnalytics.notifyListeners();
+        return "True";
+      } else {
+        return "False";
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+      return "False";
     }
   }
 

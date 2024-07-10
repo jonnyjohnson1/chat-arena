@@ -25,7 +25,7 @@ class ConversationFields {
   static const String gameType = 'gameType';
 }
 
-enum GameType { chat, debate }
+enum GameType { chat, debate, p2pchat }
 
 class Conversation {
   String? title;
@@ -79,6 +79,8 @@ class Conversation {
       gameType = GameType.chat;
     } else if (map['gameType'] == 'debate') {
       gameType = GameType.debate;
+    } else if (map['gameType'] == 'p2pchat') {
+      gameType = GameType.p2pchat;
     }
 
     return Conversation(
@@ -98,6 +100,8 @@ class Conversation {
       gameType = GameType.chat;
     } else if (json[ConversationFields.gameType] == 'debate') {
       gameType = GameType.debate;
+    } else if (json[ConversationFields.gameType] == 'p2pchat') {
+      gameType = GameType.p2pchat;
     }
     return Conversation(
         id: json[ConversationFields.id] as String,
@@ -126,6 +130,8 @@ class Conversation {
         return 'chat';
       case GameType.debate:
         return 'debate';
+      case GameType.p2pchat:
+        return 'p2pchat';
       default:
         return '';
     }
@@ -137,6 +143,8 @@ class Conversation {
         return GameType.chat;
       case 'debate':
         return GameType.debate;
+      case 'p2pchat':
+        return GameType.p2pchat;
       default:
         return null;
     }
