@@ -288,9 +288,10 @@ class _ChatGamePageState extends State<ChatGamePage> {
         setState(() {});
       }
       // emulate streaming here
-
+      int delay = (105 / (1 + messageText.length))
+          .floor(); // Exponentially decreasing delay based on increased text length
       for (int i = 0; i <= messageText.length; i++) {
-        await Future.delayed(const Duration(milliseconds: 24), () {
+        await Future.delayed(Duration(milliseconds: delay), () {
           messages.last.message!.value = messageText.substring(0, i);
           messages.last.message!.notifyListeners();
         });
