@@ -252,7 +252,6 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
   }
 
   void _processUserMessage(Map<String, dynamic> listenerMessage) {
-    final newChatBotMsgId = Tools().getRandomString(32);
     String messageId = listenerMessage['message_id'];
     String username = listenerMessage["content"]["username"];
     String text = listenerMessage["content"]["text"];

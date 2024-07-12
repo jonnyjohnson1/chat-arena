@@ -2,7 +2,6 @@ import 'package:chat/models/custom_file.dart';
 import 'package:chat/shared/image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_downloader/image_downloader.dart';
 import 'package:universal_html/html.dart' as html;
 
 class ImagesListWidget extends StatefulWidget {

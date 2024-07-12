@@ -20,12 +20,12 @@ class ConversationFields {
   static const String title = 'title';
   static const String lastMessage = 'lastMessage';
   static const String image = 'image';
-  static const String primaryModel = 'primayModel';
+  static const String primaryModel = 'primaryModel';
   static const String time = 'time';
   static const String gameType = 'gameType';
 }
 
-enum GameType { chat, debate, p2pchat }
+enum GameType { chat, debate, p2pchat, play }
 
 class Conversation {
   String? title;

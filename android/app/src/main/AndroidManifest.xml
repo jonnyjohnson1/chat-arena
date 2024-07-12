@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Intern Permission -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Haptic Feedback Permission -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
     <application
         android:label="chat"
         android:name="${applicationName}"

@@ -38,6 +38,7 @@ class LocalLLMInterface {
   String chatEndpoint = "websocket_chat";
   String metaChatEndpoint = "websocket_meta_chat";
   String chatSummaryEndpoint = "websocket_chat_summary";
+  String mermaidChartEndpoint = "websocket_mermaid_chart";
 
   bool get isLocal => true;
   String get wsPrefix => isLocal ? 'ws' : 'wss';
@@ -63,6 +64,13 @@ class LocalLLMInterface {
     // Use ws for debugging, and wss for
     webSocket = WebSocketChannel.connect(
         Uri.parse('$wsPrefix://$extractedDiAPI/$chatSummaryEndpoint'));
+  }
+
+  void initMermaidChartWebsocket() {
+    String extractedDiAPI = httpAddress.split('/').last;
+    // Use ws for debugging, and wss for
+    webSocket = WebSocketChannel.connect(
+        Uri.parse('$wsPrefix://$extractedDiAPI/$mermaidChartEndpoint'));
   }
 
   void newChatMessage(
@@ -443,6 +451,70 @@ class LocalLLMInterface {
           case 'error':
             print(decoded['message']);
             print("handle error");
+          default:
+            print(decoded['status']);
+            break;
+        }
+      },
+      onError: (error) => print(error),
+      onDone: () {
+        print("WebSocket closed.");
+      },
+    );
+  }
+
+  void genMermaidChart(Message message, String convId, ModelConfig model,
+      {fullConversation = false}) {
+    initMermaidChartWebsocket();
+
+    if (webSocket == null) {
+      print("You must init the class first to connect to the websocket.");
+      return null;
+    }
+
+    Map<String, dynamic> submitPkg = {
+      "message": message.message!.value,
+      "conversation_id": convId,
+      "model": model.model.model,
+      "full_conversation": fullConversation ?? false,
+      "temperature": 0.06,
+    };
+
+    webSocket!.sink.add(json.encode(submitPkg));
+    debugPrint(
+        "\t\t[ Submitted package to websocket sink :: message ${message.message!.value}]");
+
+    DateTime? startTime = DateTime.now();
+
+    webSocket!.stream.listen(
+      (data) {
+        // print(data.runtimeType);
+        Map<String, dynamic> decoded = {};
+        try {
+          decoded = json.decode(data);
+        } catch (e) {
+          print("Error here");
+          print(e);
+        }
+
+        // print(decoded['status']);
+        // decoded['status'] has 4 options
+        // started, generating, completed, error
+        switch (decoded['status']) {
+          case 'generating':
+            int duration = DateTime.now().difference(startTime).inMilliseconds;
+            double durInSeconds = duration / 1000;
+            print(decoded['response'] + " :: $durInSeconds secs");
+          case 'completed':
+            // UPDATE MERMAID CHART ON MESSAGE
+            int duration = DateTime.now().difference(startTime).inMilliseconds;
+            double durInSeconds = duration / 1000;
+            print(decoded['response'] + " :: $durInSeconds secs");
+            message.mermaidChart.value = decoded['response'];
+          case 'error':
+            print(decoded['message']);
+            print("handle error");
+            break;
           default:
             print(decoded['status']);
             break;

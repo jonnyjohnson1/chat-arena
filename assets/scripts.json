@@ -1,0 +1,51 @@
+{
+  "demos": [
+    {
+      "author": "Chris Forrester",
+      "name": "Chess is better than Checkers",
+      "num_players": 2,
+      "starting_role": "userABC",
+      "type": [
+        "chat",
+        "debate"
+      ],
+      "script": [
+        {
+          "role": "user",
+          "data": {
+            "user_id": "userABC",
+            "content": "Checkers is better than chess because it is simpler."
+          }
+        },
+        {
+          "role": "user",
+          "data": {
+            "user_id": "userFED",
+            "content": "Chess is better than checkers because it has more depth."
+          }
+        },
+        {
+          "role": "user",
+          "data": {
+            "user_id": "userABC",
+            "content": "Checkers is better than chess because there are fewer rules."
+          }
+        },
+        {
+          "role": "user",
+          "data": {
+            "user_id": "userFED",
+            "content": "Chess is better than checkers because it requires more strategy."
+          }
+        },
+        {
+          "role": "user",
+          "data": {
+            "user_id": "userABC",
+            "content": "Checkers is better than chess because it is faster."
+          }
+        }
+      ]
+    }
+  ]
+}

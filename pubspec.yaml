@@ -36,7 +36,7 @@ dependencies:
   aligned_dialog: ^0.0.6
   load_switch: ^2.1.0
   extended_text: ^13.0.0
-  image_downloader: ^0.31.0
+  # image_downloader: ^0.31.0
   universal_html: ^2.0.5  # For web download
   markdown_widget: ^2.3.2+6
   visibility_detector: ^0.4.0+2
@@ -79,3 +79,4 @@ flutter:
     - assets/images/
     - assets/app-config.json
     - assets/steering-suggestions.json
+    - assets/scripts.json

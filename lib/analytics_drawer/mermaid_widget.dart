@@ -1,24 +1,64 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webviewx_plus/webviewx_plus.dart';
 
 class MermaidWidget extends StatefulWidget {
-  const MermaidWidget({super.key});
+  final String mermaidText;
+  final double? width;
+  final double? height;
+  final bool alignTop;
+
+  const MermaidWidget({
+    required this.mermaidText,
+    this.width,
+    this.height,
+    this.alignTop = true,
+    super.key,
+  });
 
   @override
   State<MermaidWidget> createState() => _MermaidWidgetState();
 }
 
 class _MermaidWidgetState extends State<MermaidWidget> {
-  late WebViewXController webviewController;
-  String mermaidText = """
-graph TD
-              A[Start] --> B[Step 1]
-              B --> C{Decision}
-              C -->|Yes| D[Step 2]
-              C -->|No| E[End]
-              D --> F[End]
-""";
-  String getHtmlString() => """
+  @override
+  Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return WebViewMermaid(
+        mermaidText: widget.mermaidText,
+        width: widget.width,
+        height: widget.height,
+      );
+    } else if (Platform.isMacOS || Platform.isWindows) {
+      return Container();
+    } else if (Platform.isIOS || Platform.isAndroid) {
+      return WebViewMermaid(
+        mermaidText: widget.mermaidText,
+        width: widget.width,
+        height: widget.height,
+      );
+    }
+    return Container();
+  }
+}
+
+class WebViewMermaid extends StatelessWidget {
+  final String mermaidText;
+  final double? width;
+  final double? height;
+  final bool alignTop;
+
+  WebViewMermaid({
+    required this.mermaidText,
+    this.width,
+    this.height,
+    this.alignTop = true,
+    super.key,
+  });
+
+  String getHtmlString(String mermaidChart) => """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,7 +74,7 @@ graph TD
         body {
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Align content to the top */
+            align-items: ${alignTop ? 'flex-start' : 'center'}center; /* flex-start; /* Align content to the top */
             height: 100vh;
             margin: 0;
             padding: 0;
@@ -48,28 +88,56 @@ graph TD
 </head>
 <body>
     <div class="mermaid">
-        graph TD
-            A[Start] --> B[Step 1]
-            B --> C{Decision}
-            C -->|Yes| D[Step 2]
-            C -->|No| E[End]
-            D --> F[End]
+        $mermaidChart
     </div>
 </body>
 </html>
 """;
 
+  late WebViewXController webviewController;
+
+  String extractMermaidContent(String text) {
+    // Define the start and end delimiters
+    String startDelimiter = '```mermaid';
+    String endDelimiter = '```';
+
+    // Find the start and end indices
+    int startIndex = text.indexOf(startDelimiter);
+    int endIndex = text.lastIndexOf(endDelimiter);
+
+    // Check if both delimiters exist
+    if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
+      // Extract the content between the delimiters
+      return text
+          .substring(startIndex + startDelimiter.length, endIndex)
+          .trim();
+    }
+
+    // Return an empty string if delimiters are not found or invalid
+    return '';
+  }
+
+  String sampleMermaidText = """```mermaid
+graph TD;
+    Chess --> |is_a| Game;
+    Checkers --> |is_a| Game;
+    Chess --> |better_than| Checkers;
+```""";
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-        height: 450,
-        child: WebViewX(
-          width: 280,
-          height: 450,
-          ignoreAllGestures: true,
-          initialContent: getHtmlString(),
-          initialSourceType: SourceType.html,
-          onWebViewCreated: (controller) => webviewController = controller,
-        ));
+    String simpleText = mermaidText.isEmpty
+        ? extractMermaidContent(sampleMermaidText)
+        : extractMermaidContent(mermaidText);
+
+    return WebViewX(
+      width: width ?? MediaQuery.of(context).size.width, // ?? double.infinity,
+      height:
+          height ?? MediaQuery.of(context).size.height, // ?? double.infinity,
+      ignoreAllGestures: true,
+      initialContent: getHtmlString(simpleText),
+      initialSourceType: SourceType.html,
+      onWebViewCreated: (controller) => webviewController = controller,
+    );
   }
 }

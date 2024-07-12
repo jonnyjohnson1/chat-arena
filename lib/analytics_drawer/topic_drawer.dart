@@ -136,11 +136,15 @@ class _GraphAnalyticsDrawerState extends State<GraphAnalyticsDrawer> {
                     child: SingleChildScrollView(
                         child: Builder(builder: (context) {
                       if (kIsWeb) {
-                        return const MermaidWidget();
+                        return const MermaidWidget(
+                          mermaidText: "",
+                        );
                       } else if (Platform.isMacOS || Platform.isWindows) {
                         return Container();
                       } else if (Platform.isIOS || Platform.isAndroid) {
-                        return const MermaidWidget();
+                        return const MermaidWidget(
+                          mermaidText: "",
+                        );
                       }
                       return Container();
                     })),

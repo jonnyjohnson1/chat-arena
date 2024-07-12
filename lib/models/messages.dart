@@ -54,6 +54,7 @@ class Message {
   bool isGenerating;
   List<ImageFile>? images;
   ValueNotifier<Map<String, dynamic>> baseAnalytics;
+  ValueNotifier<String> mermaidChart;
 
   Message({
     required this.id,
@@ -70,7 +71,10 @@ class Message {
     this.isGenerating = false,
     this.images,
     ValueNotifier<Map<String, dynamic>>? baseAnalytics,
-  }) : baseAnalytics = baseAnalytics ?? ValueNotifier<Map<String, dynamic>>({});
+    ValueNotifier<String>? mermaidChart,
+  })  : baseAnalytics =
+            baseAnalytics ?? ValueNotifier<Map<String, dynamic>>({}),
+        mermaidChart = mermaidChart ?? ValueNotifier<String>("");
 
   // Convert the Message instance to a Map
   Map<String, dynamic> toMap() {

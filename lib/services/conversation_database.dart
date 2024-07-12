@@ -11,7 +11,7 @@ import '../models/messages.dart';
 class ConversationDatabase {
   static final ConversationDatabase instance = ConversationDatabase._init();
   static Database? _database;
-  static String dbPath = 'test17.db';
+  static String dbPath = 'test19.db';
   ConversationDatabase._init();
 
   Future<Database> get database async {
