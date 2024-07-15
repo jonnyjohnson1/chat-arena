@@ -294,107 +294,163 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                               );
                       }),
 
-                ValueListenableBuilder(
-                    valueListenable: displayConfigData,
-                    builder: (context, displayConfig, _) {
-                      ValueNotifier<Scripts?> scripts =
-                          Provider.of<ValueNotifier<Scripts?>>(context,
-                              listen: false);
-                      selectedScript = Provider.of<ValueNotifier<Script?>>(
-                          context,
-                          listen: false);
-                      if (displayConfig.demoMode) {
-                        return Row(
-                          children: [
-                            const SizedBox(
-                              width: 6,
-                            ),
-                            const Icon(
-                              Icons.play_lesson_outlined,
-                              size: 15,
-                              color: Colors.black87,
-                            ),
-                            const SizedBox(
-                              width: 6,
-                            ),
-                            const Text("Demo mode"),
-                            const SizedBox(
-                              width: 15,
-                            ),
-                            Material(
-                              color: Colors.white,
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10)),
-                                ),
-                                width: 135,
-                                height: 28,
-                                child: DropdownButton<Script>(
-                                  hint: Padding(
-                                    padding: const EdgeInsets.only(top: 5.0),
-                                    child: Center(
-                                      child: Text(
-                                        selectedScript.value == null
-                                            ? 'scripts'
-                                            : selectedScript.value!.name,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ),
-                                  ),
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(10)),
-                                  alignment: Alignment.center,
-                                  underline: Container(),
-                                  isDense: true,
-                                  elevation: 4,
-                                  padding: EdgeInsets.zero,
-                                  itemHeight: null,
-                                  isExpanded: true,
-                                  items: scripts.value!.demos
-                                      .map<DropdownMenuItem<Script>>((item) {
-                                    return DropdownMenuItem<Script>(
-                                      value: item,
-                                      alignment: Alignment.centerLeft,
-                                      child: SizedBox(
-                                        width: 170,
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                                child: Text(
-                                              item.name,
-                                              style:
-                                                  const TextStyle(fontSize: 14),
-                                              overflow: TextOverflow.ellipsis,
-                                              // style: TextStyle(
-                                              //     fontSize:
-                                              //         16)),
-                                            )),
-                                            Text(" (${item.author})",
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                    fontSize: 11)),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (Script? newValue) {
-                                    setState(() {
-                                      selectedScript.value = newValue!;
-                                    });
-                                  },
-                                ),
-                              ),
-                            )
-                          ],
-                        );
-                      } else {
-                        return Container();
-                      }
-                    }),
+                Expanded(
+                  child: ValueListenableBuilder(
+                      valueListenable: displayConfigData,
+                      builder: (context, displayConfig, _) {
+                        // ValueNotifier<Scripts?> scripts =
+                        //     Provider.of<ValueNotifier<Scripts?>>(context,
+                        //         listen: false);
+                        selectedScript = Provider.of<ValueNotifier<Script?>>(
+                            context,
+                            listen: false);
+                        if (displayConfig.demoMode) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              // Material(
+                              //   color: Colors.white,
+                              //   child: Container(
+                              //     decoration: const BoxDecoration(
+                              //       color: Colors.white,
+                              //       borderRadius:
+                              //           BorderRadius.all(Radius.circular(10)),
+                              //     ),
+                              //     width: 135,
+                              //     height: 28,
+                              //     child: DropdownButton<Script>(
+                              //       hint: Padding(
+                              //         padding: const EdgeInsets.only(top: 5.0),
+                              //         child: Center(
+                              //           child: Text(
+                              //             selectedScript.value == null
+                              //                 ? 'scripts'
+                              //                 : selectedScript.value!.name,
+                              //             overflow: TextOverflow.ellipsis,
+                              //             style: const TextStyle(fontSize: 12),
+                              //           ),
+                              //         ),
+                              //       ),
+                              //       borderRadius: const BorderRadius.all(
+                              //           Radius.circular(10)),
+                              //       alignment: Alignment.center,
+                              //       underline: Container(),
+                              //       isDense: true,
+                              //       elevation: 4,
+                              //       padding: EdgeInsets.zero,
+                              //       itemHeight: null,
+                              //       isExpanded: true,
+                              //       items: scripts.value!.demos
+                              //           .map<DropdownMenuItem<Script>>((item) {
+                              //         return DropdownMenuItem<Script>(
+                              //           value: item,
+                              //           alignment: Alignment.centerLeft,
+                              //           child: SizedBox(
+                              //             width: 170,
+                              //             child: Row(
+                              //               children: [
+                              //                 Expanded(
+                              //                     child: Text(
+                              //                   item.name,
+                              //                   style: const TextStyle(
+                              //                       fontSize: 14),
+                              //                   overflow: TextOverflow.ellipsis,
+                              //                   // style: TextStyle(
+                              //                   //     fontSize:
+                              //                   //         16)),
+                              //                 )),
+                              //                 Text(" (${item.author})",
+                              //                     overflow:
+                              //                         TextOverflow.ellipsis,
+                              //                     style: const TextStyle(
+                              //                         fontSize: 11)),
+                              //               ],
+                              //             ),
+                              //           ),
+                              //         );
+                              //       }).toList(),
+                              //       onChanged: (Script? newValue) {
+                              //         setState(() {
+                              //           selectedScript.value = newValue!;
+                              //         });
+                              //       },
+                              //     ),
+                              //   ),
+                              // ),
+                              // Play and Pause buttons
+                              ValueListenableBuilder(
+                                  valueListenable: selectedScript,
+                                  builder: (context, script, _) {
+                                    return ValueListenableBuilder(
+                                        valueListenable: demoController,
+                                        builder: (context, demoCont, _) {
+                                          return IconButton(
+                                            tooltip: script == null
+                                                ? "select script"
+                                                : null,
+                                            icon: Icon(
+                                              demoCont.state == DemoState.pause
+                                                  ? Icons.play_arrow
+                                                  : Icons.pause,
+                                              color: script == null
+                                                  ? Colors.grey
+                                                  : demoCont.index ==
+                                                          script.script.length
+                                                      ? Colors.grey
+                                                      : Colors.black87,
+                                            ),
+                                            onPressed: () async {
+                                              if (script != null) {
+                                                print(
+                                                    "${demoCont.index} < ${script.script.length} = ${demoCont.index + 1 < script.script.length}");
+
+                                                if (demoCont.index <
+                                                    script.script.length) {
+                                                  demoCont.state =
+                                                      demoCont.state ==
+                                                              DemoState.pause
+                                                          ? DemoState.next
+                                                          : DemoState.pause;
+                                                  print(demoCont.state);
+                                                  print("switched");
+                                                  demoController
+                                                      .notifyListeners();
+                                                  // simulate looping through the messages here
+                                                  await Future.delayed(Duration(
+                                                      milliseconds: demoCont
+                                                              .autoPlay
+                                                          ? demoCont
+                                                              .durBetweenMessages
+                                                          : 80));
+                                                  demoCont.index += 1;
+                                                  demoCont.state =
+                                                      DemoState.pause;
+                                                  print(demoCont.state);
+                                                  print("switched back!");
+                                                  demoController
+                                                      .notifyListeners();
+                                                }
+                                              } else {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                    content: Center(
+                                                        child: Text(
+                                                            '[ select a script ]')),
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                          );
+                                        });
+                                  }),
+                            ],
+                          );
+                        } else {
+                          return Container();
+                        }
+                      }),
+                ),
                 const SizedBox(
                   width: 10,
                 ),
@@ -453,25 +509,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                       },
                     ),
                   ),
-                // Play and Pause buttons
-                ValueListenableBuilder(
-                    valueListenable: demoController,
-                    builder: (context, demoCont, _) {
-                      return IconButton(
-                        icon: Icon(demoCont.state == DemoState.pause
-                            ? Icons.play_arrow
-                            : Icons.pause),
-                        onPressed: () {
-                          setState(() {
-                            demoCont.state = demoCont.state == DemoState.pause
-                                ? DemoState.next
-                                : DemoState.pause;
-
-                            demoController.notifyListeners();
-                          });
-                        },
-                      );
-                    }),
               ],
             ),
 

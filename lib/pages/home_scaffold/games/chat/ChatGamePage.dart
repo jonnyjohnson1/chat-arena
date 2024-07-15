@@ -400,16 +400,10 @@ class _ChatGamePageState extends State<ChatGamePage> {
                             return ValueListenableBuilder(
                                 valueListenable: demoController,
                                 builder: (context, demoCont, _) {
-                                  print(demoCont.index);
-                                  print(selectedScript.value);
                                   if (selectedScript.value != null) {
-                                    print("here");
-                                    print(demoCont.state);
                                     if (demoCont.state == DemoState.next) {
-                                      print("here3");
                                       String messageText = selectedScript.value!
                                           .script[demoCont.index].data.content;
-
                                       Future(() async {
                                         if (widget.conversation == null) {
                                           await createNewConversation(
@@ -424,72 +418,12 @@ class _ChatGamePageState extends State<ChatGamePage> {
                                       });
                                     }
                                   }
-                                  return IconButton(
-                                    icon: Icon(
-                                      demoCont.state == DemoState.pause
-                                          ? Icons.play_arrow
-                                          : Icons.pause,
-                                      color: selectedScript.value == null
-                                          ? Colors.grey
-                                          : demoCont.index ==
-                                                  selectedScript
-                                                      .value!.script.length
-                                              ? Colors.grey
-                                              : Colors.black87,
-                                    ),
-                                    onPressed: () async {
-                                      if (selectedScript.value != null) {
-                                        print(
-                                            "${demoCont.index} < ${selectedScript.value!.script.length} = ${demoCont.index + 1 < selectedScript.value!.script.length}");
-
-                                        if (demoCont.index <
-                                            selectedScript
-                                                .value!.script.length) {
-                                          demoCont.state =
-                                              demoCont.state == DemoState.pause
-                                                  ? DemoState.next
-                                                  : DemoState.pause;
-                                          print(demoCont.state);
-                                          print("switched");
-                                          demoController.notifyListeners();
-                                          // simulate looping through the messages here
-                                          await Future.delayed(Duration(
-                                              milliseconds: demoCont.autoPlay
-                                                  ? demoCont.durBetweenMessages
-                                                  : 80));
-                                          demoCont.index += 1;
-                                          demoCont.state = DemoState.pause;
-                                          print(demoCont.state);
-                                          print("switched back!");
-                                          demoController.notifyListeners();
-                                        }
-                                      } else {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                            content: Center(
-                                                child: Text(
-                                                    '[ select a script ]')),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  );
+                                  return Container();
                                 });
                           } else {
                             return Container();
                           }
                         });
-                  }),
-              ValueListenableBuilder(
-                  valueListenable: selectedScript,
-                  builder: (ctx, val, _) {
-                    if (selectedScript.value != null) {
-                      selectedScript.value!.script.forEach((element) {
-                        print(element.data.content);
-                      });
-                    }
-                    return Container();
                   }),
               Expanded(
                 child: ChatRoomPage(
