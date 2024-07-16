@@ -4,7 +4,7 @@ enum DemoState { generating, next, pause }
 class DemoController {
   DemoState state;
   int index;
-  int durBetweenMessages = 800;
+  int durBetweenMessages = 1400;
   bool isTypeWritten;
   bool autoPlay;
 

@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
           useMaterial3: true,
           textSelectionTheme: const TextSelectionThemeData(
-              selectionColor: Color.fromARGB(255, 47, 182, 52))),
+              selectionColor: Color.fromARGB(255, 123, 81, 237))),
       home: const HomePage(),
     );
   }

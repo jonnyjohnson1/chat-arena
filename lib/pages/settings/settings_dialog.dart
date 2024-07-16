@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:chat/models/display_configs.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
@@ -59,6 +58,7 @@ class _SettingsDialogState extends State<SettingsDialog>
     calcImageGen = config.calcImageGen;
     calcMsgMermaidChart = config.calcMsgMermaidChart;
     calcConvMermaidChart = config.calcConvMermaidChart;
+    demoMode = config.demoMode;
   }
 
   Future<bool> _toggleRerunNEROnConversation() async {

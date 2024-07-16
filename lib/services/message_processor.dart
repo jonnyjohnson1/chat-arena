@@ -26,8 +26,8 @@ class MessageProcessor {
   final StreamController<QueueProcess> _processingQueueController =
       StreamController();
   int _numberOfProcesses = 0;
-
-  MessageProcessor() {
+  final Future<void> Function()? processCompleteFunction;
+  MessageProcessor({this.processCompleteFunction}) {
     _processQueue();
   }
 
@@ -65,13 +65,78 @@ class MessageProcessor {
       await _validateAndExecuteFunction(queueProcess);
       _numberOfProcesses--;
       print("Processes remain: $_numberOfProcesses");
-      if (_numberOfProcesses == 0) {
-        // print("Setting delay for progress bar to close");
-        Future.delayed(const Duration(seconds: 1), () {
-          // print("Setting progress bar to close");
-          // Add your progress bar logic here if necessary
-        });
+      if (_numberOfProcesses == 0 && processCompleteFunction != null) {
+        // Trigger your function when processes reach zero
+        if (_numberOfProcesses == 0 && processCompleteFunction != null) {
+          await processCompleteFunction!();
+        }
+      }
+
+      void _triggerFunctionWhenProcessesZero() {
+        // Replace this with your function logic to do something when processes reach zero
+        print("All processes completed. Triggering function...");
+      }
+
+      void dispose() {
+        _processingQueueController.close();
       }
     }
   }
 }
+
+// class MessageProcessor {
+//   final StreamController<QueueProcess> _processingQueueController =
+//       StreamController();
+//   int _numberOfProcesses = 0;
+//   final Future<void> Function()? processCompleteFunction;
+
+//   MessageProcessor({this.processCompleteFunction});
+
+//   int get numberOfProcesses => _numberOfProcesses;
+
+//   void addProcess(QueueProcess process) {
+//     _processingQueueController.add(process);
+//     _numberOfProcesses++;
+//     print("Processes remain: $_numberOfProcesses");
+//   }
+
+//   Future<dynamic> _validateAndExecuteFunction(QueueProcess queueProcess) async {
+//     try {
+//       if (queueProcess.function == null) {
+//         throw Exception("Function is not set.");
+//       }
+
+//       if (!(queueProcess.function is Function)) {
+//         throw Exception("Invalid function type.");
+//       }
+
+//       if (queueProcess.args != null && !(queueProcess.args is Map)) {
+//         throw Exception("Arguments must be a Map.");
+//       }
+
+//       return await queueProcess.execute();
+//     } catch (e) {
+//       print("Error: ${e.toString()}");
+//       return null;
+//     }
+//   }
+
+//   void _processQueue() async {
+//     await for (var queueProcess in _processingQueueController.stream) {
+//       await _validateAndExecuteFunction(queueProcess);
+//       _numberOfProcesses--;
+//       print("Processes remain: $_numberOfProcesses");
+//       if (_numberOfProcesses == 0 && processCompleteFunction != null) {
+//         await processCompleteFunction!();
+//       }
+//     }
+//   }
+
+//   void dispose() {
+//     _processingQueueController.close();
+//   }
+
+//   Stream<QueueProcess> get processingQueueStream =>
+//       _processingQueueController.stream;
+// }
+  

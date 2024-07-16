@@ -49,15 +49,12 @@ class Script {
     List<ScriptContent> scriptContents =
         scriptList.map((script) => ScriptContent.fromJson(script)).toList();
 
-    scriptContents.forEach((element) {
-      print(element.data.userId == startingRole);
+    for (ScriptContent element in scriptContents) {
+      // print(element.data.userId == startingRole);
       if (element.data.userId == startingRole && uid != null) {
         element.data.userId = uid;
       }
-      print(element.data.content);
-      print(element.data.userId);
-      print(element.role);
-    });
+    }
 
     return Script(
         author: json['author'],

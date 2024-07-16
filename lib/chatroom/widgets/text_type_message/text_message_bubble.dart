@@ -363,14 +363,6 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                                                       350]);
                                                             }
                                                             return Container();
-                                                            RotatedBox(
-                                                              quarterTurns: 3,
-                                                              child: Icon(
-                                                                  Icons.schema,
-                                                                  color: Colors
-                                                                          .grey[
-                                                                      350]),
-                                                            );
                                                           })
                                                     ]),
                                                   ),

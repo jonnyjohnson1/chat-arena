@@ -247,9 +247,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                 ? setState(() {
                     analyticsDrawerIsOpen = !analyticsDrawerIsOpen;
                   })
-                :
-                // TODO open analyticsDrawer
-                endDrawerIsOpen
+                : endDrawerIsOpen
                     ? _scaffoldKey.currentState?.closeEndDrawer()
                     : _scaffoldKey.currentState?.openEndDrawer();
           }, onChatsTap: () {

@@ -84,7 +84,9 @@ buildAppBar(
                                         ],
                                       ),
                                     Text(
-                                      displayConfig.demoMode ? "Demo" : title,
+                                      displayConfig.demoMode
+                                          ? "Chat Demo"
+                                          : title,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     if (displayConfig.demoMode)

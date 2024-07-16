@@ -6,7 +6,6 @@ import 'package:chat/models/sys_resources.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:chat/pages/home_scaffold/home_page_layout_manager.dart';
 import 'package:chat/services/conversation_database.dart';
-import 'package:chat/services/json_loader.dart';
 import 'package:chat/services/scripts.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
