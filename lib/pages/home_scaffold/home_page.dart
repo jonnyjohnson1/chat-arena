@@ -6,6 +6,7 @@ import 'package:chat/models/sys_resources.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:chat/pages/home_scaffold/home_page_layout_manager.dart';
 import 'package:chat/services/conversation_database.dart';
+import 'package:chat/services/message_processor.dart';
 import 'package:chat/services/scripts.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -91,6 +92,7 @@ class _HomePageState extends State<HomePage> {
       ValueNotifier(DisplayConfigData());
   ValueNotifier<Conversation?> currentSelectedConversation =
       ValueNotifier(null);
+  MessageProcessor messageProcessor = MessageProcessor();
 
   @override
   Widget build(BuildContext context) {
@@ -106,6 +108,7 @@ class _HomePageState extends State<HomePage> {
         ChangeNotifierProvider<ValueNotifier<DemoController>>.value(
             value: demoController),
         ChangeNotifierProvider<ValueNotifier<User>>.value(value: userId),
+        Provider<MessageProcessor>.value(value: messageProcessor)
       ],
       child: HomePageLayoutManager(
         title: title,

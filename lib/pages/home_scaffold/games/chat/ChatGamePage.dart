@@ -17,6 +17,7 @@ import 'package:chat/services/tools.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/models/messages.dart' as uiMessage;
 import 'package:provider/provider.dart';
+import 'dart:math';
 
 late final dynamic
     llmInterface; // Can be LocalLLMInterface or DebateLLMInterface
@@ -80,6 +81,8 @@ class _ChatGamePageState extends State<ChatGamePage> {
   late ValueNotifier<User> userModel;
   late ValueNotifier<Scripts?> scripts;
   late ValueNotifier<Script?> selectedScript;
+  late MessageProcessor? messageProcessor;
+  ValueNotifier<bool> isProcessing = ValueNotifier(false);
 
   @override
   void initState() {
@@ -95,10 +98,26 @@ class _ChatGamePageState extends State<ChatGamePage> {
     scripts = Provider.of<ValueNotifier<Scripts?>>(context, listen: false);
     selectedScript =
         Provider.of<ValueNotifier<Script?>>(context, listen: false);
-
-    messageProcessor = MessageProcessor(processCompleteFunction: () async {
-      await _handleProcessCompleted();
-    });
+    messageProcessor = Provider.of<MessageProcessor>(context, listen: false);
+    // Listen to completion status changes
+    if (messageProcessor != null) {
+      messageProcessor!.completionStatus.listen((completed) async {
+        print("IsCompleted: ${messageProcessor!.isCompleted()}");
+        if (completed) {
+          if (demoController.value.autoPlay) {
+            print("\t[ ChatGamePage :: Processing completed :: auto-playing ]");
+          }
+        } else {
+          // Do something when processing is still ongoing
+          // print("Processing in progress.");
+        }
+      });
+    }
+    messageProcessor!.processDemoCompleteFunction = () async {
+      if (demoController.value.autoPlay) {
+        await _handleProcessCompleted();
+      }
+    };
 
     debugPrint("\t[ Chat :: GamePage initState ]");
     initData();
@@ -111,9 +130,6 @@ class _ChatGamePageState extends State<ChatGamePage> {
       Script? script = selectedScript.value;
       if (script != null) {
         if (demoCont.index < script.script.length) {
-          print(
-              "${demoCont.index} < ${script.script.length} = ${demoCont.index + 1 < script.script.length}");
-          debugPrint("\t[ chat demo :: auto-playing next message ]");
           await Future.delayed(
               Duration(
                   milliseconds: demoCont.autoPlay
@@ -123,10 +139,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
             demoController.notifyListeners();
             // simulate looping through the messages here
             await Future.delayed(
-                Duration(
-                    milliseconds: demoCont.autoPlay
-                        ? demoCont.durBetweenMessages
-                        : 80), () {
+                Duration(milliseconds: demoCont.autoPlay ? 650 : 80), () async {
               demoCont.index += 1;
               demoCont.state = DemoState.pause;
               demoController.notifyListeners();
@@ -171,10 +184,16 @@ class _ChatGamePageState extends State<ChatGamePage> {
               6) // run_mermaid_check // if tokens > 6
           {
             print("mermaid chart here");
-            LocalLLMInterface(displayConfigData.value.apiConfig)
+            await LocalLLMInterface(displayConfigData.value.apiConfig)
                 .genMermaidChart(messages[currentIdx - 1],
                     widget.conversation!.id, selectedModel,
                     fullConversation: false);
+
+            print("got");
+            // LocalLLMInterface(displayConfigData.value.apiConfig)
+            //     .genMermaidChartWS(messages[currentIdx - 1],
+            //         widget.conversation!.id, selectedModel,
+            //         fullConversation: false);
           }
         }
 
@@ -281,8 +300,6 @@ class _ChatGamePageState extends State<ChatGamePage> {
     messages.add(message);
   }
 
-  late MessageProcessor messageProcessor;
-
   Future<void> processDemoMessage(
       ScriptContent content, Conversation conversation) async {
     // make message
@@ -320,13 +337,14 @@ class _ChatGamePageState extends State<ChatGamePage> {
           isGenerating: true,
           type: uiMessage.MessageType.text);
       messages.add(message);
+
       //option to emulate streaming text here
       print("added user message to messages");
       if (mounted) {
         setState(() {});
       }
       // emulate streaming here
-      int delay = (105 / (1 + messageText.length))
+      int delay = (105 / sqrt(1 + messageText.length))
           .floor(); // Exponentially decreasing delay based on increased text length
       for (int i = 0; i <= messageText.length; i++) {
         await Future.delayed(Duration(milliseconds: delay), () {
@@ -340,14 +358,16 @@ class _ChatGamePageState extends State<ChatGamePage> {
 
     //option to emulate streaming text here
     print("added user message to messages");
+    await ConversationDatabase.instance
+        .createMessage(message); // save to database
     if (mounted) {
       setState(() {});
     }
     // send received user's message for processing
-    sendMessageForProcessing(messageProcessor, message, widget.conversation!);
-    conversation.lastMessage = messageText;
-    conversation.time = DateTime.now();
-    // conversation.;
+    sendMessageForProcessing(messageProcessor!, message, widget.conversation!);
+    widget.conversation!.lastMessage = messageText;
+    widget.conversation!.time = DateTime.now();
+    // conversation;
   }
 
   void sendMessageForProcessing(MessageProcessor processor,
@@ -365,36 +385,54 @@ class _ChatGamePageState extends State<ChatGamePage> {
       },
     ));
 
-    // TODO Queue the mermaid chart to process here too
+    if (displayConfigData.value.calcMsgMermaidChart) {
+      processor.addProcess(QueueProcess(
+        function: () async {
+          await LocalLLMInterface(displayConfigData.value.apiConfig)
+              .genMermaidChart(message, widget.conversation!.id, selectedModel,
+                  fullConversation: false);
+        },
+      ));
+    }
 
-    // proces the whole chat analytics
+    // process the whole chat analytics
     // Run all the post conversation analyses here
     // run sidebar calculations if config says so
-    // if (displayConfigData.value.showSidebarBaseAnalytics) {
-    //   // TODO the execution of this function could be more precise
-    //   await Future.delayed(const Duration(seconds: 2), () async {
-    //     ConversationData? data =
-    //         await LocalLLMInterface(displayConfigData.value.apiConfig)
-    //             .getChatAnalysis(widget.conversation!.id);
-    //     // return analysis to the Conversation object
-    //     widget.conversation!.conversationAnalytics.value = data;
-    //     widget.conversation!.conversationAnalytics.notifyListeners();
-    //   });
+    if (displayConfigData.value.showSidebarBaseAnalytics) {
+      processor.addProcess(QueueProcess(
+        function: () async {
+          await Future.delayed(const Duration(seconds: 2), () async {
+            ConversationData? data =
+                await LocalLLMInterface(displayConfigData.value.apiConfig)
+                    .getChatAnalysis(widget.conversation!.id);
+            // return analysis to the Conversation object
+            widget.conversation!.conversationAnalytics.value = data;
+            widget.conversation!.conversationAnalytics.notifyListeners();
+          });
+          demoController.value.state = DemoState.pause;
+          displayConfigData.notifyListeners();
+        },
+      ));
+    }
 
-    //   // get an image depiction of the conversation
-    //   if (displayConfigData.value.calcImageGen) {
-    //     ImageFile? imageFile =
-    //         await LocalLLMInterface(displayConfigData.value.apiConfig)
-    //             .getConvToImage(widget.conversation!.id);
-    //     if (imageFile != null) {
-    //       // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
-    //       widget.conversation!.convToImagesList.value.add(imageFile);
-    //       widget.conversation!.convToImagesList.notifyListeners();
-    //     }
-    //   }
-    //   demoController.value.state = DemoState.pause;
-    //   displayConfigData.notifyListeners();
-    // }
+// get an image depiction of the conversation
+    if (displayConfigData.value.calcImageGen) {
+      processor.addProcess(QueueProcess(
+        function: () async {
+          ImageFile? imageFile =
+              await LocalLLMInterface(displayConfigData.value.apiConfig)
+                  .getConvToImage(widget.conversation!.id);
+          if (imageFile != null) {
+            // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
+            widget.conversation!.convToImagesList.value.add(imageFile);
+            widget.conversation!.convToImagesList.notifyListeners();
+          }
+        },
+      ));
+    }
+
+    demoController.value.state = DemoState.pause;
+    displayConfigData.notifyListeners();
   }
 
   Future<void> createNewConversation(String text, GameType gameType) async {

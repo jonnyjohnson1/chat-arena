@@ -6,6 +6,7 @@ import 'package:chat/models/demoController.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/models/scripts.dart';
+import 'package:chat/services/message_processor.dart';
 import 'package:chat/services/static_queries.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/shared/image_viewer.dart';
@@ -63,6 +64,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   ValueNotifier<Script?> selectedScript = ValueNotifier(null);
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late ValueNotifier<DemoController> demoController;
+  late MessageProcessor? messageProcessor;
+  ValueNotifier<bool> isProcessing = ValueNotifier(false);
 
   @override
   void initState() {
@@ -72,7 +75,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         Provider.of<ValueNotifier<DemoController>>(context, listen: false);
     selectedScript =
         Provider.of<ValueNotifier<Script?>>(context, listen: false);
-
+    messageProcessor = Provider.of<MessageProcessor>(context, listen: false);
     if (widget.showModelSelectButton) {
       assert(widget.selectedModelConfig != null &&
           widget.onSelectedModelChange != null);
@@ -131,16 +134,20 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 return ValueListenableBuilder(
                     valueListenable: selectedScript,
                     builder: ((context, script, child) {
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text("Script: "),
-                          const SizedBox(
-                            width: 4,
-                          ),
-                          Text(script != null ? script.name : "<select script>")
-                        ],
-                      );
+                      if (script != null) {
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text("Script: "),
+                            const SizedBox(
+                              width: 4,
+                            ),
+                            Text(script.name)
+                          ],
+                        );
+                      }
+
+                      return Container();
                     }));
               }
               return Container();
@@ -171,11 +178,20 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
           children: [
             MultiProvider(
               providers: [Provider.value(value: widget.showGeneratingText)],
-              child: MessageListView(
-                this,
-                _listViewController,
-                widget.messages,
-              ),
+              child: widget.messages.isNotEmpty
+                  ? MessageListView(
+                      this,
+                      _listViewController,
+                      widget.messages,
+                    )
+                  :
+                  // TODO build a starter page here
+                  // select demos
+                  // select games
+                  // select from prompts
+                  const Center(
+                      child: Text("Write a message"),
+                    ),
             ),
             // reset chat button
             // Positioned(
@@ -243,7 +259,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                           future: getModels(displayConfigData.value.apiConfig),
                           builder:
                               (BuildContext context, AsyncSnapshot snapshot) {
-                            print(snapshot.data);
                             return snapshot.hasData
                                 ? Material(
                                     color: Colors.white,
@@ -417,18 +432,24 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                         return ValueListenableBuilder(
                                             valueListenable: demoController,
                                             builder: (context, demoCont, _) {
+                                              print(
+                                                  "Auto-play: ${demoCont.autoPlay} :: State: ${demoCont.state} :: Num Procs: ${messageProcessor!.numberOfProcesses.value}");
                                               return Row(
                                                 children: [
-                                                  if (script == null)
-                                                    Text("Message: ~/~",
-                                                        style: TextStyle(
-                                                            color: Theme.of(
-                                                                    context)
-                                                                .colorScheme
-                                                                .primary)),
+                                                  if (script != null)
+                                                    if ((demoCont.autoPlay &&
+                                                            (demoCont.index !=
+                                                                0) &&
+                                                            demoCont.index <
+                                                                script.script
+                                                                    .length) ||
+                                                        demoCont.state ==
+                                                            DemoState
+                                                                .generating)
+                                                      CupertinoActivityIndicator(),
                                                   if (script != null)
                                                     Text(
-                                                        "Message: ${demoCont.index + 1}/${script.script.length + 1}",
+                                                        "Message: ${demoCont.index}/${script.script.length}",
                                                         style: TextStyle(
                                                             color: Theme.of(
                                                                     context)

@@ -463,7 +463,7 @@ class LocalLLMInterface {
     );
   }
 
-  void genMermaidChart(Message message, String convId, ModelConfig model,
+  void genMermaidChartWS(Message message, String convId, ModelConfig model,
       {fullConversation = false}) {
     initMermaidChartWebsocket();
 
@@ -687,6 +687,59 @@ class LocalLLMInterface {
     } catch (e) {
       debugPrint('Error: $e');
       return null;
+    }
+  }
+
+  Future<void> genMermaidChart(
+      Message message, String convId, ModelConfig model,
+      {bool fullConversation = false}) async {
+    final uri = httpAddress + "/generate_mermaid_chart";
+    final url = Uri.parse(uri);
+    final headers = {
+      "accept": "application/json; charset=utf-8",
+      "Content-Type": "application/json; charset=utf-8"
+    };
+
+    // Prepare the payload
+    Map<String, dynamic> submitPkg = {
+      "message": message.message!.value,
+      "conversation_id": convId,
+      "model": model.model.model,
+      "full_conversation": fullConversation ?? false,
+      "temperature": 0.06,
+    };
+
+    // Encode the payload as JSON
+    String body = json.encode(submitPkg);
+
+    // Make the HTTP POST request
+    try {
+      var request = await http.post(url, headers: headers, body: body);
+
+      if (request.statusCode == 200) {
+        Map<String, dynamic> decoded = json.decode(request.body);
+
+        // Handle different status responses
+        switch (decoded['status']) {
+          case 'generating':
+            print(decoded['response']);
+            break;
+          case 'completed':
+            message.mermaidChart.value = decoded['response'];
+            print(decoded['response']);
+            break;
+          case 'error':
+            print(decoded['message']);
+            break;
+          default:
+            print(decoded['status']);
+            break;
+        }
+      } else {
+        print('Failed to load data. Status code: ${request.statusCode}');
+      }
+    } catch (e) {
+      print('Exception thrown: $e');
     }
   }
 }
