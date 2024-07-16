@@ -2,6 +2,8 @@ import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/conversation_summary.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/messages.dart';
+import 'package:chat/theming/theming_config.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 const String tableConversations = 'conversations';
@@ -134,6 +136,22 @@ class Conversation {
         return 'p2pchat';
       default:
         return '';
+    }
+  }
+
+  Icon gameTypeToIcon(GameType? gameType, {double? size}) {
+    switch (gameType) {
+      case GameType.chat:
+        return Icon(CupertinoIcons.chat_bubble_text_fill,
+            size: size, color: debateIconColor);
+      case GameType.debate:
+        return Icon(CupertinoIcons.group_solid,
+            size: size, color: chatBubbleColor);
+      case GameType.p2pchat:
+        return Icon(CupertinoIcons.person_2_fill,
+            size: size, color: personIconColor);
+      default:
+        return Icon(Icons.help_outline);
     }
   }
 

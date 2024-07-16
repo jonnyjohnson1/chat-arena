@@ -1,6 +1,7 @@
 // chatroom.dart
 
 import 'dart:io';
+import 'package:chat/chatroom/widgets/empty_home_page/starter_home_page.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/demoController.dart';
 import 'package:chat/models/display_configs.dart';
@@ -184,14 +185,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                       _listViewController,
                       widget.messages,
                     )
-                  :
-                  // TODO build a starter page here
-                  // select demos
-                  // select games
-                  // select from prompts
-                  const Center(
-                      child: Text("Write a message"),
-                    ),
+                  : const StarterHomePage(),
             ),
             // reset chat button
             // Positioned(

@@ -344,8 +344,17 @@ class _ChatGamePageState extends State<ChatGamePage> {
         setState(() {});
       }
       // emulate streaming here
-      int delay = (105 / sqrt(1 + messageText.length))
-          .floor(); // Exponentially decreasing delay based on increased text length
+      // streaming_rate = slow, med, fast
+      int delay = 0;
+      if (true) // medium
+      {
+        delay = (105 / sqrt(1 + messageText.length))
+            .floor(); // Exponentially decreasing delay based on increased text length
+      } else {
+        // really fast!
+        delay = (105 / 1 + messageText.length)
+            .floor(); // Exponentially decreasing delay based on increased text length
+      }
       for (int i = 0; i <= messageText.length; i++) {
         await Future.delayed(Duration(milliseconds: delay), () {
           messages.last.message!.value = messageText.substring(0, i);

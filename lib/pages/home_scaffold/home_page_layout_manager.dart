@@ -342,7 +342,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                           if (drawerIsOpen)
                             Container(
                               width: 1,
-                              color: Colors.grey,
+                              color: const Color.fromARGB(255, 238, 238, 238),
                             ),
                         ],
                       ),
@@ -362,7 +362,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                         if (analyticsDrawerIsOpen)
                           Container(
                             width: 1,
-                            color: Colors.grey,
+                            color: const Color.fromARGB(255, 238, 238, 238),
                           ),
                         AnimatedContainer(
                             duration: const Duration(milliseconds: 150),
