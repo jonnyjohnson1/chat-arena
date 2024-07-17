@@ -699,9 +699,10 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   final List<String> _currencies = [
     "People",
     "Personalities",
+    "Arguments Thus Far",
     "Knowledge",
-    "the information unsaid",
-    "list implications of actions",
+    "Unsaid Information",
+    "List Implications of Actions",
     "Struggles",
     "Emotions"
   ];

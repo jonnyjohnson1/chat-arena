@@ -53,7 +53,7 @@ class _ScriptItemState extends State<ScriptItem> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // this sized box is white space for another icon to appear
-                    SizedBox(
+                    const SizedBox(
                       height: 13,
                     ),
                     Expanded(child: Container()),

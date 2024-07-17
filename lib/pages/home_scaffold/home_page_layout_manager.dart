@@ -9,7 +9,9 @@ import 'package:chat/pages/home_scaffold/analytics_drawer.dart';
 import 'package:chat/pages/home_scaffold/app_bar.dart';
 import 'package:chat/pages/home_scaffold/drawer.dart';
 import 'package:chat/pages/home_scaffold/widgets/scripts_list.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 class HomePageLayoutManager extends StatefulWidget {
@@ -30,11 +32,20 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
       ValueNotifier(MemoryConfig(totalMemory: 17, usedMemory: 0.0));
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
+  ValueNotifier<bool> startDrawerOpen = ValueNotifier(true);
   @override
   void initState() {
     super.initState();
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (MediaQuery.of(context).size.width < 1000) {
+        setState(() {
+          startDrawerOpen.value = false;
+        });
+      }
+    });
   }
 
   @override
@@ -160,6 +171,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     bool isMobile = width < 550;
+
     if (isMobile && analyticsDrawerIsOpen) {
       Future.delayed(const Duration(milliseconds: 599), () {
         setState(() {
@@ -209,6 +221,10 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
             !isMobile
                 ? setState(() {
                     drawerIsOpen = !drawerIsOpen;
+                    if (!startDrawerOpen.value) {
+                      startDrawerOpen.value = true;
+                      startDrawerOpen.notifyListeners();
+                    }
                   })
                 : showModalBottomSheet<void>(
                     context: context,
@@ -313,32 +329,48 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                     if (!isMobile)
                       Row(
                         children: [
-                          AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              curve: Curves.fastOutSlowIn,
-                              width: drawerIsOpen ? 320 : 0,
-                              child: drawerIsOpen
-                                  ? PageViewDrawer(
-                                      onSettingsDrawerTap: (String page) {
-                                        if (page == "gamemanager") {
-                                          widget.title.value = "Game Manager";
-                                          widget.title.notifyListeners();
-                                          widget.body.value = GamesListPage(
-                                            duration: 90,
-                                            selectedGame:
-                                                (GamesConfig selected) {
-                                              // TODO Update home page to game viewer page
+                          ValueListenableBuilder<bool>(
+                              valueListenable: startDrawerOpen,
+                              builder: (context, _startDrawerOpen, _) {
+                                return AnimatedContainer(
+                                    duration: const Duration(milliseconds: 150),
+                                    curve: Curves.fastOutSlowIn,
+                                    width: _startDrawerOpen
+                                        ? drawerIsOpen
+                                            ? 320
+                                            : 0
+                                        : 0,
+                                    child: drawerIsOpen
+                                        ? PageViewDrawer(
+                                            onSettingsDrawerTap: (String page) {
+                                              print("clicked");
+                                              if (page == "gamemanager") {
+                                                if (!startDrawerOpen.value) {
+                                                  startDrawerOpen.value = true;
+                                                  startDrawerOpen
+                                                      .notifyListeners();
+                                                }
+                                                widget.title.value =
+                                                    "Game Manager";
+                                                widget.title.notifyListeners();
+                                                widget.body.value =
+                                                    GamesListPage(
+                                                  duration: 90,
+                                                  selectedGame:
+                                                      (GamesConfig selected) {
+                                                    // TODO Update home page to game viewer page
+                                                  },
+                                                  // homePage: widget.body,
+                                                );
+                                                widget.body.notifyListeners();
+                                              }
                                             },
-                                            // homePage: widget.body,
-                                          );
-                                          widget.body.notifyListeners();
-                                        }
-                                      },
-                                      body: widget.body,
-                                      conversations: widget.conversations,
-                                      title: widget.title,
-                                    )
-                                  : Container()),
+                                            body: widget.body,
+                                            conversations: widget.conversations,
+                                            title: widget.title,
+                                          )
+                                        : Container());
+                              }),
                           if (drawerIsOpen)
                             Container(
                               width: 1,

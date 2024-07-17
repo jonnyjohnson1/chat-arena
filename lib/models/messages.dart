@@ -44,6 +44,7 @@ class Message {
   final String? documentID;
   final String? senderID;
   final String? conversationID;
+  final bool isDemo;
   ValueNotifier<String>? message;
   final DateTime? timestamp;
   double toksPerSec;
@@ -62,6 +63,7 @@ class Message {
     this.senderID,
     required this.conversationID,
     this.message,
+    this.isDemo = false,
     this.timestamp,
     this.completionTime = 000,
     this.toksPerSec = 000,

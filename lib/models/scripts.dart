@@ -2,6 +2,7 @@
 // import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:chat/models/conversation.dart';
+import 'package:chat/services/tools.dart';
 
 class Scripts {
   final List<Script> demos;
@@ -27,6 +28,7 @@ class Script {
   final List<ScriptContent> script;
   final ScriptType scriptType;
   final String startingRole;
+  final Map<String, String> cast;
 
   Script(
       {required this.author,
@@ -35,7 +37,8 @@ class Script {
       required this.type,
       required this.script,
       required this.scriptType,
-      required this.startingRole});
+      required this.startingRole,
+      required this.cast});
 
   factory Script.fromJson(Map<String, dynamic> json, String? uid) {
     var typeList = json['type'] as List;
@@ -45,19 +48,26 @@ class Script {
         .toList();
 
     var scriptList = json['script'] as List;
-    String startingRole = json['starting_role'] as String;
+    // String startingRole = json['starting_role'] as String;
     List<ScriptContent> scriptContents =
         scriptList.map((script) => ScriptContent.fromJson(script)).toList();
 
+    Map<String, String> cast = {};
+    // create cast with name, senderID
     for (ScriptContent element in scriptContents) {
       // print(element.data.userId == startingRole);
-      if (element.data.userId == startingRole && uid != null) {
-        element.data.userId = uid;
-      }
+      cast.putIfAbsent(element.data.userId, () {
+        return Tools().getRandomString(6); // add senderID
+      });
+      print("_" * 84);
+      print(element.role);
+      print(element.data.userId);
+      print("_" * 84);
     }
 
     return Script(
         author: json['author'],
+        cast: cast,
         name: json['name'],
         numPlayers: json['num_players'],
         type: gameTypes,

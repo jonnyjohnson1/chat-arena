@@ -1,4 +1,5 @@
 import 'package:chat/models/scripts.dart';
+import 'package:chat/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
@@ -24,11 +25,13 @@ class _ScriptsSelectionDropdownState extends State<ScriptsSelectionDropdown> {
   bool didInit = false;
   late ValueNotifier<Scripts?> scripts;
   late ValueNotifier<Script?> selectedScript;
+  late ValueNotifier<User> userModel;
   @override
   void initState() {
     selectedScript =
         Provider.of<ValueNotifier<Script?>>(context, listen: false);
     scripts = Provider.of<ValueNotifier<Scripts?>>(context, listen: false);
+    userModel = Provider.of<ValueNotifier<User>>(context, listen: false);
     Future.delayed(Duration(milliseconds: widget.duration),
         () => setState((() => didInit = true)));
     super.initState();
@@ -61,6 +64,7 @@ class _ScriptsSelectionDropdownState extends State<ScriptsSelectionDropdown> {
                     child: InkWell(
                       onTap: () {
                         setState(() {
+                          // assign role to userid
                           selectedScript.value = script;
                           selectedScript.notifyListeners();
                           debugPrint("\t[ selected script :: ${script.name} ]");

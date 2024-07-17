@@ -309,19 +309,28 @@ class _ChatGamePageState extends State<ChatGamePage> {
     DateTime timestamp =
         DateTime.now(); //DateTime.parse(listenerMessage["timestamp"]);
     String messageText = content.data.content;
-    String senderID = content.data.userId;
+    String name = content.data.userId;
+    String senderID =
+        selectedScript.value!.cast[content.role] ?? Tools().getRandomString(6);
+    if (name == selectedScript.value!.startingRole) {
+      // set the senderID to the user's to put the user in this person's shoes
+      senderID = userModel.value.uid;
+    }
+
     print("ID:  ${conversation.id}");
     late uiMessage.Message message;
+
     if (!demoController.value.isTypeWritten) {
       message = uiMessage.Message(
           id: newMessageId,
           conversationID: conversation.id,
           message: ValueNotifier(messageText),
           documentID: '',
-          name: senderID,
+          name: name,
           senderID: senderID,
           status: '',
           timestamp: timestamp,
+          isDemo: true,
           type: uiMessage.MessageType.text);
       messages.add(message);
     } else {
@@ -330,11 +339,12 @@ class _ChatGamePageState extends State<ChatGamePage> {
           conversationID: conversation.id,
           message: ValueNotifier(""),
           documentID: '',
-          name: senderID,
+          name: name,
           senderID: senderID,
           status: '',
           timestamp: timestamp,
           isGenerating: true,
+          isDemo: true,
           type: uiMessage.MessageType.text);
       messages.add(message);
 

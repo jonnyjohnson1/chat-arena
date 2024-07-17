@@ -95,6 +95,7 @@ class LocalLLMInterface {
 
     for (Message msg in messageHistory) {
       bool isUserMessage = msg.senderID! == user.uid;
+      String role = isUserMessage || msg.isDemo ? "user" : msg.senderID!;
       if (msg.images != null) {
         if (msg.images!.isNotEmpty) {
           try {
@@ -112,7 +113,7 @@ class LocalLLMInterface {
               images.add(path);
             }
             msgHist.add({
-              'role': isUserMessage ? "user" : msg.senderID!,
+              'role': role,
               'content': msg.message!.value,
               'images': images,
             });
@@ -120,16 +121,10 @@ class LocalLLMInterface {
             debugPrint("[ error parsing image ]");
           }
         } else {
-          msgHist.add({
-            'role': isUserMessage ? "user" : msg.senderID!,
-            'content': msg.message!.value
-          });
+          msgHist.add({'role': role, 'content': msg.message!.value});
         }
       } else {
-        msgHist.add({
-          'role': isUserMessage ? "user" : msg.senderID!,
-          'content': msg.message!.value
-        });
+        msgHist.add({'role': role, 'content': msg.message!.value});
       }
     }
 
