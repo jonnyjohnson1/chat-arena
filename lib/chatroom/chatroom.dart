@@ -407,15 +407,18 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                         ? "select script"
                                                         : null,
                                                     icon: Icon(
-                                                      demoCont.index >=
-                                                              script!
-                                                                  .script.length
-                                                          ? Icons.refresh
-                                                          : demoCont.state ==
-                                                                  DemoState
-                                                                      .pause
-                                                              ? Icons.play_arrow
-                                                              : Icons.pause,
+                                                      script != null
+                                                          ? demoCont.index >=
+                                                                  script.script
+                                                                      .length
+                                                              ? Icons.refresh
+                                                              : demoCont.state ==
+                                                                      DemoState
+                                                                          .pause
+                                                                  ? Icons
+                                                                      .play_arrow
+                                                                  : Icons.pause
+                                                          : Icons.play_arrow,
                                                       color: script == null
                                                           ? Colors.grey
                                                           : demoCont.index ==

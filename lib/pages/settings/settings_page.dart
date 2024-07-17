@@ -50,6 +50,7 @@ class _SettingsPageState extends State<SettingsPage>
     calcImageGen = config.calcImageGen;
     calcMsgMermaidChart = config.calcMsgMermaidChart;
     calcConvMermaidChart = config.calcConvMermaidChart;
+    demoMode = config.demoMode;
   }
 
   @override
