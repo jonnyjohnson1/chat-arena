@@ -50,11 +50,13 @@ buildAppBar(
                           return InkWell(
                             borderRadius:
                                 const BorderRadius.all(Radius.circular(12)),
-                            onTap: displayConfig.demoMode
-                                ? () {
-                                    overlayPopupController();
-                                  }
-                                : null,
+                            onTap:
+                                //  displayConfig.demoMode
+                                //     ? () {
+                                //         overlayPopupController();
+                                //       }
+                                //     :
+                                null,
                             child: Container(
                               decoration: BoxDecoration(
                                 color: overlayIsOpen
@@ -89,16 +91,16 @@ buildAppBar(
                                           : title,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    if (displayConfig.demoMode)
-                                      Row(
-                                        children: [
-                                          const SizedBox(width: 3),
-                                          Icon(Icons.keyboard_arrow_down_sharp,
-                                              color: Color.fromARGB(
-                                                  255, 41, 32, 32) //600,
-                                              )
-                                        ],
-                                      ),
+                                    // if (displayConfig.demoMode)
+                                    //   Row(
+                                    //     children: [
+                                    //       const SizedBox(width: 3),
+                                    //       Icon(Icons.keyboard_arrow_down_sharp,
+                                    //           color: Color.fromARGB(
+                                    //               255, 41, 32, 32) //600,
+                                    //           )
+                                    //     ],
+                                    //   ),
                                   ],
                                 ),
                               ),

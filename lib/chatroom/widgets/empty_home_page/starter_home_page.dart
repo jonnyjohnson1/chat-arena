@@ -32,7 +32,6 @@ class _StarterHomePageState extends State<StarterHomePage> {
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     demoController =
         Provider.of<ValueNotifier<DemoController>>(context, listen: false);
-
     userModel = Provider.of<ValueNotifier<User>>(context, listen: false);
     scriptsListenable =
         Provider.of<ValueNotifier<Scripts?>>(context, listen: false);
@@ -45,7 +44,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
     return ValueListenableBuilder<Scripts?>(
       valueListenable: scriptsListenable,
       builder: (context, scripts, _) {
-        if (scripts == null) return CupertinoActivityIndicator();
+        if (scripts == null) return const CupertinoActivityIndicator();
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -77,6 +76,9 @@ class _StarterHomePageState extends State<StarterHomePage> {
                   );
                 }).toList(),
               ),
+              const SizedBox(
+                height: 14,
+              ), // whitespace to center the demo options
             ],
           ),
         );

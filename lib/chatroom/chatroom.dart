@@ -32,6 +32,7 @@ class ChatRoomPage extends StatefulWidget {
   bool showTopTitle;
   ModelConfig? selectedModelConfig;
   final Function? onSelectedModelChange;
+  final Function? onResetDemoChat;
   String topTitleHeading;
   String topTitleText;
   ValueNotifier<bool>? isGenerating;
@@ -43,6 +44,7 @@ class ChatRoomPage extends StatefulWidget {
       required this.messages,
       this.selectedModelConfig,
       this.onSelectedModelChange,
+      this.onResetDemoChat,
       this.isGenerating,
       this.onNewMessage,
       this.showGeneratingText = true,
@@ -82,7 +84,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
           widget.onSelectedModelChange != null);
       selectedModel = widget.selectedModelConfig;
     }
-
     super.initState();
   }
 
@@ -247,6 +248,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    //white space
+                    const SizedBox(
+                      width: 20,
+                    ),
                     // model selector button
                     if (widget.showModelSelectButton)
                       FutureBuilder(
@@ -266,8 +271,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                       height: 28,
                                       child: DropdownButton<LanguageModel>(
                                         hint: Padding(
-                                          padding:
-                                              const EdgeInsets.only(top: 5.0),
+                                          padding: const EdgeInsets.only(
+                                              top: 5.0, left: 6),
                                           child: Center(
                                             child: Text(
                                               selectedModel!.model.name ??
@@ -340,85 +345,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                       child: ValueListenableBuilder(
                           valueListenable: displayConfigData,
                           builder: (context, displayConfig, _) {
-                            // ValueNotifier<Scripts?> scripts =
-                            //     Provider.of<ValueNotifier<Scripts?>>(context,
-                            //         listen: false);
-
                             if (displayConfig.demoMode) {
                               return Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  // Material(
-                                  //   color: Colors.white,
-                                  //   child: Container(
-                                  //     decoration: const BoxDecoration(
-                                  //       color: Colors.white,
-                                  //       borderRadius:
-                                  //           BorderRadius.all(Radius.circular(10)),
-                                  //     ),
-                                  //     width: 135,
-                                  //     height: 28,
-                                  //     child: DropdownButton<Script>(
-                                  //       hint: Padding(
-                                  //         padding: const EdgeInsets.only(top: 5.0),
-                                  //         child: Center(
-                                  //           child: Text(
-                                  //             selectedScript.value == null
-                                  //                 ? 'scripts'
-                                  //                 : selectedScript.value!.name,
-                                  //             overflow: TextOverflow.ellipsis,
-                                  //             style: const TextStyle(fontSize: 12),
-                                  //           ),
-                                  //         ),
-                                  //       ),
-                                  //       borderRadius: const BorderRadius.all(
-                                  //           Radius.circular(10)),
-                                  //       alignment: Alignment.center,
-                                  //       underline: Container(),
-                                  //       isDense: true,
-                                  //       elevation: 4,
-                                  //       padding: EdgeInsets.zero,
-                                  //       itemHeight: null,
-                                  //       isExpanded: true,
-                                  //       items: scripts.value!.demos
-                                  //           .map<DropdownMenuItem<Script>>((item) {
-                                  //         return DropdownMenuItem<Script>(
-                                  //           value: item,
-                                  //           alignment: Alignment.centerLeft,
-                                  //           child: SizedBox(
-                                  //             width: 170,
-                                  //             child: Row(
-                                  //               children: [
-                                  //                 Expanded(
-                                  //                     child: Text(
-                                  //                   item.name,
-                                  //                   style: const TextStyle(
-                                  //                       fontSize: 14),
-                                  //                   overflow: TextOverflow.ellipsis,
-                                  //                   // style: TextStyle(
-                                  //                   //     fontSize:
-                                  //                   //         16)),
-                                  //                 )),
-                                  //                 Text(" (${item.author})",
-                                  //                     overflow:
-                                  //                         TextOverflow.ellipsis,
-                                  //                     style: const TextStyle(
-                                  //                         fontSize: 11)),
-                                  //               ],
-                                  //             ),
-                                  //           ),
-                                  //         );
-                                  //       }).toList(),
-                                  //       onChanged: (Script? newValue) {
-                                  //         setState(() {
-                                  //           selectedScript.value = newValue!;
-                                  //         });
-                                  //       },
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  // Auto-play Button
-
                                   // Play and Pause buttons
                                   ValueListenableBuilder(
                                       valueListenable: selectedScript,
@@ -440,7 +370,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                         demoCont.state ==
                                                             DemoState
                                                                 .generating)
-                                                      CupertinoActivityIndicator(),
+                                                      const CupertinoActivityIndicator(),
                                                   if (script != null)
                                                     Text(
                                                         "Message: ${demoCont.index}/${script.script.length}",
@@ -477,10 +407,15 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                         ? "select script"
                                                         : null,
                                                     icon: Icon(
-                                                      demoCont.state ==
-                                                              DemoState.pause
-                                                          ? Icons.play_arrow
-                                                          : Icons.pause,
+                                                      demoCont.index >=
+                                                              script!
+                                                                  .script.length
+                                                          ? Icons.refresh
+                                                          : demoCont.state ==
+                                                                  DemoState
+                                                                      .pause
+                                                              ? Icons.play_arrow
+                                                              : Icons.pause,
                                                       color: script == null
                                                           ? Colors.grey
                                                           : demoCont.index ==
@@ -507,8 +442,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                                       .pause
                                                               ? DemoState.next
                                                               : DemoState.pause;
-                                                          print(demoCont.state);
-                                                          print("switched");
                                                           demoController
                                                               .notifyListeners();
                                                           // simulate looping through the messages here
@@ -521,11 +454,18 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                           demoCont.index += 1;
                                                           demoCont.state =
                                                               DemoState.pause;
-                                                          print(demoCont.state);
-                                                          print(
-                                                              "switched back!");
+
                                                           demoController
                                                               .notifyListeners();
+                                                        } else {
+                                                          print(
+                                                              "\t[ resetting demo chat ]");
+                                                          if (widget
+                                                                  .onResetDemoChat !=
+                                                              null) {
+                                                            widget
+                                                                .onResetDemoChat!();
+                                                          }
                                                         }
                                                       } else {
                                                         ScaffoldMessenger.of(

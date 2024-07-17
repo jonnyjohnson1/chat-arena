@@ -526,6 +526,16 @@ class _ChatGamePageState extends State<ChatGamePage> {
                   },
                   showTopTitle: false,
                   isGenerating: isGenerating,
+                  onResetDemoChat: () async {
+                    print("reset demo here");
+                    demoController.value.index =
+                        0; // reset controller index to zero
+                    messages.clear(); // empty messages link
+                    // reset the conversation history
+                    await ConversationDatabase.instance.delete(
+                        widget.conversation!.id); // delete the conversation
+                    setState(() {});
+                  },
                   onNewMessage: (Conversation? conv, String text,
                       List<ImageFile> images) async {
                     if (widget.conversation == null) {
