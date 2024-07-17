@@ -26,9 +26,9 @@ class MyApp extends StatelessWidget {
       title: 'Chat Arena',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        useMaterial3: true,
-        primarySwatch: Colors.blue,
-      ),
+          useMaterial3: true,
+          textSelectionTheme: const TextSelectionThemeData(
+              selectionColor: Color.fromARGB(255, 190, 168, 255))),
       home: const HomePage(),
     );
   }

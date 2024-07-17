@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+
 class QueueProcess {
   Function function; // function to process
   Map<String, dynamic>? args; // arguments
@@ -25,18 +27,27 @@ class QueueProcess {
 class MessageProcessor {
   final StreamController<QueueProcess> _processingQueueController =
       StreamController();
-  int _numberOfProcesses = 0;
+  final ValueNotifier<int> _numberOfPriorProcesses = ValueNotifier(0);
+  final ValueNotifier<int> _numberOfProcesses = ValueNotifier(0);
+  final StreamController<bool> _completionStatusController =
+      StreamController<bool>.broadcast();
+  Future<void> Function()? processDemoCompleteFunction;
 
-  MessageProcessor() {
+  MessageProcessor({this.processDemoCompleteFunction}) {
     _processQueue();
   }
 
-  int get numberOfProcesses => _numberOfProcesses;
+  ValueNotifier<int> get numberOfProcesses => _numberOfProcesses;
+  Stream<bool> get completionStatus => _completionStatusController.stream;
 
   void addProcess(QueueProcess process) {
     _processingQueueController.add(process);
-    _numberOfProcesses++;
+    _numberOfProcesses.value++;
     print("Processes remain: $_numberOfProcesses");
+  }
+
+  bool isCompleted() {
+    return _numberOfProcesses.value == 0 && _numberOfPriorProcesses.value > 0;
   }
 
   Future<dynamic> _validateAndExecuteFunction(QueueProcess queueProcess) async {
@@ -63,15 +74,25 @@ class MessageProcessor {
   void _processQueue() async {
     await for (var queueProcess in _processingQueueController.stream) {
       await _validateAndExecuteFunction(queueProcess);
-      _numberOfProcesses--;
-      print("Processes remain: $_numberOfProcesses");
-      if (_numberOfProcesses == 0) {
-        // print("Setting delay for progress bar to close");
-        Future.delayed(const Duration(seconds: 1), () {
-          // print("Setting progress bar to close");
-          // Add your progress bar logic here if necessary
-        });
+      _numberOfPriorProcesses.value = _numberOfProcesses.value;
+      _numberOfProcesses.value--;
+      print("Processes remain: ${_numberOfProcesses.value}");
+      _completionStatusController.add(
+          _numberOfProcesses.value == 0 && _numberOfPriorProcesses.value > 0);
+
+      if (_numberOfProcesses.value == 0 && _numberOfPriorProcesses.value > 0) {
+        // Trigger your function when processes reach zero
+        if (processDemoCompleteFunction != null &&
+            _numberOfPriorProcesses.value > 0 &&
+            _numberOfProcesses.value == 0) {
+          await processDemoCompleteFunction!();
+        }
       }
     }
+  }
+
+  void dispose() {
+    _processingQueueController.close();
+    _completionStatusController.close();
   }
 }

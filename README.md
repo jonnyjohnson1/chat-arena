@@ -8,6 +8,8 @@
 If you are using this project, we want to hear from you!
 [feedback](https://tally.so/r/3yyQQ6)
 
+Download this app's backend on [github](https://github.com/jonnyjohnson1/topos-cli).
+
 # Dialogues Games
 
 An application to host local games powered by local LLMs:

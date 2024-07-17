@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:chat/models/display_configs.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +24,9 @@ class _SettingsDialogState extends State<SettingsDialog>
   bool showModerationTags = true;
   bool calcModerationTags = true;
   bool calcImageGen = false;
+  bool calcMsgMermaidChart = true;
+  bool calcConvMermaidChart = true;
+  bool demoMode = false;
 
   late TabController _tabController;
 
@@ -54,6 +56,9 @@ class _SettingsDialogState extends State<SettingsDialog>
     showModerationTags = config.showModerationTags;
     calcModerationTags = config.calculateModerationTags;
     calcImageGen = config.calcImageGen;
+    calcMsgMermaidChart = config.calcMsgMermaidChart;
+    calcConvMermaidChart = config.calcConvMermaidChart;
+    demoMode = config.demoMode;
   }
 
   Future<bool> _toggleRerunNEROnConversation() async {
@@ -130,6 +135,39 @@ class _SettingsDialogState extends State<SettingsDialog>
     displayConfigData.notifyListeners();
     setState(() {
       showInMsgNER = newValue;
+    });
+    return newValue;
+  }
+
+  Future<bool> _toggleCalcMsgMermaidChart() async {
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
+    final newValue = !displayConfigData.value.calcMsgMermaidChart;
+    displayConfigData.value.calcMsgMermaidChart = newValue;
+    displayConfigData.notifyListeners();
+    setState(() {
+      calcMsgMermaidChart = newValue;
+    });
+    return newValue;
+  }
+
+  Future<bool> _toggleCalcConvMermaidChart() async {
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
+    final newValue = !displayConfigData.value.calcConvMermaidChart;
+    displayConfigData.value.calcConvMermaidChart = newValue;
+    displayConfigData.notifyListeners();
+    setState(() {
+      calcConvMermaidChart = newValue;
+    });
+    return newValue;
+  }
+
+  Future<bool> _toggleDemoMode() async {
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
+    final newValue = !displayConfigData.value.demoMode;
+    displayConfigData.value.demoMode = newValue;
+    displayConfigData.notifyListeners();
+    setState(() {
+      demoMode = newValue;
     });
     return newValue;
   }
@@ -369,11 +407,35 @@ class _SettingsDialogState extends State<SettingsDialog>
           ),
           const Divider(),
           _buildRow(
+            icon: Icons.schema_outlined,
+            label: "Mermaid Chart (msg)",
+            value: calcMsgMermaidChart,
+            future: _toggleCalcMsgMermaidChart,
+            notifier: displayConfigData.value.calcMsgMermaidChart,
+          ),
+          const Divider(),
+          _buildRow(
+            icon: Icons.schema_outlined,
+            label: "Mermaid Chart (conv)",
+            value: calcConvMermaidChart,
+            future: _toggleCalcConvMermaidChart,
+            notifier: displayConfigData.value.calcConvMermaidChart,
+          ),
+          const Divider(),
+          _buildRow(
             icon: Icons.image,
             label: "ImageGen",
             value: calcImageGen,
             future: _togglecalcImageGen,
             notifier: displayConfigData.value.calcImageGen,
+          ),
+          const Divider(),
+          _buildRow(
+            icon: Icons.play_lesson,
+            label: "Demo Mode",
+            value: demoMode,
+            future: _toggleDemoMode,
+            notifier: displayConfigData.value.demoMode,
           ),
         ],
       ),

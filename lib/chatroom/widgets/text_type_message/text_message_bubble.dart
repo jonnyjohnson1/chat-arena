@@ -1,3 +1,4 @@
+import 'package:chat/analytics_drawer/mermaid_widget.dart';
 import 'package:chat/chatroom/widgets/text_type_message/emotion_icon.dart';
 import 'package:chat/chatroom/widgets/text_type_message/mod_icon_widget.dart';
 import 'package:chat/chatroom/widgets/text_type_message/sentiment_widget.dart';
@@ -232,7 +233,7 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
               sentiment: ternSent,
               score: ternSentScore,
               size: 16,
-            )
+            ),
           ],
         );
       } else {
@@ -312,7 +313,57 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                                                   .showModerationTags
                                                           ? Container()
                                                           : buildCommentsRow(
-                                                              baseAnalytics)
+                                                              baseAnalytics),
+                                                      ValueListenableBuilder<
+                                                              String>(
+                                                          valueListenable:
+                                                              widget._message
+                                                                  .mermaidChart,
+                                                          builder: (context,
+                                                              mermaidString,
+                                                              _) {
+                                                            if (mermaidString
+                                                                .isNotEmpty) {
+                                                              return IconButton(
+                                                                icon: const Icon(
+                                                                    Icons
+                                                                        .schema,
+                                                                    size: 16),
+                                                                onPressed: () {
+                                                                  showDialog(
+                                                                    context:
+                                                                        context,
+                                                                    builder:
+                                                                        (BuildContext
+                                                                            context) {
+                                                                      return Dialog(
+                                                                        child:
+                                                                            Container(
+                                                                          constraints: const BoxConstraints(
+                                                                              maxWidth: 1000,
+                                                                              maxHeight: 700),
+                                                                          child: Center(
+                                                                              child: MermaidWidget(
+                                                                            mermaidText:
+                                                                                mermaidString,
+                                                                            alignTop:
+                                                                                false,
+                                                                          )),
+                                                                        ),
+                                                                      );
+                                                                    },
+                                                                  );
+                                                                },
+                                                              );
+                                                            } else {
+                                                              // mermaid string is empty
+                                                              Icon(Icons.schema,
+                                                                  color: Colors
+                                                                          .grey[
+                                                                      350]);
+                                                            }
+                                                            return Container();
+                                                          })
                                                     ]),
                                                   ),
                                                   Container(height: 2),

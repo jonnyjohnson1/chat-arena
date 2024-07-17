@@ -1,9 +1,13 @@
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/demoController.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/models/scripts.dart';
 import 'package:chat/models/sys_resources.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:chat/pages/home_scaffold/home_page_layout_manager.dart';
 import 'package:chat/services/conversation_database.dart';
+import 'package:chat/services/message_processor.dart';
+import 'package:chat/services/scripts.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,14 +30,29 @@ class _HomePageState extends State<HomePage> {
 
   ValueNotifier<List<Conversation>> conversations = ValueNotifier([]);
   ValueNotifier<User> userId = ValueNotifier(User(uid: ""));
-
+  ValueNotifier<Scripts?> scripts = ValueNotifier(null);
+  ValueNotifier<Script?> selectedScript = ValueNotifier(null);
+  ValueNotifier<DemoController> demoController = ValueNotifier(DemoController(
+      state: DemoState.pause,
+      index: 0,
+      durBetweenMessages: 2000,
+      isTypeWritten: true,
+      autoPlay: false));
   @override
   void initState() {
     _loadModelListFromAppConfig;
     refreshConversationDatabase();
     getUserID();
     // load senderID from sharedPrefs if none: ,
+    getScripts();
     super.initState();
+  }
+
+  void getScripts() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? uid = prefs.getString('userId');
+    scripts.value = await loadScriptsJson(uid);
+    scripts.notifyListeners();
   }
 
   void getUserID() async {
@@ -73,6 +92,7 @@ class _HomePageState extends State<HomePage> {
       ValueNotifier(DisplayConfigData());
   ValueNotifier<Conversation?> currentSelectedConversation =
       ValueNotifier(null);
+  MessageProcessor messageProcessor = MessageProcessor();
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +102,13 @@ class _HomePageState extends State<HomePage> {
             value: currentSelectedConversation),
         ChangeNotifierProvider<ValueNotifier<DisplayConfigData>>.value(
             value: displayConfigData),
+        ChangeNotifierProvider<ValueNotifier<Scripts?>>.value(value: scripts),
+        ChangeNotifierProvider<ValueNotifier<Script?>>.value(
+            value: selectedScript),
+        ChangeNotifierProvider<ValueNotifier<DemoController>>.value(
+            value: demoController),
         ChangeNotifierProvider<ValueNotifier<User>>.value(value: userId),
+        Provider<MessageProcessor>.value(value: messageProcessor)
       ],
       child: HomePageLayoutManager(
         title: title,

@@ -26,6 +26,9 @@ class _SettingsPageState extends State<SettingsPage>
   bool showModerationTags = true;
   bool calcModerationTags = true;
   bool calcImageGen = false;
+  bool calcMsgMermaidChart = true;
+  bool calcConvMermaidChart = true;
+  bool demoMode = false;
 
   String responseMessageDefault = "";
   String responseMessageCustom = "";
@@ -45,6 +48,8 @@ class _SettingsPageState extends State<SettingsPage>
     showModerationTags = config.showModerationTags;
     calcModerationTags = config.calculateModerationTags;
     calcImageGen = config.calcImageGen;
+    calcMsgMermaidChart = config.calcMsgMermaidChart;
+    calcConvMermaidChart = config.calcConvMermaidChart;
   }
 
   @override
@@ -63,7 +68,7 @@ class _SettingsPageState extends State<SettingsPage>
   // }
 
   Future<bool> _toggleShowSidebarBaseAnalytics() async {
-    await Future.delayed(Duration(milliseconds: 900));
+    await Future.delayed(const Duration(milliseconds: 900));
     final newValue = !displayConfigData.value.showSidebarBaseAnalytics;
     displayConfigData.value.showSidebarBaseAnalytics = newValue;
     displayConfigData.notifyListeners();
@@ -74,7 +79,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _toggleShowInMsgNER() async {
-    await Future.delayed(Duration(milliseconds: 900));
+    await Future.delayed(const Duration(milliseconds: 900));
     final newValue = !displayConfigData.value.showInMessageNER;
     displayConfigData.value.showInMessageNER = newValue;
     displayConfigData.notifyListeners();
@@ -85,7 +90,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _toggleNERCalculations() async {
-    await Future.delayed(Duration(milliseconds: 900));
+    await Future.delayed(const Duration(milliseconds: 900));
     final newValue = !displayConfigData.value.calculateInMessageNER;
     displayConfigData.value.calculateInMessageNER = newValue;
     displayConfigData.notifyListeners();
@@ -96,7 +101,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _toggleShowModerationTags() async {
-    await Future.delayed(Duration(milliseconds: 900));
+    await Future.delayed(const Duration(milliseconds: 900));
     final newValue = !displayConfigData.value.showModerationTags;
     displayConfigData.value.showModerationTags = newValue;
     displayConfigData.notifyListeners();
@@ -107,7 +112,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _toggleModerationCalculations() async {
-    await Future.delayed(Duration(milliseconds: 900));
+    await Future.delayed(const Duration(milliseconds: 900));
     final newValue = !displayConfigData.value.calculateModerationTags;
     displayConfigData.value.calculateModerationTags = newValue;
     displayConfigData.notifyListeners();
@@ -118,12 +123,45 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _togglecalcImageGen() async {
-    await Future.delayed(Duration(milliseconds: 900));
+    await Future.delayed(const Duration(milliseconds: 900));
     final newValue = !displayConfigData.value.calcImageGen;
     displayConfigData.value.calcImageGen = newValue;
     displayConfigData.notifyListeners();
     setState(() {
       calcImageGen = newValue;
+    });
+    return newValue;
+  }
+
+  Future<bool> _toggleCalcMsgMermaidChart() async {
+    await Future.delayed(const Duration(milliseconds: 900));
+    final newValue = !displayConfigData.value.calcMsgMermaidChart;
+    displayConfigData.value.calcMsgMermaidChart = newValue;
+    displayConfigData.notifyListeners();
+    setState(() {
+      calcMsgMermaidChart = newValue;
+    });
+    return newValue;
+  }
+
+  Future<bool> _toggleCalcConvMermaidChart() async {
+    await Future.delayed(const Duration(milliseconds: 900));
+    final newValue = !displayConfigData.value.calcConvMermaidChart;
+    displayConfigData.value.calcConvMermaidChart = newValue;
+    displayConfigData.notifyListeners();
+    setState(() {
+      calcConvMermaidChart = newValue;
+    });
+    return newValue;
+  }
+
+  Future<bool> _toggleDemoMode() async {
+    await Future.delayed(const Duration(milliseconds: 900));
+    final newValue = !displayConfigData.value.demoMode;
+    displayConfigData.value.demoMode = newValue;
+    displayConfigData.notifyListeners();
+    setState(() {
+      demoMode = newValue;
     });
     return newValue;
   }
@@ -247,11 +285,35 @@ class _SettingsPageState extends State<SettingsPage>
           ),
           const Divider(),
           _buildRow(
+            icon: Icons.schema_outlined,
+            label: "Mermaid Chart (msg)",
+            value: calcMsgMermaidChart,
+            future: _toggleCalcMsgMermaidChart,
+            notifier: displayConfigData.value.calcMsgMermaidChart,
+          ),
+          const Divider(),
+          _buildRow(
+            icon: Icons.schema_outlined,
+            label: "Mermaid Chart (conv)",
+            value: calcConvMermaidChart,
+            future: _toggleCalcConvMermaidChart,
+            notifier: displayConfigData.value.calcConvMermaidChart,
+          ),
+          const Divider(),
+          _buildRow(
             icon: Icons.image,
             label: "ImageGen",
             value: calcImageGen,
             future: _togglecalcImageGen,
             notifier: displayConfigData.value.calcImageGen,
+          ),
+          const Divider(),
+          _buildRow(
+            icon: Icons.play_lesson,
+            label: "Demo Mode",
+            value: demoMode,
+            future: _toggleDemoMode,
+            notifier: displayConfigData.value.demoMode,
           ),
         ],
       ),
@@ -296,14 +358,14 @@ class _SettingsPageState extends State<SettingsPage>
               children: [
                 ElevatedButton(
                   onPressed: () => pingEndpoint(true),
-                  child: Text("Test"),
+                  child: const Text("Test"),
                 ),
                 const SizedBox(width: 10),
                 Text(responseMessageDefault),
               ],
             ),
             const SizedBox(height: 8),
-            Divider(),
+            const Divider(),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -334,7 +396,7 @@ class _SettingsPageState extends State<SettingsPage>
               children: [
                 ElevatedButton(
                   onPressed: () => pingEndpoint(false),
-                  child: Text("Test"),
+                  child: const Text("Test"),
                 ),
                 const SizedBox(width: 10),
                 Text(responseMessageCustom),

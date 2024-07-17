@@ -5,6 +5,9 @@ class DisplayConfigData {
   bool calculateModerationTags;
   bool showSidebarBaseAnalytics;
   bool calcImageGen;
+  bool calcMsgMermaidChart;
+  bool calcConvMermaidChart;
+  bool demoMode;
   APIConfig apiConfig;
 
   DisplayConfigData({
@@ -14,6 +17,9 @@ class DisplayConfigData {
     this.calculateModerationTags = true,
     this.showSidebarBaseAnalytics = true,
     this.calcImageGen = false,
+    this.calcMsgMermaidChart = false,
+    this.calcConvMermaidChart = false,
+    this.demoMode = false,
   }) : apiConfig = APIConfig();
 
   Map<String, bool> toMap() {
@@ -24,6 +30,9 @@ class DisplayConfigData {
       'calculateModerationTags': calculateModerationTags,
       'showSidebarBaseAnalytics': showSidebarBaseAnalytics,
       'calculateImageGen': calcImageGen,
+      'calcMsgMermaidChart': calcMsgMermaidChart,
+      'calcConvMermaidChart': calcConvMermaidChart,
+      'demoMode': demoMode
     };
   }
 }

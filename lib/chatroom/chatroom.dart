@@ -1,15 +1,21 @@
 // chatroom.dart
 
 import 'dart:io';
+import 'package:chat/chatroom/widgets/empty_home_page/starter_home_page.dart';
 import 'package:chat/models/custom_file.dart';
+import 'package:chat/models/demoController.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/llm.dart';
+import 'package:chat/models/scripts.dart';
+import 'package:chat/services/message_processor.dart';
 import 'package:chat/services/static_queries.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/shared/image_viewer.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:chat/chatroom/widgets/message_field/message_field.dart';
 import 'package:chat/chatroom/widgets/message_list_view.dart';
@@ -26,6 +32,7 @@ class ChatRoomPage extends StatefulWidget {
   bool showTopTitle;
   ModelConfig? selectedModelConfig;
   final Function? onSelectedModelChange;
+  final Function? onResetDemoChat;
   String topTitleHeading;
   String topTitleText;
   ValueNotifier<bool>? isGenerating;
@@ -37,6 +44,7 @@ class ChatRoomPage extends StatefulWidget {
       required this.messages,
       this.selectedModelConfig,
       this.onSelectedModelChange,
+      this.onResetDemoChat,
       this.isGenerating,
       this.onNewMessage,
       this.showGeneratingText = true,
@@ -56,18 +64,26 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   bool isIphone = false;
   ModelConfig? selectedModel;
+  ValueNotifier<Script?> selectedScript = ValueNotifier(null);
   late ValueNotifier<DisplayConfigData> displayConfigData;
+  late ValueNotifier<DemoController> demoController;
+  late MessageProcessor? messageProcessor;
+  ValueNotifier<bool> isProcessing = ValueNotifier(false);
 
   @override
   void initState() {
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
+    demoController =
+        Provider.of<ValueNotifier<DemoController>>(context, listen: false);
+    selectedScript =
+        Provider.of<ValueNotifier<Script?>>(context, listen: false);
+    messageProcessor = Provider.of<MessageProcessor>(context, listen: false);
     if (widget.showModelSelectButton) {
       assert(widget.selectedModelConfig != null &&
           widget.onSelectedModelChange != null);
       selectedModel = widget.selectedModelConfig;
     }
-
     super.initState();
   }
 
@@ -113,6 +129,31 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
+        ValueListenableBuilder(
+            valueListenable: displayConfigData,
+            builder: ((context, displayConfig, child) {
+              if (displayConfig.demoMode) {
+                return ValueListenableBuilder(
+                    valueListenable: selectedScript,
+                    builder: ((context, script, child) {
+                      if (script != null) {
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text("Script: "),
+                            const SizedBox(
+                              width: 4,
+                            ),
+                            Text(script.name)
+                          ],
+                        );
+                      }
+
+                      return Container();
+                    }));
+              }
+              return Container();
+            })),
         if (widget.showTopTitle)
           Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 3, top: 3),
@@ -139,11 +180,13 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
           children: [
             MultiProvider(
               providers: [Provider.value(value: widget.showGeneratingText)],
-              child: MessageListView(
-                this,
-                _listViewController,
-                widget.messages,
-              ),
+              child: widget.messages.isNotEmpty
+                  ? MessageListView(
+                      this,
+                      _listViewController,
+                      widget.messages,
+                    )
+                  : const StarterHomePage(),
             ),
             // reset chat button
             // Positioned(
@@ -199,151 +242,321 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         Column(
           children: [
             // messagefield attachments
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            Stack(
+              alignment: Alignment.bottomCenter,
               children: [
-                // model selector button
-                if (widget.showModelSelectButton)
-                  FutureBuilder(
-                      future: getModels(displayConfigData.value.apiConfig),
-                      builder: (BuildContext context, AsyncSnapshot snapshot) {
-                        return snapshot.hasData
-                            ? Material(
-                                color: Colors.white,
-                                child: Container(
-                                  decoration: const BoxDecoration(
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    //white space
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    // model selector button
+                    if (widget.showModelSelectButton)
+                      FutureBuilder(
+                          future: getModels(displayConfigData.value.apiConfig),
+                          builder:
+                              (BuildContext context, AsyncSnapshot snapshot) {
+                            return snapshot.hasData
+                                ? Material(
                                     color: Colors.white,
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(10)),
-                                  ),
-                                  width: 135,
-                                  height: 28,
-                                  child: DropdownButton<LanguageModel>(
-                                    hint: Padding(
-                                      padding: const EdgeInsets.only(top: 5.0),
-                                      child: Center(
-                                        child: Text(
-                                          selectedModel!.model.name ??
-                                              'make a selection',
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(10)),
                                       ),
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                        Radius.circular(10)),
-                                    alignment: Alignment.center,
-                                    underline: Container(),
-                                    isDense: true,
-                                    elevation: 4,
-                                    padding: EdgeInsets.zero,
-                                    itemHeight: null,
-                                    isExpanded: true,
-                                    items: snapshot.data
-                                        .map<DropdownMenuItem<LanguageModel>>(
-                                            (item) {
-                                      return DropdownMenuItem<LanguageModel>(
-                                        value: item,
-                                        alignment: Alignment.centerLeft,
-                                        child: SizedBox(
-                                          width: 170,
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                  child: Text(
-                                                item.name,
-                                                style: const TextStyle(
-                                                    fontSize: 14),
-                                                overflow: TextOverflow.ellipsis,
-                                                // style: TextStyle(
-                                                //     fontSize:
-                                                //         16)),
-                                              )),
-                                              if (item.size != null)
-                                                Text(
-                                                    " (${sizeToGB(item.size)})",
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                        fontSize: 11)),
-                                            ],
+                                      width: 135,
+                                      height: 28,
+                                      child: DropdownButton<LanguageModel>(
+                                        hint: Padding(
+                                          padding: const EdgeInsets.only(
+                                              top: 5.0, left: 6),
+                                          child: Center(
+                                            child: Text(
+                                              selectedModel!.model.name ??
+                                                  'make a selection',
+                                              overflow: TextOverflow.ellipsis,
+                                              style:
+                                                  const TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                         ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (LanguageModel? newValue) {
-                                      setState(() {
-                                        selectedModel!.model = newValue!;
-                                      });
-                                      widget.onSelectedModelChange!(newValue);
+                                        borderRadius: const BorderRadius.all(
+                                            Radius.circular(10)),
+                                        alignment: Alignment.center,
+                                        underline: Container(),
+                                        isDense: true,
+                                        elevation: 4,
+                                        padding: EdgeInsets.zero,
+                                        itemHeight: null,
+                                        isExpanded: true,
+                                        items: snapshot.data.map<
+                                            DropdownMenuItem<
+                                                LanguageModel>>((item) {
+                                          return DropdownMenuItem<
+                                              LanguageModel>(
+                                            value: item,
+                                            alignment: Alignment.centerLeft,
+                                            child: SizedBox(
+                                              width: 170,
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                      child: Text(
+                                                    item.name,
+                                                    style: const TextStyle(
+                                                        fontSize: 14),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    // style: TextStyle(
+                                                    //     fontSize:
+                                                    //         16)),
+                                                  )),
+                                                  if (item.size != null)
+                                                    Text(
+                                                        " (${sizeToGB(item.size)})",
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: const TextStyle(
+                                                            fontSize: 11)),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                        onChanged: (LanguageModel? newValue) {
+                                          setState(() {
+                                            selectedModel!.model = newValue!;
+                                          });
+                                          widget
+                                              .onSelectedModelChange!(newValue);
+                                        },
+                                      ),
+                                    ),
+                                  )
+                                : const Center(
+                                    child: Text('Loading...'),
+                                  );
+                          }),
+
+                    Expanded(
+                      child: ValueListenableBuilder(
+                          valueListenable: displayConfigData,
+                          builder: (context, displayConfig, _) {
+                            if (displayConfig.demoMode) {
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  // Play and Pause buttons
+                                  ValueListenableBuilder(
+                                      valueListenable: selectedScript,
+                                      builder: (context, script, _) {
+                                        return ValueListenableBuilder(
+                                            valueListenable: demoController,
+                                            builder: (context, demoCont, _) {
+                                              print(
+                                                  "Auto-play: ${demoCont.autoPlay} :: State: ${demoCont.state} :: Num Procs: ${messageProcessor!.numberOfProcesses.value}");
+                                              return Row(
+                                                children: [
+                                                  if (script != null)
+                                                    if ((demoCont.autoPlay &&
+                                                            (demoCont.index !=
+                                                                0) &&
+                                                            demoCont.index <
+                                                                script.script
+                                                                    .length) ||
+                                                        demoCont.state ==
+                                                            DemoState
+                                                                .generating)
+                                                      const CupertinoActivityIndicator(),
+                                                  if (script != null)
+                                                    Text(
+                                                        "Message: ${demoCont.index}/${script.script.length}",
+                                                        style: TextStyle(
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .colorScheme
+                                                                .primary)),
+                                                  const SizedBox(width: 4),
+                                                  TextButton(
+                                                      onPressed: () {
+                                                        demoCont.autoPlay =
+                                                            !demoCont.autoPlay;
+                                                        demoController
+                                                            .notifyListeners();
+                                                      },
+                                                      child: Text("Auto-Play",
+                                                          style: TextStyle(
+                                                              decoration: !demoCont
+                                                                      .autoPlay
+                                                                  ? TextDecoration
+                                                                      .lineThrough
+                                                                  : null,
+                                                              color: demoCont
+                                                                      .autoPlay
+                                                                  ? Theme.of(
+                                                                          context)
+                                                                      .colorScheme
+                                                                      .primary
+                                                                  : Colors
+                                                                      .grey))),
+                                                  IconButton(
+                                                    tooltip: script == null
+                                                        ? "select script"
+                                                        : null,
+                                                    icon: Icon(
+                                                      demoCont.index >=
+                                                              script!
+                                                                  .script.length
+                                                          ? Icons.refresh
+                                                          : demoCont.state ==
+                                                                  DemoState
+                                                                      .pause
+                                                              ? Icons.play_arrow
+                                                              : Icons.pause,
+                                                      color: script == null
+                                                          ? Colors.grey
+                                                          : demoCont.index ==
+                                                                  script.script
+                                                                      .length
+                                                              ? Colors.grey
+                                                              : Theme.of(
+                                                                      context)
+                                                                  .colorScheme
+                                                                  .primary,
+                                                    ),
+                                                    onPressed: () async {
+                                                      if (script != null) {
+                                                        print(
+                                                            "${demoCont.index} < ${script.script.length} = ${demoCont.index + 1 < script.script.length}");
+
+                                                        if (demoCont.index <
+                                                            script.script
+                                                                .length) {
+                                                          demoCont
+                                                              .state = demoCont
+                                                                      .state ==
+                                                                  DemoState
+                                                                      .pause
+                                                              ? DemoState.next
+                                                              : DemoState.pause;
+                                                          demoController
+                                                              .notifyListeners();
+                                                          // simulate looping through the messages here
+                                                          await Future.delayed(Duration(
+                                                              milliseconds: demoCont
+                                                                      .autoPlay
+                                                                  ? demoCont
+                                                                      .durBetweenMessages
+                                                                  : 80));
+                                                          demoCont.index += 1;
+                                                          demoCont.state =
+                                                              DemoState.pause;
+
+                                                          demoController
+                                                              .notifyListeners();
+                                                        } else {
+                                                          print(
+                                                              "\t[ resetting demo chat ]");
+                                                          if (widget
+                                                                  .onResetDemoChat !=
+                                                              null) {
+                                                            widget
+                                                                .onResetDemoChat!();
+                                                          }
+                                                        }
+                                                      } else {
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          const SnackBar(
+                                                            content: Center(
+                                                                child: Text(
+                                                                    '[ select a script ]')),
+                                                          ),
+                                                        );
+                                                      }
+                                                    },
+                                                  ),
+                                                ],
+                                              );
+                                            });
+                                      }),
+                                ],
+                              );
+                            } else {
+                              return Container();
+                            }
+                          }),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    if (selectedImages.isNotEmpty)
+                      Container(
+                        height: 75,
+                        constraints: const BoxConstraints(maxWidth: 800),
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.all(0),
+                          itemCount: selectedImages.length,
+                          shrinkWrap: true,
+                          itemBuilder: (BuildContext context, int index) {
+                            // TO show selected file
+                            return InkWell(
+                              onTap: () async {
+                                await launchImageViewer(
+                                    context,
+                                    kIsWeb
+                                        ? selectedImages[index].webFile
+                                        : selectedImages[index].localFile);
+                              },
+                              child: Stack(
+                                alignment: Alignment.topRight,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.only(
+                                        top: 15, right: 12),
+                                    child: Center(
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                        child: kIsWeb
+                                            ? Image.network(
+                                                selectedImages[index]
+                                                    .webFile!
+                                                    .path)
+                                            : Image.file(selectedImages[index]
+                                                .localFile!),
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    splashRadius: 11,
+                                    constraints: const BoxConstraints(),
+                                    padding: const EdgeInsets.all(0),
+                                    icon: const Icon(Icons.close),
+                                    iconSize: 21,
+                                    onPressed: () async {
+                                      await removeImage(index);
                                     },
                                   ),
-                                ),
-                              )
-                            : const Center(
-                                child: Text('Loading...'),
-                              );
-                      }),
-                const SizedBox(
-                  width: 10,
-                ),
-                if (selectedImages.isNotEmpty)
-                  Container(
-                    height: 75,
-                    constraints: const BoxConstraints(maxWidth: 800),
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.all(0),
-                      itemCount: selectedImages.length,
-                      shrinkWrap: true,
-                      itemBuilder: (BuildContext context, int index) {
-                        // TO show selected file
-                        return InkWell(
-                          onTap: () async {
-                            await launchImageViewer(
-                                context,
-                                kIsWeb
-                                    ? selectedImages[index].webFile
-                                    : selectedImages[index].localFile);
+                                ],
+                              ),
+                            );
+                            // If you are making the web app then you have to
+                            // use image provider as network image or in
+                            // android or iOS it will as file only
                           },
-                          child: Stack(
-                            alignment: Alignment.topRight,
-                            children: [
-                              Container(
-                                padding:
-                                    const EdgeInsets.only(top: 15, right: 12),
-                                child: Center(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    child: kIsWeb
-                                        ? Image.network(
-                                            selectedImages[index].webFile!.path)
-                                        : Image.file(
-                                            selectedImages[index].localFile!),
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                splashRadius: 11,
-                                constraints: const BoxConstraints(),
-                                padding: const EdgeInsets.all(0),
-                                icon: const Icon(Icons.close),
-                                iconSize: 21,
-                                onPressed: () async {
-                                  await removeImage(index);
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                        // If you are making the web app then you have to
-                        // use image provider as network image or in
-                        // android or iOS it will as file only
-                      },
-                    ),
-                  ),
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
+
             Container(
               color: Colors.white,
               child: MessageField(

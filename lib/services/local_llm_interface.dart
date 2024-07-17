@@ -38,6 +38,7 @@ class LocalLLMInterface {
   String chatEndpoint = "websocket_chat";
   String metaChatEndpoint = "websocket_meta_chat";
   String chatSummaryEndpoint = "websocket_chat_summary";
+  String mermaidChartEndpoint = "websocket_mermaid_chart";
 
   bool get isLocal => true;
   String get wsPrefix => isLocal ? 'ws' : 'wss';
@@ -65,6 +66,13 @@ class LocalLLMInterface {
         Uri.parse('$wsPrefix://$extractedDiAPI/$chatSummaryEndpoint'));
   }
 
+  void initMermaidChartWebsocket() {
+    String extractedDiAPI = httpAddress.split('/').last;
+    // Use ws for debugging, and wss for
+    webSocket = WebSocketChannel.connect(
+        Uri.parse('$wsPrefix://$extractedDiAPI/$mermaidChartEndpoint'));
+  }
+
   void newChatMessage(
       String message,
       List<Message> messageHistory,
@@ -87,6 +95,7 @@ class LocalLLMInterface {
 
     for (Message msg in messageHistory) {
       bool isUserMessage = msg.senderID! == user.uid;
+      String role = isUserMessage || msg.isDemo ? "user" : msg.senderID!;
       if (msg.images != null) {
         if (msg.images!.isNotEmpty) {
           try {
@@ -104,7 +113,7 @@ class LocalLLMInterface {
               images.add(path);
             }
             msgHist.add({
-              'role': isUserMessage ? "user" : msg.senderID!,
+              'role': role,
               'content': msg.message!.value,
               'images': images,
             });
@@ -112,16 +121,10 @@ class LocalLLMInterface {
             debugPrint("[ error parsing image ]");
           }
         } else {
-          msgHist.add({
-            'role': isUserMessage ? "user" : msg.senderID!,
-            'content': msg.message!.value
-          });
+          msgHist.add({'role': role, 'content': msg.message!.value});
         }
       } else {
-        msgHist.add({
-          'role': isUserMessage ? "user" : msg.senderID!,
-          'content': msg.message!.value
-        });
+        msgHist.add({'role': role, 'content': msg.message!.value});
       }
     }
 
@@ -455,6 +458,70 @@ class LocalLLMInterface {
     );
   }
 
+  void genMermaidChartWS(Message message, String convId, ModelConfig model,
+      {fullConversation = false}) {
+    initMermaidChartWebsocket();
+
+    if (webSocket == null) {
+      print("You must init the class first to connect to the websocket.");
+      return null;
+    }
+
+    Map<String, dynamic> submitPkg = {
+      "message": message.message!.value,
+      "conversation_id": convId,
+      "model": model.model.model,
+      "full_conversation": fullConversation ?? false,
+      "temperature": 0.06,
+    };
+
+    webSocket!.sink.add(json.encode(submitPkg));
+    debugPrint(
+        "\t\t[ Submitted package to websocket sink :: message ${message.message!.value}]");
+
+    DateTime? startTime = DateTime.now();
+
+    webSocket!.stream.listen(
+      (data) {
+        // print(data.runtimeType);
+        Map<String, dynamic> decoded = {};
+        try {
+          decoded = json.decode(data);
+        } catch (e) {
+          print("Error here");
+          print(e);
+        }
+
+        // print(decoded['status']);
+        // decoded['status'] has 4 options
+        // started, generating, completed, error
+        switch (decoded['status']) {
+          case 'generating':
+            int duration = DateTime.now().difference(startTime).inMilliseconds;
+            double durInSeconds = duration / 1000;
+            print(decoded['response'] + " :: $durInSeconds secs");
+          case 'completed':
+            // UPDATE MERMAID CHART ON MESSAGE
+            int duration = DateTime.now().difference(startTime).inMilliseconds;
+            double durInSeconds = duration / 1000;
+            print(decoded['response'] + " :: $durInSeconds secs");
+            message.mermaidChart.value = decoded['response'];
+          case 'error':
+            print(decoded['message']);
+            print("handle error");
+            break;
+          default:
+            print(decoded['status']);
+            break;
+        }
+      },
+      onError: (error) => print(error),
+      onDone: () {
+        print("WebSocket closed.");
+      },
+    );
+  }
+
   Future<ConversationData?> getChatAnalysis(String conversationID) async {
     final uri = httpAddress + "/chat_conversation_analysis";
     final url = Uri.parse(uri);
@@ -615,6 +682,59 @@ class LocalLLMInterface {
     } catch (e) {
       debugPrint('Error: $e');
       return null;
+    }
+  }
+
+  Future<void> genMermaidChart(
+      Message message, String convId, ModelConfig model,
+      {bool fullConversation = false}) async {
+    final uri = httpAddress + "/generate_mermaid_chart";
+    final url = Uri.parse(uri);
+    final headers = {
+      "accept": "application/json; charset=utf-8",
+      "Content-Type": "application/json; charset=utf-8"
+    };
+
+    // Prepare the payload
+    Map<String, dynamic> submitPkg = {
+      "message": message.message!.value,
+      "conversation_id": convId,
+      "model": model.model.model,
+      "full_conversation": fullConversation ?? false,
+      "temperature": 0.06,
+    };
+
+    // Encode the payload as JSON
+    String body = json.encode(submitPkg);
+
+    // Make the HTTP POST request
+    try {
+      var request = await http.post(url, headers: headers, body: body);
+
+      if (request.statusCode == 200) {
+        Map<String, dynamic> decoded = json.decode(request.body);
+
+        // Handle different status responses
+        switch (decoded['status']) {
+          case 'generating':
+            print(decoded['response']);
+            break;
+          case 'completed':
+            message.mermaidChart.value = decoded['response'];
+            print(decoded['response']);
+            break;
+          case 'error':
+            print(decoded['message']);
+            break;
+          default:
+            print(decoded['status']);
+            break;
+        }
+      } else {
+        print('Failed to load data. Status code: ${request.statusCode}');
+      }
+    } catch (e) {
+      print('Exception thrown: $e');
     }
   }
 }

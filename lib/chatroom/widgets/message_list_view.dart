@@ -49,42 +49,36 @@ class _MessageListViewState extends State<MessageListView> {
     reversedList = widget.messages.reversed.toList();
     return Container(
         color: Colors.white,
-        child: widget.messages.isNotEmpty
-            ? Align(
-                alignment: Alignment.topCenter,
-                child: Scrollbar(
-                  controller: _listViewController,
-                  child: ListView.builder(
-                    controller: _listViewController,
-                    shrinkWrap: true,
-                    reverse: true,
-                    padding: const EdgeInsets.fromLTRB(1, 2, 1, 2),
-                    itemCount:
-                        widget.messages.length, //_conversationData.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      var message =
-                          reversedList[index]; //_conversationData[_index];
-                      bool isOurMessage =
-                          message.senderID == userModel.value.uid; //_uid;
-                      return VisibilityDetector(
-                        key: Key("$index"),
-                        onVisibilityChanged: (
-                          VisibilityInfo visibilityInfo,
-                        ) {
-                          _handleVisibilityChanged(visibilityInfo, index);
-                        },
-                        child: MessageListViewChild(
-                          isOurMessage,
-                          message,
-                          key: Key(message.id),
-                        ),
-                      );
-                    },
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Scrollbar(
+            controller: _listViewController,
+            child: ListView.builder(
+              controller: _listViewController,
+              shrinkWrap: true,
+              reverse: true,
+              padding: const EdgeInsets.fromLTRB(1, 2, 1, 2),
+              itemCount: widget.messages.length, //_conversationData.length,
+              itemBuilder: (BuildContext context, int index) {
+                var message = reversedList[index]; //_conversationData[_index];
+                bool isOurMessage =
+                    message.senderID == userModel.value.uid; //_uid;
+                return VisibilityDetector(
+                  key: Key("$index"),
+                  onVisibilityChanged: (
+                    VisibilityInfo visibilityInfo,
+                  ) {
+                    _handleVisibilityChanged(visibilityInfo, index);
+                  },
+                  child: MessageListViewChild(
+                    isOurMessage,
+                    message,
+                    key: Key(message.id),
                   ),
-                ),
-              )
-            : const Center(
-                child: Text("Write a message"),
-              ));
+                );
+              },
+            ),
+          ),
+        ));
   }
 }
