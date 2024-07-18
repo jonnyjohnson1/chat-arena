@@ -48,13 +48,13 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
       bottomSelectedIndex = index;
     });
     if (index == 0) {
-      widget.title.value = "Chat Arena";
+      widget.title.value = "";
     }
     if (index == 1) {
-      widget.title.value = "Chat Arena";
+      widget.title.value = "";
     }
     if (index == 2) {
-      widget.title.value = "Chat Arena";
+      widget.title.value = "";
     }
     widget.title.notifyListeners();
   }
@@ -126,17 +126,18 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
     );
   }
 
+  // used to set the title, but we did away with the title at the top
   String setTitle(Conversation? conversation) {
     if (conversation != null) {
       switch (conversation.gameType) {
         case GameType.chat:
-          return "Chat"; //conversation.title! ??
+          return ""; //conversation.title! ??
         case GameType.debate:
-          return "Debate";
+          return "";
         case GameType.p2pchat:
-          return "Chat";
+          return "";
         default:
-          return "Chat";
+          return "";
       }
     } else {
       return "Chat";

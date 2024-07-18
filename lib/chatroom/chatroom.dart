@@ -129,52 +129,52 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        ValueListenableBuilder(
-            valueListenable: displayConfigData,
-            builder: ((context, displayConfig, child) {
-              if (displayConfig.demoMode) {
-                return ValueListenableBuilder(
-                    valueListenable: selectedScript,
-                    builder: ((context, script, child) {
-                      if (script != null) {
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text("Script: "),
-                            const SizedBox(
-                              width: 4,
-                            ),
-                            Text(script.name)
-                          ],
-                        );
-                      }
+        // ValueListenableBuilder(
+        //     valueListenable: displayConfigData,
+        //     builder: ((context, displayConfig, child) {
+        //       if (displayConfig.demoMode) {
+        //         return ValueListenableBuilder(
+        //             valueListenable: selectedScript,
+        //             builder: ((context, script, child) {
+        //               if (script != null) {
+        //                 return Row(
+        //                   mainAxisSize: MainAxisSize.min,
+        //                   children: [
+        //                     Text("Script: "),
+        //                     const SizedBox(
+        //                       width: 4,
+        //                     ),
+        //                     Text(script.name)
+        //                   ],
+        //                 );
+        //               }
 
-                      return Container();
-                    }));
-              }
-              return Container();
-            })),
-        if (widget.showTopTitle)
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0, bottom: 3, top: 3),
-            child: InkWell(
-              onTap: () {
-                if (widget.topTitleText == "insert topic") {
-                  print("change title");
-                }
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(widget.topTitleHeading),
-                  const SizedBox(
-                    width: 4,
-                  ),
-                  Text(widget.topTitleText)
-                ],
-              ),
-            ),
-          ),
+        //               return Container();
+        //             }));
+        //       }
+        //       return Container();
+        //     })),
+        // if (widget.showTopTitle)
+        //   Padding(
+        //     padding: const EdgeInsets.only(left: 8.0, bottom: 3, top: 3),
+        //     child: InkWell(
+        //       onTap: () {
+        //         if (widget.topTitleText == "insert topic") {
+        //           print("change title");
+        //         }
+        //       },
+        //       child: Row(
+        //         mainAxisSize: MainAxisSize.min,
+        //         children: [
+        //           Text(widget.topTitleHeading),
+        //           const SizedBox(
+        //             width: 4,
+        //           ),
+        //           Text(widget.topTitleText)
+        //         ],
+        //       ),
+        //     ),
+        //   ),
         Expanded(
             child: Stack(
           children: [

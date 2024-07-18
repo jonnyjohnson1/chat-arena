@@ -23,7 +23,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   ValueNotifier<Widget> homePage = ValueNotifier(Container());
-  ValueNotifier<String> title = ValueNotifier("Chat Arena");
+  ValueNotifier<String> title = ValueNotifier("");
   late String directoryPath;
   ValueNotifier<MemoryConfig> sysResources =
       ValueNotifier(MemoryConfig(totalMemory: 17, usedMemory: 0.0));

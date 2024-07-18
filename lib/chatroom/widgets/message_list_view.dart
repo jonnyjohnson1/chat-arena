@@ -57,7 +57,7 @@ class _MessageListViewState extends State<MessageListView> {
               controller: _listViewController,
               shrinkWrap: true,
               reverse: true,
-              padding: const EdgeInsets.fromLTRB(1, 2, 1, 2),
+              padding: const EdgeInsets.fromLTRB(1, 2, 7, 2),
               itemCount: widget.messages.length, //_conversationData.length,
               itemBuilder: (BuildContext context, int index) {
                 var message = reversedList[index]; //_conversationData[_index];
@@ -70,10 +70,14 @@ class _MessageListViewState extends State<MessageListView> {
                   ) {
                     _handleVisibilityChanged(visibilityInfo, index);
                   },
-                  child: MessageListViewChild(
-                    isOurMessage,
-                    message,
-                    key: Key(message.id),
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                        top: index == widget.messages.length - 1 ? 45 : 0),
+                    child: MessageListViewChild(
+                      isOurMessage,
+                      message,
+                      key: Key(message.id),
+                    ),
                   ),
                 );
               },
