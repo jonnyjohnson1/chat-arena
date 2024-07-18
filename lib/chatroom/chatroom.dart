@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'package:chat/chatroom/widgets/empty_home_page/starter_home_page.dart';
+import 'package:chat/models/backend_connected.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/demoController.dart';
 import 'package:chat/models/display_configs.dart';
@@ -70,6 +71,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   late MessageProcessor? messageProcessor;
   ValueNotifier<bool> isProcessing = ValueNotifier(false);
 
+  late ValueNotifier<BackendService?> backendConnector;
   @override
   void initState() {
     displayConfigData =
@@ -79,6 +81,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     selectedScript =
         Provider.of<ValueNotifier<Script?>>(context, listen: false);
     messageProcessor = Provider.of<MessageProcessor>(context, listen: false);
+    backendConnector =
+        Provider.of<ValueNotifier<BackendService?>>(context, listen: false);
+
     if (widget.showModelSelectButton) {
       assert(widget.selectedModelConfig != null &&
           widget.onSelectedModelChange != null);
@@ -254,91 +259,106 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                     ),
                     // model selector button
                     if (widget.showModelSelectButton)
-                      FutureBuilder(
-                          future: getModels(displayConfigData.value.apiConfig),
-                          builder:
-                              (BuildContext context, AsyncSnapshot snapshot) {
-                            return snapshot.hasData
-                                ? Material(
-                                    color: Colors.white,
-                                    child: Container(
-                                      decoration: const BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(10)),
-                                      ),
-                                      width: 135,
-                                      height: 28,
-                                      child: DropdownButton<LanguageModel>(
-                                        hint: Padding(
-                                          padding: const EdgeInsets.only(
-                                              top: 5.0, left: 6),
-                                          child: Center(
-                                            child: Text(
-                                              selectedModel!.model.name ??
-                                                  'make a selection',
-                                              overflow: TextOverflow.ellipsis,
-                                              style:
-                                                  const TextStyle(fontSize: 12),
+                      ValueListenableBuilder<BackendService?>(
+                          valueListenable: backendConnector,
+                          builder: (context, backend, _) {
+                            return FutureBuilder(
+                                future: getModels(
+                                    displayConfigData.value.apiConfig),
+                                builder: (BuildContext context,
+                                    AsyncSnapshot snapshot) {
+                                  return snapshot.hasData
+                                      ? Material(
+                                          color: Colors.white,
+                                          child: Container(
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(10)),
                                             ),
-                                          ),
-                                        ),
-                                        borderRadius: const BorderRadius.all(
-                                            Radius.circular(10)),
-                                        alignment: Alignment.center,
-                                        underline: Container(),
-                                        isDense: true,
-                                        elevation: 4,
-                                        padding: EdgeInsets.zero,
-                                        itemHeight: null,
-                                        isExpanded: true,
-                                        items: snapshot.data.map<
-                                            DropdownMenuItem<
-                                                LanguageModel>>((item) {
-                                          return DropdownMenuItem<
-                                              LanguageModel>(
-                                            value: item,
-                                            alignment: Alignment.centerLeft,
-                                            child: SizedBox(
-                                              width: 170,
-                                              child: Row(
-                                                children: [
-                                                  Expanded(
-                                                      child: Text(
-                                                    item.name,
-                                                    style: const TextStyle(
-                                                        fontSize: 14),
+                                            width: 135,
+                                            height: 28,
+                                            child:
+                                                DropdownButton<LanguageModel>(
+                                              hint: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 5.0, left: 6),
+                                                child: Center(
+                                                  child: Text(
+                                                    selectedModel!.model.name ??
+                                                        'make a selection',
                                                     overflow:
                                                         TextOverflow.ellipsis,
-                                                    // style: TextStyle(
-                                                    //     fontSize:
-                                                    //         16)),
-                                                  )),
-                                                  if (item.size != null)
-                                                    Text(
-                                                        " (${sizeToGB(item.size)})",
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        style: const TextStyle(
-                                                            fontSize: 11)),
-                                                ],
+                                                    style: const TextStyle(
+                                                        fontSize: 12),
+                                                  ),
+                                                ),
                                               ),
+                                              borderRadius:
+                                                  const BorderRadius.all(
+                                                      Radius.circular(10)),
+                                              alignment: Alignment.center,
+                                              underline: Container(),
+                                              isDense: true,
+                                              elevation: 4,
+                                              padding: EdgeInsets.zero,
+                                              itemHeight: null,
+                                              isExpanded: true,
+                                              items: snapshot.data.map<
+                                                  DropdownMenuItem<
+                                                      LanguageModel>>((item) {
+                                                return DropdownMenuItem<
+                                                    LanguageModel>(
+                                                  value: item,
+                                                  alignment:
+                                                      Alignment.centerLeft,
+                                                  child: SizedBox(
+                                                    width: 170,
+                                                    child: Row(
+                                                      children: [
+                                                        Expanded(
+                                                            child: Text(
+                                                          item.name,
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 14),
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          // style: TextStyle(
+                                                          //     fontSize:
+                                                          //         16)),
+                                                        )),
+                                                        if (item.size != null)
+                                                          Text(
+                                                              " (${sizeToGB(item.size)})",
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                              style:
+                                                                  const TextStyle(
+                                                                      fontSize:
+                                                                          11)),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                              onChanged:
+                                                  (LanguageModel? newValue) {
+                                                setState(() {
+                                                  selectedModel!.model =
+                                                      newValue!;
+                                                });
+                                                widget.onSelectedModelChange!(
+                                                    newValue);
+                                              },
                                             ),
-                                          );
-                                        }).toList(),
-                                        onChanged: (LanguageModel? newValue) {
-                                          setState(() {
-                                            selectedModel!.model = newValue!;
-                                          });
-                                          widget
-                                              .onSelectedModelChange!(newValue);
-                                        },
-                                      ),
-                                    ),
-                                  )
-                                : const Center(
-                                    child: Text('Loading...'),
-                                  );
+                                          ),
+                                        )
+                                      : const Center(
+                                          child: Text('Loading...'),
+                                        );
+                                });
                           }),
 
                     Expanded(

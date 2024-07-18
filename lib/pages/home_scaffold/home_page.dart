@@ -1,3 +1,4 @@
+import 'package:chat/models/backend_connected.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/demoController.dart';
 import 'package:chat/models/display_configs.dart';
@@ -32,6 +33,8 @@ class _HomePageState extends State<HomePage> {
   ValueNotifier<User> userId = ValueNotifier(User(uid: ""));
   ValueNotifier<Scripts?> scripts = ValueNotifier(null);
   ValueNotifier<Script?> selectedScript = ValueNotifier(null);
+  ValueNotifier<BackendService?> backendConnector =
+      ValueNotifier(BackendService());
   ValueNotifier<DemoController> demoController = ValueNotifier(DemoController(
       state: DemoState.pause,
       index: 0,
@@ -98,6 +101,8 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<ValueNotifier<BackendService?>>.value(
+            value: backendConnector),
         ChangeNotifierProvider<ValueNotifier<Conversation?>>.value(
             value: currentSelectedConversation),
         ChangeNotifierProvider<ValueNotifier<DisplayConfigData>>.value(

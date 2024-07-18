@@ -9,9 +9,7 @@ import 'package:chat/pages/home_scaffold/analytics_drawer.dart';
 import 'package:chat/pages/home_scaffold/app_bar.dart';
 import 'package:chat/pages/home_scaffold/drawer.dart';
 import 'package:chat/pages/home_scaffold/widgets/scripts_list.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 class HomePageLayoutManager extends StatefulWidget {
@@ -188,24 +186,30 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
         child: Scaffold(
           key: _scaffoldKey,
           endDrawer: Drawer(
+              child: Container(
+            color: Colors.white,
+            child: SafeArea(
+              bottom: false,
               child: AnalyticsViewDrawer(
-            isMobile: isMobile,
-            onSettingsDrawerTap: (String page) {
-              if (page == "gamemanager") {
-                widget.title.value = "Game Manager";
-                widget.title.notifyListeners();
-                widget.body.value = GamesListPage(
-                  duration: 90,
-                  selectedGame: (GamesConfig selected) {
-                    // TODO Update home page to game viewer page
-                  },
-                );
-                widget.body.notifyListeners();
-              }
-            },
-            body: widget.body,
-            conversations: widget.conversations,
-            title: widget.title,
+                isMobile: isMobile,
+                onSettingsDrawerTap: (String page) {
+                  if (page == "gamemanager") {
+                    widget.title.value = "Game Manager";
+                    widget.title.notifyListeners();
+                    widget.body.value = GamesListPage(
+                      duration: 90,
+                      selectedGame: (GamesConfig selected) {
+                        // TODO Update home page to game viewer page
+                      },
+                    );
+                    widget.body.notifyListeners();
+                  }
+                },
+                body: widget.body,
+                conversations: widget.conversations,
+                title: widget.title,
+              ),
+            ),
           )),
           // appBar: ,
           body: Container(
@@ -351,127 +355,132 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                     ),
                   ),
                 ),
-                Container(
-                  height: 45,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: [.12, .5, 1],
-                      colors: [
-                        Colors.white,
-                        Color.fromARGB(127, 255, 255, 255),
-                        Color.fromARGB(0, 255, 255, 255)
-                      ],
+                SafeArea(
+                  child: Container(
+                    height: 45,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: [0, .18, .48, .7],
+                        colors: [
+                          Colors.white,
+                          Color.fromARGB(220, 255, 255, 255),
+                          Color.fromARGB(127, 255, 255, 255),
+                          Color.fromARGB(0, 255, 255, 255)
+                        ],
+                      ),
                     ),
-                  ),
-                  child: buildAppBar(
-                      isMobile,
-                      widget.title,
-                      displayConfigData,
-                      bottomSelectedIndex,
-                      overlayIsOpen,
-                      context, onMenuTap: () {
-                    !isMobile
-                        ? setState(() {
-                            drawerIsOpen = !drawerIsOpen;
-                            if (!startDrawerOpen.value) {
-                              startDrawerOpen.value = true;
-                              startDrawerOpen.notifyListeners();
-                            }
-                          })
-                        : showModalBottomSheet<void>(
-                            context: context,
-                            enableDrag: true,
-                            isScrollControlled: true,
-                            shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(10),
-                                    topRight: Radius.circular(10))),
-                            builder: (BuildContext context) {
-                              return MultiProvider(
-                                providers: [
-                                  Provider.value(value: true)
-                                  // Provider<
-                                  //     SwiftFunctionsInterface>.value(
-                                  //   value: swiftInterface,
-                                  // ),
-                                ],
-                                child: Container(
-                                    padding: EdgeInsets.only(
-                                        bottom: MediaQuery.of(context)
-                                            .viewInsets
-                                            .bottom),
-                                    constraints:
-                                        const BoxConstraints(maxHeight: 700),
-                                    height:
-                                        MediaQuery.of(context).size.height - 85,
-                                    child: GamesListPage(
-                                      duration: 90,
-                                      isIphone: isMobile,
-                                      selectedGame: (GamesConfig selected) {
-                                        // TODO Update hoem page to game viewer page
-                                      },
-                                    )),
-                              );
-                            });
-                  }, onAnalyticsTap: () {
-                    !isMobile
-                        ? setState(() {
-                            analyticsDrawerIsOpen = !analyticsDrawerIsOpen;
-                          })
-                        : endDrawerIsOpen
-                            ? _scaffoldKey.currentState?.closeEndDrawer()
-                            : _scaffoldKey.currentState?.openEndDrawer();
-                  }, onChatsTap: () {
-                    debugPrint("Chats");
-                    showModalBottomSheet<void>(
-                        context: context,
-                        enableDrag: true,
-                        isScrollControlled: true,
-                        shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(10),
-                                topRight: Radius.circular(10))),
-                        builder: (BuildContext context) {
-                          return MultiProvider(
-                            providers: [
-                              ChangeNotifierProvider.value(
-                                  value: displayConfigData)
-                            ],
-                            child: Container(
-                                padding: EdgeInsets.only(
-                                    bottom: MediaQuery.of(context)
-                                        .viewInsets
-                                        .bottom),
-                                constraints:
-                                    const BoxConstraints(maxHeight: 700),
-                                height: MediaQuery.of(context).size.height - 85,
-                                child: PageViewDrawer(
-                                  isMobile: isMobile,
-                                  onSettingsDrawerTap: (String page) {
-                                    if (page == "gamemanager") {
-                                      widget.title.value = "Game Manager";
-                                      widget.title.notifyListeners();
-                                      widget.body.value = GamesListPage(
+                    child: buildAppBar(
+                        isMobile,
+                        widget.title,
+                        displayConfigData,
+                        bottomSelectedIndex,
+                        overlayIsOpen,
+                        context, onMenuTap: () {
+                      !isMobile
+                          ? setState(() {
+                              drawerIsOpen = !drawerIsOpen;
+                              if (!startDrawerOpen.value) {
+                                startDrawerOpen.value = true;
+                                startDrawerOpen.notifyListeners();
+                              }
+                            })
+                          : showModalBottomSheet<void>(
+                              context: context,
+                              enableDrag: true,
+                              isScrollControlled: true,
+                              shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(10),
+                                      topRight: Radius.circular(10))),
+                              builder: (BuildContext context) {
+                                return MultiProvider(
+                                  providers: [
+                                    Provider.value(value: true)
+                                    // Provider<
+                                    //     SwiftFunctionsInterface>.value(
+                                    //   value: swiftInterface,
+                                    // ),
+                                  ],
+                                  child: Container(
+                                      padding: EdgeInsets.only(
+                                          bottom: MediaQuery.of(context)
+                                              .viewInsets
+                                              .bottom),
+                                      constraints:
+                                          const BoxConstraints(maxHeight: 700),
+                                      height:
+                                          MediaQuery.of(context).size.height -
+                                              85,
+                                      child: GamesListPage(
                                         duration: 90,
+                                        isIphone: isMobile,
                                         selectedGame: (GamesConfig selected) {
-                                          // TODO Update home page to game viewer page
+                                          // TODO Update hoem page to game viewer page
                                         },
-                                        // homePage: widget.body,
-                                      );
-                                      widget.body.notifyListeners();
-                                    }
-                                  },
-                                  body: widget.body,
-                                  conversations: widget.conversations,
-                                  title: widget.title,
-                                )),
-                          );
-                        });
-                  }, overlayPopupController: () {
-                    _overlayPopupController(context);
-                  }),
+                                      )),
+                                );
+                              });
+                    }, onAnalyticsTap: () {
+                      !isMobile
+                          ? setState(() {
+                              analyticsDrawerIsOpen = !analyticsDrawerIsOpen;
+                            })
+                          : endDrawerIsOpen
+                              ? _scaffoldKey.currentState?.closeEndDrawer()
+                              : _scaffoldKey.currentState?.openEndDrawer();
+                    }, onChatsTap: () {
+                      debugPrint("Chats");
+                      showModalBottomSheet<void>(
+                          context: context,
+                          enableDrag: true,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(10),
+                                  topRight: Radius.circular(10))),
+                          builder: (BuildContext context) {
+                            return MultiProvider(
+                              providers: [
+                                ChangeNotifierProvider.value(
+                                    value: displayConfigData)
+                              ],
+                              child: Container(
+                                  padding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(context)
+                                          .viewInsets
+                                          .bottom),
+                                  constraints:
+                                      const BoxConstraints(maxHeight: 700),
+                                  height:
+                                      MediaQuery.of(context).size.height - 85,
+                                  child: PageViewDrawer(
+                                    isMobile: isMobile,
+                                    onSettingsDrawerTap: (String page) {
+                                      if (page == "gamemanager") {
+                                        widget.title.value = "Game Manager";
+                                        widget.title.notifyListeners();
+                                        widget.body.value = GamesListPage(
+                                          duration: 90,
+                                          selectedGame: (GamesConfig selected) {
+                                            // TODO Update home page to game viewer page
+                                          },
+                                          // homePage: widget.body,
+                                        );
+                                        widget.body.notifyListeners();
+                                      }
+                                    },
+                                    body: widget.body,
+                                    conversations: widget.conversations,
+                                    title: widget.title,
+                                  )),
+                            );
+                          });
+                    }, overlayPopupController: () {
+                      _overlayPopupController(context);
+                    }),
+                  ),
                 )
               ],
             ),
