@@ -59,10 +59,6 @@ class Script {
       cast.putIfAbsent(element.data.userId, () {
         return Tools().getRandomString(6); // add senderID
       });
-      print("_" * 84);
-      print(element.role);
-      print(element.data.userId);
-      print("_" * 84);
     }
 
     return Script(

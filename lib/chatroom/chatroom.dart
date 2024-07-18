@@ -393,7 +393,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                       const CupertinoActivityIndicator(),
                                                   if (script != null)
                                                     Text(
-                                                        "Message: ${demoCont.index}/${script.script.length}",
+                                                        "${demoCont.index}/${script.script.length}",
                                                         style: TextStyle(
                                                             color: Theme.of(
                                                                     context)

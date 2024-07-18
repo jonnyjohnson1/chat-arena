@@ -102,9 +102,9 @@ class _StarterHomePageState extends State<StarterHomePage> {
       if (response.statusCode == 200 && body == "hello world") {
         setState(() {
           if (isDefault) {
-            responseMessageDefault = body;
+            responseMessageDefault = "You are connected!";
           } else {
-            responseMessageCustom = body;
+            responseMessageCustom = "You are connected!";
           }
         });
         Future.delayed(const Duration(milliseconds: 1200), () {

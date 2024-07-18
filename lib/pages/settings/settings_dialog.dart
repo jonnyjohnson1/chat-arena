@@ -71,7 +71,7 @@ class _SettingsDialogState extends State<SettingsDialog>
     return false;
   }
 
-  final int futureWaitDuration = 900;
+  final int futureWaitDuration = 230;
 
   Future<bool> _togglecalcImageGen() async {
     await Future.delayed(Duration(milliseconds: futureWaitDuration));

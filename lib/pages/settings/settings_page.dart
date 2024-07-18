@@ -60,7 +60,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   // Future<bool> _toggleSetting(String settingKey) async {
-  //   await Future.delayed(Duration(milliseconds: 900));
+  //   await Future.delayed(Duration(milliseconds: futureWaitDuration));
   //   final newValue = !displayConfigData.value.getSetting(settingKey);
   //   displayConfigData.value.setSetting(settingKey, newValue);
   //   displayConfigData.notifyListeners();
@@ -69,7 +69,7 @@ class _SettingsPageState extends State<SettingsPage>
   // }
 
   Future<bool> _toggleShowSidebarBaseAnalytics() async {
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.showSidebarBaseAnalytics;
     displayConfigData.value.showSidebarBaseAnalytics = newValue;
     displayConfigData.notifyListeners();
@@ -80,7 +80,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _toggleShowInMsgNER() async {
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.showInMessageNER;
     displayConfigData.value.showInMessageNER = newValue;
     displayConfigData.notifyListeners();
@@ -91,7 +91,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _toggleNERCalculations() async {
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.calculateInMessageNER;
     displayConfigData.value.calculateInMessageNER = newValue;
     displayConfigData.notifyListeners();
@@ -102,7 +102,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _toggleShowModerationTags() async {
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.showModerationTags;
     displayConfigData.value.showModerationTags = newValue;
     displayConfigData.notifyListeners();
@@ -113,7 +113,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _toggleModerationCalculations() async {
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.calculateModerationTags;
     displayConfigData.value.calculateModerationTags = newValue;
     displayConfigData.notifyListeners();
@@ -124,7 +124,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _togglecalcImageGen() async {
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.calcImageGen;
     displayConfigData.value.calcImageGen = newValue;
     displayConfigData.notifyListeners();
@@ -135,7 +135,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _toggleCalcMsgMermaidChart() async {
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.calcMsgMermaidChart;
     displayConfigData.value.calcMsgMermaidChart = newValue;
     displayConfigData.notifyListeners();
@@ -146,7 +146,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _toggleCalcConvMermaidChart() async {
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.calcConvMermaidChart;
     displayConfigData.value.calcConvMermaidChart = newValue;
     displayConfigData.notifyListeners();
@@ -157,7 +157,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<bool> _toggleDemoMode() async {
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(Duration(milliseconds: futureWaitDuration));
     final newValue = !displayConfigData.value.demoMode;
     displayConfigData.value.demoMode = newValue;
     displayConfigData.notifyListeners();
@@ -212,6 +212,8 @@ class _SettingsPageState extends State<SettingsPage>
       });
     }
   }
+
+  final int futureWaitDuration = 230;
 
   @override
   Widget build(BuildContext context) {

@@ -362,11 +362,13 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        stops: [0, .18, .48, .7],
+                        stops: [0, 0.08, .21, .40, .45, .6],
                         colors: [
                           Colors.white,
-                          Color.fromARGB(220, 255, 255, 255),
-                          Color.fromARGB(127, 255, 255, 255),
+                          Color.fromARGB(245, 255, 255, 255),
+                          Color.fromARGB(235, 255, 255, 255),
+                          Color.fromARGB(183, 255, 255, 255),
+                          Color.fromARGB(155, 255, 255, 255),
                           Color.fromARGB(0, 255, 255, 255)
                         ],
                       ),
