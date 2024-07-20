@@ -59,6 +59,7 @@ class _MessageFieldState extends State<MessageField> {
                   minLines: 1,
                   maxLines: 5,
                   focusNode: _focusNode,
+                  textInputAction: TextInputAction.send,
                   onSubmitted: (String text) {
                     if (text.trim() != "") {
                       widget.onSubmit(text);

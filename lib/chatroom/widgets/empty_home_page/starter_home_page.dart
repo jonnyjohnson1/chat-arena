@@ -4,8 +4,9 @@ import 'dart:io';
 import 'package:chat/chatroom/widgets/empty_home_page/script_item.dart';
 import 'package:chat/models/backend_connected.dart';
 import 'package:chat/models/conversation.dart';
-import 'package:chat/models/demoController.dart';
+import 'package:chat/models/demo_controller.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/models/env_installer.dart';
 import 'package:chat/models/scripts.dart';
 import 'package:chat/models/user.dart';
 import 'package:flutter/cupertino.dart';
@@ -29,10 +30,13 @@ class _StarterHomePageState extends State<StarterHomePage> {
   late ValueNotifier<DemoController> demoController;
   late ValueNotifier<BackendService?> backendConnector;
   late ValueNotifier<double> opacityNotifier;
+  late ValueNotifier<InstallerService> installerService;
 
   @override
   void initState() {
     super.initState();
+    installerService =
+        Provider.of<ValueNotifier<InstallerService>>(context, listen: false);
     currentSelectedConversation =
         Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
     displayConfigData =
@@ -107,9 +111,12 @@ class _StarterHomePageState extends State<StarterHomePage> {
             responseMessageCustom = "You are connected!";
           }
         });
-        Future.delayed(const Duration(milliseconds: 1200), () {
+        Future.delayed(const Duration(milliseconds: 1200), () async {
           backendConnector.value!.connected = true;
           backendConnector.notifyListeners();
+          installerService.value.backendConnected =
+              await installerService.value.checkBackendConnected();
+          installerService.notifyListeners();
         });
       } else {
         setState(() {
@@ -133,115 +140,121 @@ class _StarterHomePageState extends State<StarterHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<BackendService?>(
-      valueListenable: backendConnector,
-      builder: (context, backend, _) {
-        return ValueListenableBuilder<Scripts?>(
-          valueListenable: scriptsListenable,
-          builder: (context, scripts, _) {
-            if (scripts == null) return const CupertinoActivityIndicator();
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Column(
-                    children: [
-                      Text(
-                        "Demos",
-                        style: TextStyle(
-                            color: Theme.of(context)
-                                .textTheme
-                                .bodyLarge!
-                                .color!
-                                .withOpacity(.74)),
-                      ),
-                      Wrap(
-                        spacing: 8.0, // space between items horizontally
-                        runSpacing: 8.0, // space between items vertically
-                        children: scripts.demos.map((script) {
-                          return ScriptItem(
-                            script: script,
-                            onScriptSelectionTap: () {
-                              setState(() {
-                                selectedScript.value = script;
-                                selectedScript.notifyListeners();
-                                debugPrint(
-                                    "\t[ selected script :: ${script.name} ]");
-                                displayConfigData.value.demoMode = true;
-                                displayConfigData.notifyListeners();
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(
-                        height: 20,
-                      ), // whitespace to center the demo options
-                      // if platform is not desktop/linux/macos display url option
-                      if (!_isDesktopPlatform())
-                        AnimatedOpacity(
-                          opacity: opacityNotifier.value,
-                          duration: const Duration(seconds: 1),
-                          child: Column(
-                            children: [
-                              Text(
-                                "API URL",
-                                style: TextStyle(
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge!
-                                        .color!
-                                        .withOpacity(.74)),
-                              ),
-                              SizedBox(
-                                width: 200,
-                                height: 38,
-                                child: TextField(
-                                  style: TextStyle(
-                                      color: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge!
-                                          .color!
-                                          .withOpacity(.74)),
-                                  textAlign: TextAlign.center,
-                                  decoration: inputDecoration.copyWith(
-                                      hintText: "Enter your endpoint"),
-                                  onSubmitted: (value) {
-                                    displayConfigData
-                                        .value.apiConfig.customEndpoint = value;
-                                    displayConfigData.notifyListeners();
-                                    pingEndpoint(false);
+    return ValueListenableBuilder<InstallerService>(
+        valueListenable: installerService,
+        builder: (context, backend, _) {
+          return ValueListenableBuilder<BackendService?>(
+            valueListenable: backendConnector,
+            builder: (context, backend, _) {
+              return ValueListenableBuilder<Scripts?>(
+                valueListenable: scriptsListenable,
+                builder: (context, scripts, _) {
+                  if (scripts == null)
+                    return const CupertinoActivityIndicator();
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              "Demos",
+                              style: TextStyle(
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge!
+                                      .color!
+                                      .withOpacity(.74)),
+                            ),
+                            Wrap(
+                              spacing: 8.0, // space between items horizontally
+                              runSpacing: 8.0, // space between items vertically
+                              children: scripts.demos.map((script) {
+                                return ScriptItem(
+                                  script: script,
+                                  onScriptSelectionTap: () {
+                                    setState(() {
+                                      selectedScript.value = script;
+                                      selectedScript.notifyListeners();
+                                      debugPrint(
+                                          "\t[ selected script :: ${script.name} ]");
+                                      displayConfigData.value.demoMode = true;
+                                      displayConfigData.notifyListeners();
+                                    });
                                   },
-                                  onChanged: (value) {
-                                    displayConfigData
-                                        .value.apiConfig.customEndpoint = value;
-                                    displayConfigData.notifyListeners();
-                                    pingEndpoint(false);
-                                  },
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ), // whitespace to center the demo options
+                            // if platform is not desktop/linux/macos display url option
+                            if (!_isDesktopPlatform() ||
+                                !installerService.value.backendConnected)
+                              AnimatedOpacity(
+                                opacity: opacityNotifier.value,
+                                duration: const Duration(seconds: 1),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      "API URL",
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge!
+                                              .color!
+                                              .withOpacity(.74)),
+                                    ),
+                                    SizedBox(
+                                      width: 200,
+                                      height: 38,
+                                      child: TextField(
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge!
+                                                .color!
+                                                .withOpacity(.74)),
+                                        textAlign: TextAlign.center,
+                                        decoration: inputDecoration.copyWith(
+                                            hintText: "Enter your endpoint"),
+                                        onSubmitted: (value) async {
+                                          displayConfigData.value.apiConfig
+                                              .customEndpoint = value;
+                                          displayConfigData.notifyListeners();
+                                          await pingEndpoint(false);
+                                        },
+                                        onChanged: (value) async {
+                                          displayConfigData.value.apiConfig
+                                              .customEndpoint = value;
+                                          displayConfigData.notifyListeners();
+                                          await pingEndpoint(false);
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      responseMessageCustom,
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge!
+                                              .color!
+                                              .withOpacity(.74)),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 3),
-                              Text(
-                                responseMessageCustom,
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge!
-                                        .color!
-                                        .withOpacity(.74)),
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        });
   }
 }

@@ -45,4 +45,7 @@ class APIConfig {
     this.defaultEndpoint = "http://0.0.0.0:13341",
     this.customEndpoint = "",
   });
+
+  String getDefault() =>
+      customEndpoint.isEmpty ? defaultEndpoint : customEndpoint;
 }

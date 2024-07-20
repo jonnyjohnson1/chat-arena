@@ -4,7 +4,7 @@ import 'package:chat/chatroom/chatroom.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/custom_file.dart';
-import 'package:chat/models/demoController.dart';
+import 'package:chat/models/demo_controller.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/llm.dart';

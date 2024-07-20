@@ -2,6 +2,7 @@ import 'package:chat/models/conversation.dart';
 import 'package:chat/models/conversation_settings.dart';
 import 'package:chat/models/conversation_summary.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/models/env_installer.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/models/messages.dart';
@@ -37,6 +38,8 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
   late ValueNotifier<List<uiMessage.Message>> messages;
   late ValueNotifier<List<ConversationSummary>> summaryMessages;
   late TabController _tabController;
+
+  late ValueNotifier<InstallerService> installerService;
   int pathIndex = 0;
 
   Map<String, List<Suggestion>> suggestionsMap = {};
@@ -85,6 +88,8 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
       });
     });
 
+    installerService =
+        Provider.of<ValueNotifier<InstallerService>>(context, listen: false);
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     currentSelectedConversation =
@@ -286,7 +291,22 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                             const SizedBox(height: 8),
                             buildQueryInput(context),
                             const SizedBox(height: 4),
-                            buildModelSelector(context),
+                            ValueListenableBuilder<InstallerService>(
+                                valueListenable: installerService,
+                                builder: (context, backend, _) {
+                                  if (installerService.value.backendConnected) {
+                                    return buildModelSelector(context);
+                                  } else {
+                                    return const Center(
+                                        child: Text(
+                                      "Connect your device to the backend",
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400),
+                                      overflow: TextOverflow.ellipsis,
+                                    ));
+                                  }
+                                }),
                             buildTabBar(),
                             buildTabContent(),
                           ],
@@ -875,7 +895,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                 width: 12,
               ),
               SizedBox(
-                  height: 38,
+                  height: 33,
                   width: 150,
                   child: FormField<String>(
                     builder: (FormFieldState<String> state) {
@@ -897,19 +917,23 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                             return Row(
                               children: [
                                 Expanded(
-                                  child: TextField(
-                                    controller: _textController,
-                                    onChanged: (String newValue) {
-                                      setState(() {
-                                        _currentSelectedValue = newValue;
-                                        state.didChange(newValue);
-                                      });
-                                    },
-                                    style: const TextStyle(fontSize: 13),
-                                    decoration: const InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: 'Enter a focus...',
-                                        hintStyle: TextStyle(fontSize: 13)),
+                                  child: Center(
+                                    child: TextField(
+                                      controller: _textController,
+                                      onChanged: (String newValue) {
+                                        setState(() {
+                                          _currentSelectedValue = newValue;
+                                          state.didChange(newValue);
+                                        });
+                                      },
+                                      style: const TextStyle(fontSize: 13),
+                                      decoration: const InputDecoration(
+                                          contentPadding:
+                                              EdgeInsets.only(bottom: 14),
+                                          border: InputBorder.none,
+                                          hintText: 'Enter a focus...',
+                                          hintStyle: TextStyle(fontSize: 13)),
+                                    ),
                                   ),
                                 ),
                                 Material(

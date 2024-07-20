@@ -1,7 +1,8 @@
 import 'package:chat/models/backend_connected.dart';
 import 'package:chat/models/conversation.dart';
-import 'package:chat/models/demoController.dart';
+import 'package:chat/models/demo_controller.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/models/env_installer.dart';
 import 'package:chat/models/scripts.dart';
 import 'package:chat/models/sys_resources.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
@@ -28,6 +29,11 @@ class _HomePageState extends State<HomePage> {
   late String directoryPath;
   ValueNotifier<MemoryConfig> sysResources =
       ValueNotifier(MemoryConfig(totalMemory: 17, usedMemory: 0.0));
+  ValueNotifier<DisplayConfigData> displayConfigData =
+      ValueNotifier(DisplayConfigData());
+  ValueNotifier<Conversation?> currentSelectedConversation =
+      ValueNotifier(null);
+  MessageProcessor messageProcessor = MessageProcessor();
 
   ValueNotifier<List<Conversation>> conversations = ValueNotifier([]);
   ValueNotifier<User> userId = ValueNotifier(User(uid: ""));
@@ -41,14 +47,31 @@ class _HomePageState extends State<HomePage> {
       durBetweenMessages: 2000,
       isTypeWritten: true,
       autoPlay: false));
+
+  late ValueNotifier<InstallerService> installerService;
   @override
   void initState() {
     _loadModelListFromAppConfig;
     refreshConversationDatabase();
+    installerService = ValueNotifier(
+        InstallerService(apiConfig: displayConfigData.value.apiConfig));
+    initEnvironment();
     getUserID();
     // load senderID from sharedPrefs if none: ,
     getScripts();
     super.initState();
+  }
+
+  void initEnvironment() async {
+    await installerService.value.initEnvironment();
+    installerService.notifyListeners();
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      print("Backend installed: ${installerService.value.backendInstalled}");
+      print("Backend connected: ${installerService.value.backendConnected}");
+      print("Python installed: ${installerService.value.pythonInstalled}");
+      print(
+          "Backend fully installed: ${installerService.value.isBackendFullyInstalled()}");
+    });
   }
 
   void getScripts() async {
@@ -91,16 +114,12 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
-  ValueNotifier<DisplayConfigData> displayConfigData =
-      ValueNotifier(DisplayConfigData());
-  ValueNotifier<Conversation?> currentSelectedConversation =
-      ValueNotifier(null);
-  MessageProcessor messageProcessor = MessageProcessor();
-
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<ValueNotifier<InstallerService>>.value(
+            value: installerService),
         ChangeNotifierProvider<ValueNotifier<BackendService?>>.value(
             value: backendConnector),
         ChangeNotifierProvider<ValueNotifier<Conversation?>>.value(
