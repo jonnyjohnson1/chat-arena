@@ -103,7 +103,7 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
         : Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 8.0, right: 5),
+                padding: const EdgeInsets.only(top: 9, left: 8.0, right: 5),
                 child: Row(
                   children: [
                     ElevatedButton(

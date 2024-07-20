@@ -3,6 +3,10 @@
     "topic_emoji": "👫",
     "suggestions": [
       {
+        "suggestion": "What do I EVEN say to this???",
+        "purpose": "Sometimes...just...WTF???"
+      },
+      {
         "suggestion": "Help me find ways to defend myself here. I want to maintain my stance, without coming across as defensive or really aggressive.",
         "purpose": "Sometimes, out of your own self-respect, you do need to push back, maintain your stance, and that is exactly what we are trying to achieve with this line of prompting."
       },

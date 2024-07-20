@@ -445,13 +445,6 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
         ? Container()
         : Column(
             children: [
-              ChatStatusRow(
-                sessionId: sessionId,
-                isConnected: clientIsConnected,
-                userCount: 1,
-                onReconnect: () {},
-                onStartChat: () {},
-              ),
               Expanded(
                 child: ChatRoomPage(
                   key: widget.conversation != null

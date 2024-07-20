@@ -28,6 +28,7 @@ class HomePageLayoutManager extends StatefulWidget {
 class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
   ValueNotifier<MemoryConfig> sysResources =
       ValueNotifier(MemoryConfig(totalMemory: 17, usedMemory: 0.0));
+  late ValueNotifier<Conversation?> currentSelectedConversation;
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
   ValueNotifier<bool> startDrawerOpen = ValueNotifier(true);
@@ -36,7 +37,8 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
     super.initState();
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
-
+    currentSelectedConversation =
+        Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (MediaQuery.of(context).size.width < 1000) {
         setState(() {
@@ -377,6 +379,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                         isMobile,
                         widget.title,
                         displayConfigData,
+                        currentSelectedConversation,
                         bottomSelectedIndex,
                         overlayIsOpen,
                         context, onMenuTap: () {
