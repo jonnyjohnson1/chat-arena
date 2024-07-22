@@ -191,8 +191,8 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
                             // only return conversation's whose game type is p2pchat
                             if (conversationlist[index].gameType !=
                                 GameType.p2pchat) return Container();
-                            return (Platform.isMacOS ||
-                                    kIsWeb ||
+                            return (kIsWeb ||
+                                    Platform.isMacOS ||
                                     Platform.isWindows)
                                 ? P2pConversationListItem(
                                     key: Key(conversationlist[index].id),
