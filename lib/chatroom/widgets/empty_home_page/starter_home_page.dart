@@ -13,6 +13,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class StarterHomePage extends StatefulWidget {
   const StarterHomePage({super.key});
@@ -76,7 +77,8 @@ class _StarterHomePageState extends State<StarterHomePage> {
   );
   TextStyle style = const TextStyle(fontSize: 14);
   bool _isDesktopPlatform() {
-    return Platform.isLinux || Platform.isMacOS || Platform.isWindows;
+    if (kIsWeb) return false;
+    return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
   }
 
   String responseMessageDefault = "";
