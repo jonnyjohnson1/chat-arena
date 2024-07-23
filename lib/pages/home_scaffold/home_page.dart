@@ -2,7 +2,7 @@ import 'package:chat/models/backend_connected.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/demo_controller.dart';
 import 'package:chat/models/display_configs.dart';
-import 'package:chat/models/env_installer.dart';
+import 'package:chat/services/env_installer.dart';
 import 'package:chat/models/scripts.dart';
 import 'package:chat/models/sys_resources.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
@@ -47,14 +47,18 @@ class _HomePageState extends State<HomePage> {
       durBetweenMessages: 2000,
       isTypeWritten: true,
       autoPlay: false));
+  late GlobalKey<NavigatorState> navigatorKey;
 
   late ValueNotifier<InstallerService> installerService;
   @override
   void initState() {
     _loadModelListFromAppConfig;
     refreshConversationDatabase();
-    installerService = ValueNotifier(
-        InstallerService(apiConfig: displayConfigData.value.apiConfig));
+    navigatorKey =
+        Provider.of<GlobalKey<NavigatorState>>(context, listen: false);
+    installerService = ValueNotifier(InstallerService(
+        navigatorKey: navigatorKey,
+        apiConfig: displayConfigData.value.apiConfig));
     initEnvironment();
     getUserID();
     // load senderID from sharedPrefs if none: ,
@@ -63,15 +67,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   void initEnvironment() async {
-    await installerService.value.initEnvironment();
-    installerService.notifyListeners();
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      print("Backend installed: ${installerService.value.backendInstalled}");
-      print("Backend connected: ${installerService.value.backendConnected}");
-      print("Python installed: ${installerService.value.pythonInstalled}");
-      print(
-          "Backend fully installed: ${installerService.value.isBackendFullyInstalled()}");
+    installerService.value.initEnvironment().then((_) async {
+      installerService.notifyListeners();
+      await printEnvironment();
     });
+  }
+
+  Future<void> printEnvironment() async {
+    print("Backend installed: ${installerService.value.backendInstalled}");
+    print("Backend connected: ${installerService.value.backendConnected}");
+    print("Python installed: ${installerService.value.pythonInstalled}");
+    print(
+        "Backend fully installed: ${installerService.value.isBackendFullyInstalled()}");
   }
 
   void getScripts() async {

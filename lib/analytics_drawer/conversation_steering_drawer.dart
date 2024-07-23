@@ -2,7 +2,7 @@ import 'package:chat/models/conversation.dart';
 import 'package:chat/models/conversation_settings.dart';
 import 'package:chat/models/conversation_summary.dart';
 import 'package:chat/models/display_configs.dart';
-import 'package:chat/models/env_installer.dart';
+import 'package:chat/services/env_installer.dart';
 import 'package:chat/models/event_channel_model.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/models/messages.dart';

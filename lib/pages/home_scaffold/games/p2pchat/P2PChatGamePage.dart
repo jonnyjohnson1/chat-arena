@@ -7,7 +7,6 @@ import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/game_models/debate.dart';
 import 'package:chat/models/llm.dart';
-import 'package:chat/pages/home_scaffold/games/p2pchat/chat_status_row.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/message_processor.dart';
@@ -451,6 +450,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
                       ? Key(widget.conversation!.id)
                       : Key(DateTime.now().toIso8601String()),
                   messages: messages,
+                  sessionId: sessionId,
                   conversation: widget.conversation,
                   showModelSelectButton: false,
                   // selectedModelConfig: selectedModel,

@@ -86,8 +86,8 @@ buildAppBar(
                       children: [
                         Padding(
                           padding: isMobile
-                              ? const EdgeInsets.all(0)
-                              : const EdgeInsets.only(right: 56.0),
+                              ? const EdgeInsets.only(left: 37)
+                              : const EdgeInsets.only(left: 37),
                           child: Center(
                             child: Builder(builder: (ctx) {
                               return InkWell(

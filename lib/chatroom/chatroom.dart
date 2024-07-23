@@ -6,7 +6,7 @@ import 'package:chat/models/backend_connected.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/demo_controller.dart';
 import 'package:chat/models/display_configs.dart';
-import 'package:chat/models/env_installer.dart';
+import 'package:chat/services/env_installer.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/models/scripts.dart';
 import 'package:chat/services/message_processor.dart';
@@ -14,11 +14,14 @@ import 'package:chat/services/static_queries.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/shared/image_viewer.dart';
 import 'package:chat/shared/model_selector.dart';
+import 'package:chat/shared/toasts/simple_toast.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:chat/chatroom/widgets/message_field/message_field.dart';
 import 'package:chat/chatroom/widgets/message_list_view.dart';
@@ -38,6 +41,7 @@ class ChatRoomPage extends StatefulWidget {
   final Function? onResetDemoChat;
   String topTitleHeading;
   String topTitleText;
+  String sessionId;
   ValueNotifier<bool>? isGenerating;
   bool showGeneratingText;
   List<uiMessage.Message> messages;
@@ -55,6 +59,7 @@ class ChatRoomPage extends StatefulWidget {
       this.showTopTitle = true,
       this.topTitleHeading = "Topic:",
       this.topTitleText = "",
+      this.sessionId = "",
       Key? key})
       : super(key: key);
 
@@ -73,10 +78,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   late MessageProcessor? messageProcessor;
   ValueNotifier<bool> isProcessing = ValueNotifier(false);
   late ValueNotifier<InstallerService> installerService;
-
   late ValueNotifier<BackendService?> backendConnector;
+
+  late FToast fToast;
+  late GlobalKey<NavigatorState> navigatorKey;
+
   @override
   void initState() {
+    fToast = FToast();
     installerService =
         Provider.of<ValueNotifier<InstallerService>>(context, listen: false);
     displayConfigData =
@@ -94,6 +103,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
           widget.onSelectedModelChange != null);
       selectedModel = widget.selectedModelConfig;
     }
+    navigatorKey =
+        Provider.of<GlobalKey<NavigatorState>>(context, listen: false);
+    fToast.init(navigatorKey.currentContext!);
     super.initState();
   }
 
@@ -139,52 +151,52 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        // ValueListenableBuilder(
-        //     valueListenable: displayConfigData,
-        //     builder: ((context, displayConfig, child) {
-        //       if (displayConfig.demoMode) {
-        //         return ValueListenableBuilder(
-        //             valueListenable: selectedScript,
-        //             builder: ((context, script, child) {
-        //               if (script != null) {
-        //                 return Row(
-        //                   mainAxisSize: MainAxisSize.min,
-        //                   children: [
-        //                     Text("Script: "),
-        //                     const SizedBox(
-        //                       width: 4,
-        //                     ),
-        //                     Text(script.name)
-        //                   ],
-        //                 );
-        //               }
+        ValueListenableBuilder(
+            valueListenable: displayConfigData,
+            builder: ((context, displayConfig, child) {
+              if (displayConfig.demoMode) {
+                return ValueListenableBuilder(
+                    valueListenable: selectedScript,
+                    builder: ((context, script, child) {
+                      if (script != null) {
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text("Script: "),
+                            const SizedBox(
+                              width: 4,
+                            ),
+                            Text(script.name)
+                          ],
+                        );
+                      }
 
-        //               return Container();
-        //             }));
-        //       }
-        //       return Container();
-        //     })),
-        // if (widget.showTopTitle)
-        //   Padding(
-        //     padding: const EdgeInsets.only(left: 8.0, bottom: 3, top: 3),
-        //     child: InkWell(
-        //       onTap: () {
-        //         if (widget.topTitleText == "insert topic") {
-        //           print("change title");
-        //         }
-        //       },
-        //       child: Row(
-        //         mainAxisSize: MainAxisSize.min,
-        //         children: [
-        //           Text(widget.topTitleHeading),
-        //           const SizedBox(
-        //             width: 4,
-        //           ),
-        //           Text(widget.topTitleText)
-        //         ],
-        //       ),
-        //     ),
-        //   ),
+                      return Container();
+                    }));
+              }
+              return Container();
+            })),
+        if (widget.showTopTitle)
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0, bottom: 3, top: 3),
+            child: InkWell(
+              onTap: () {
+                if (widget.topTitleText == "insert topic") {
+                  print("change title");
+                }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(widget.topTitleHeading),
+                  const SizedBox(
+                    width: 4,
+                  ),
+                  Text(widget.topTitleText)
+                ],
+              ),
+            ),
+          ),
         Expanded(
             child: Stack(
           children: [
@@ -262,6 +274,38 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                     const SizedBox(
                       width: 20,
                     ),
+                    if (widget.sessionId.isNotEmpty)
+                      InkWell(
+                        onTap: () {
+                          Clipboard.setData(
+                              ClipboardData(text: widget.sessionId));
+                          Widget toast = const ToastWidget(
+                            message: "Session ID copied to clipboard",
+                          );
+
+                          // Custom Toast Position
+                          fToast.showToast(
+                              child: toast,
+                              toastDuration: const Duration(seconds: 2),
+                              positionedToastBuilder: (context, child) {
+                                return Positioned(
+                                  top: 16.0,
+                                  right: 16.0,
+                                  child: child,
+                                );
+                              });
+                        },
+                        child: Row(
+                          children: [
+                            const Text("ID: "),
+                            Text(
+                              widget.sessionId,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
 
                     // model selector button
                     if (widget.showModelSelectButton)

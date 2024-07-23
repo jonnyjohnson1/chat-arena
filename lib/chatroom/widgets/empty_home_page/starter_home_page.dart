@@ -6,7 +6,7 @@ import 'package:chat/models/backend_connected.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/demo_controller.dart';
 import 'package:chat/models/display_configs.dart';
-import 'package:chat/models/env_installer.dart';
+import 'package:chat/services/env_installer.dart';
 import 'package:chat/models/scripts.dart';
 import 'package:chat/models/user.dart';
 import 'package:flutter/cupertino.dart';
