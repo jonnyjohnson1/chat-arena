@@ -69,16 +69,8 @@ class _HomePageState extends State<HomePage> {
   void initEnvironment() async {
     installerService.value.initEnvironment().then((_) async {
       installerService.notifyListeners();
-      await printEnvironment();
+      installerService.value.printEnvironment();
     });
-  }
-
-  Future<void> printEnvironment() async {
-    print("Backend installed: ${installerService.value.backendInstalled}");
-    print("Backend connected: ${installerService.value.backendConnected}");
-    print("Python installed: ${installerService.value.pythonInstalled}");
-    print(
-        "Backend fully installed: ${installerService.value.isBackendFullyInstalled()}");
   }
 
   void getScripts() async {

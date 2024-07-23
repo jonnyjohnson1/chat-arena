@@ -105,7 +105,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     }
     navigatorKey =
         Provider.of<GlobalKey<NavigatorState>>(context, listen: false);
-    fToast.init(navigatorKey.currentContext!);
+    if (navigatorKey.currentContext != null) {
+      fToast.init(navigatorKey.currentContext!);
+    }
     super.initState();
   }
 

@@ -18,7 +18,7 @@ class InstallerService {
     required this.navigatorKey,
     this.backendConnected = false,
     this.backendInstalled = false,
-    this.pythonInstalled = false,
+    this.pythonInstalled = true,
   });
 
   GlobalKey<NavigatorState> navigatorKey;
@@ -196,31 +196,6 @@ class InstallerService {
     }
   }
 
-  Future<void> runSpinInstallScript(String password) async {
-    try {
-      String scriptPath;
-      if (Platform.isWindows) {
-        scriptPath =
-            '${Directory.current.path}\\scripts\\spin\\install_windows.bat';
-      } else if (Platform.isLinux || Platform.isMacOS) {
-        scriptPath = '${Directory.current.path}/scripts/spin/install.sh';
-      } else {
-        throw UnsupportedError('Unsupported platform');
-      }
-
-      if (!Platform.isWindows) {
-        try {
-          await runCommandWithPassword('bash', ['-c', scriptPath],
-              environment: {'PASSWORD': password});
-        } catch (e) {
-          debugPrint("Failed to run $scriptPath ${e.toString()}");
-        }
-      }
-    } catch (e) {
-      print('Error running script: $e');
-    }
-  }
-
   Future<String> _getLatestCommitHash() async {
     const String githubApiUrl =
         'https://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}';
@@ -350,6 +325,13 @@ class InstallerService {
       );
       return false;
     }
+  }
+
+  Future<void> printEnvironment() async {
+    print("Backend installed: $backendInstalled");
+    print("Backend connected: $backendConnected");
+    print("Python installed: $pythonInstalled");
+    print("Backend fully installed: ${isBackendFullyInstalled()}");
   }
 
   bool isBackendFullyInstalled() {
