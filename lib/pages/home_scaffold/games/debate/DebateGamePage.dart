@@ -160,58 +160,82 @@ class _DebateGamePageState extends State<DebateGamePage> {
 
   // Handle different types of WebSocket messages
   void _handleWebSocketMessage(Map<String, dynamic> data) {
-    print('Received WebSocket message: ${json.encode(data)}');
+    try {
+      debugPrint('\t[ Received WebSocket message: ${json.encode(data)} ]');
 
-    switch (data['status']) {
-      case 'message_processed':
-        print('Message processed: ${data['message_id']}');
-        // Handle initial message processing
-        // Example: Update UI to show message was received by server
-        setState(() {
-          // Find the message in the messages list and update its status
-          int index = messages.indexWhere((m) => m.id == data['message_id']);
-          if (index != -1) {
-            // Assuming you have a method to update the message status
-            //@note:@todo:@next:
-            // messages[index].updateStatus('Processed');
-          }
-        });
-        break;
+      switch (data['status']) {
+        case 'message_processed':
+          debugPrint('\t\t[ Message processed: ${data['message_id']} ]');
+          // Handle initial message processing
+          // Example: Update UI to show message was received by server
+          setState(() {
+            // Find the message in the messages list and update its status
+            int index = messages.indexWhere((m) => m.id == data['message_id']);
+            if (index != -1) {
+              // Assuming you have a method to update the message status
+              //@note:@todo:@next:
+              // messages[index].updateStatus('Processed');
+            }
+          });
+          break;
 
-      case 'initial_clusters':
-        print('Received initial clusters: ${data['clusters']}');
-        // Handle initial cluster data
-        // Example: Display initial argument clusters
-        _displayClusters(data['clusters'], isInitial: true);
-        break;
+        case 'initial_clusters':
+          debugPrint('Received initial clusters: ${data['clusters']}');
+          // Handle initial cluster data
+          // Example: Display initial argument clusters
+          _displayClusters(data['clusters'], isInitial: true);
+          break;
 
-      case 'updated_clusters':
-        print('Received updated clusters: ${data['clusters']}');
-        // Handle updated cluster data
-        // Example: Update displayed argument clusters
-        _displayClusters(data['clusters'], isInitial: false);
-        break;
+        case 'updated_clusters':
+          debugPrint('Received updated clusters: ${data['clusters']}');
+          // Handle updated cluster data
+          // Example: Update displayed argument clusters
+          _displayClusters(data['clusters'], isInitial: false);
+          break;
 
-      case 'wepcc_result':
-        print('Received WEPCC result for cluster: ${data['cluster_id']}');
-        print('WEPCC details: ${data['wepcc_result']}');
-        // Handle WEPCC (Warrant, Evidence, Persuasiveness, Claim, Counterclaim) result
-        // Example: Update UI with WEPCC analysis
-        _updateWEPCCAnalysis(data['cluster_id'], data['wepcc_result']);
-        break;
+        case 'wepcc_result':
+          debugPrint('Received WEPCC result for cluster: ${data['cluster_id']}');
+          debugPrint('WEPCC details: ${data['wepcc_result']}');
+          // Handle WEPCC (Warrant, Evidence, Persuasiveness, Claim, Counterclaim) result
+          // Example: Update UI with WEPCC analysis
+          _updateWEPCCAnalysis(data['cluster_id'], data['wepcc_result']);
+          break;
 
-      case 'final_results':
-        print('Received final debate results');
-        print('Aggregated scores: ${data['aggregated_scores']}');
-        print('Addressed clusters: ${data['addressed_clusters']}');
-        print('Unaddressed clusters: ${data['unaddressed_clusters']}');
-        // Handle final debate results
-        // Example: Display final debate scores and analysis
-        _displayFinalResults(data);
-        break;
+        case 'final_results':
+          debugPrint('Received final debate results');
+          debugPrint('Aggregated scores: ${data['aggregated_scores']}');
+          debugPrint('Addressed clusters: ${data['addressed_clusters']}');
+          debugPrint('Unaddressed clusters: ${data['unaddressed_clusters']}');
 
-      default:
-        print('Unknown message type received: ${data['status']}');
+          // Convert cluster IDs to strings
+          Map<String, List<List<dynamic>>> addressedClusters = {};
+          Map<String, List<List<dynamic>>> unaddressedClusters = {};
+
+          data['addressed_clusters'].forEach((userId, clusters) {
+            addressedClusters[userId] = (clusters as List<dynamic>).map((cluster) =>
+            [cluster[0].toString(), cluster[1]]).toList();
+          });
+
+          data['unaddressed_clusters'].forEach((userId, clusters) {
+            unaddressedClusters[userId] = (clusters as List<dynamic>).map((cluster) =>
+            [cluster[0].toString(), cluster[1]]).toList();
+          });
+
+          _displayFinalResults(
+              data['aggregated_scores'],
+              addressedClusters,
+              unaddressedClusters,
+              data['results']
+          );
+          break;
+
+        default:
+          debugPrint('Unknown message type received: ${data['status']}');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('Error handling WebSocket message: $e');
+      debugPrint('Stack trace: $stackTrace');
+      // Optionally, you could show an error message to the user here
     }
 
     // Update UI based on received data
@@ -233,9 +257,27 @@ class _DebateGamePageState extends State<DebateGamePage> {
     print('WEPCC analysis updated for cluster $clusterId');
   }
 
-  void _displayFinalResults(Map<String, dynamic> results) {
+  void _displayFinalResults(
+      Map<String, dynamic> aggregatedScores,
+      Map<String, dynamic> addressedClusters,
+      Map<String, dynamic> unaddressedClusters,
+      List<dynamic> results
+      ) {
     // Implement logic to display final debate results
-    print('Final debate results displayed');
+    debugPrint('Final debate results displayed');
+    debugPrint('Aggregated scores: $aggregatedScores');
+    debugPrint('Addressed clusters: $addressedClusters');
+    debugPrint('Unaddressed clusters: $unaddressedClusters');
+    debugPrint('Results: $results');
+
+    // Update UI components to show the final results
+    // For example:
+    // setState(() {
+    //   finalScores = aggregatedScores;
+    //   finalAddressedClusters = addressedClusters;
+    //   finalUnaddressedClusters = unaddressedClusters;
+    //   finalResults = results;
+    // });
   }
 
 
