@@ -6,6 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class InstallerService {
@@ -25,27 +28,31 @@ class InstallerService {
 
   final ValueNotifier<List<String>> outputNotifier =
       ValueNotifier<List<String>>([]);
+  final ValueNotifier<bool> isConnecting = ValueNotifier(false);
 
   FToast fToast = FToast();
 
-  bool _isDesktopPlatform() {
+  Future<bool> _isDesktopPlatform() async {
     if (kIsWeb) return false;
-    return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+    return Platform.isWindows ||
+        Platform.isLinux ||
+        Platform.isMacOS ||
+        await IsIosAppOnMac().isiOSAppOnMac();
   }
 
   List<String> endingStatements = [
     "Installation complete!",
-    "Rust is already installed.",
-    """INFO:     127.0.0.1:49448 - "GET /openapi.json HTTP/1.1" 200 OK"""
   ];
   void _addOutput(String data) {
-    outputNotifier.value = List.from(outputNotifier.value)..add(data);
-    outputNotifier.notifyListeners();
-    if (endingStatements.contains(data.trim())) {
-      Future.delayed(const Duration(seconds: 2), () {
-        outputNotifier.value.add(" ");
-        outputNotifier.notifyListeners();
-      });
+    if (data.trim().isNotEmpty) {
+      outputNotifier.value = List.from(outputNotifier.value)..add(data);
+      outputNotifier.notifyListeners();
+      // if (endingStatements.contains(data.trim())) {
+      //   Future.delayed(const Duration(seconds: 2), () {
+      //     outputNotifier.value.add(" ");
+      //     outputNotifier.notifyListeners();
+      //   });
+      // }
     }
   }
 
@@ -118,6 +125,9 @@ class InstallerService {
   }
 
   Future<Map<String, dynamic>> turnToposOn(String httpAddress) async {
+    debugPrint("\t[ turning the monster on ]");
+    isConnecting.value = true;
+    isConnecting.notifyListeners();
     var process = await Process.start('topos', ['run']);
     var urlCompleter = Completer<String>();
     var isRunning = false;
@@ -159,7 +169,8 @@ class InstallerService {
     if (!isRunning) {
       throw Exception('Failed to start Topos');
     }
-
+    isConnecting.value = false;
+    isConnecting.notifyListeners();
     return {'isRunning': isRunning, 'url': url};
   }
 
@@ -173,24 +184,66 @@ class InstallerService {
     }
   }
 
+  // Future<void> runInstallScript() async {
+  //   try {
+  // String scriptPath;
+  // if (Platform.isWindows) {
+  //   scriptPath = '${Directory.current.path}\\scripts\\install_windows.bat';
+  // } else if (Platform.isLinux || Platform.isMacOS) {
+  //   scriptPath = '${Directory.current.path}/scripts/install.sh';
+  // } else if (await IsIosAppOnMac().isiOSAppOnMac()) {
+  //   scriptPath = '${Directory.current.path}/scripts/install.sh';
+  // } else {
+  //   throw UnsupportedError('Unsupported platform');
+  // }
+
+  //     if (!Platform.isWindows) {
+  //       await runCommand('chmod', ['+x', scriptPath]);
+  //     }
+
+  //     await (Platform.isWindows
+  //         ? runCommand('cmd.exe', ['/c', scriptPath])
+  //         : runCommand('/bin/sh', ['-c', scriptPath]));
+  //   } catch (e) {
+  //     print('Error running script: $e');
+  //   }
+  // }
+
   Future<void> runInstallScript() async {
     try {
-      String scriptPath;
+      String scriptAssetPath;
+      String scriptContent;
+
       if (Platform.isWindows) {
-        scriptPath = '${Directory.current.path}\\scripts\\install_windows.bat';
+        scriptAssetPath = 'assets/install_scripts/install_windows.bat';
       } else if (Platform.isLinux || Platform.isMacOS) {
-        scriptPath = '${Directory.current.path}/scripts/install.sh';
+        scriptAssetPath = 'assets/install_scripts/install.sh';
+      } else if (await IsIosAppOnMac().isiOSAppOnMac()) {
+        scriptAssetPath = 'assets/install_scripts/install.sh';
       } else {
         throw UnsupportedError('Unsupported platform');
       }
 
+      // Load the script content from assets
+      scriptContent = await rootBundle.loadString(scriptAssetPath);
+
+      // Get a temporary directory to write the script file
+      final tempDir = await getTemporaryDirectory();
+      final scriptFile = File(
+          '${tempDir.path}/${Platform.isWindows ? 'install_windows.bat' : 'install.sh'}');
+
+      // Write the script content to the file
+      await scriptFile.writeAsString(scriptContent);
+
       if (!Platform.isWindows) {
-        await runCommand('chmod', ['+x', scriptPath]);
+        await runCommand('chmod', ['+x', scriptFile.path]);
       }
 
+      // Run the script with the temporary directory as an argument
       await (Platform.isWindows
-          ? runCommand('cmd.exe', ['/c', scriptPath])
-          : runCommand('/bin/sh', ['-c', scriptPath]));
+          ? runCommand('cmd.exe', ['/c', scriptFile.path, tempDir.path])
+          : runCommand(
+              '/bin/sh', ['-c', '${scriptFile.path} ${tempDir.path}']));
     } catch (e) {
       print('Error running script: $e');
     }
@@ -277,16 +330,15 @@ class InstallerService {
   }
 
   Future<bool> checkToposCLIInstalled({bool autoTurnOn = true}) async {
-    if (_isDesktopPlatform()) {
+    if (await _isDesktopPlatform()) {
       debugPrint("\t[ running on desktop ]");
       bool monsterIsInstalled = await checkIfCommandExists('topos');
       if (monsterIsInstalled) {
         if (!autoTurnOn) return true;
         try {
-          debugPrint("\t[ turning the monster on ]");
           var result = await turnToposOn(apiConfig.getDefault());
           print('Monster is running at ${result['url']}');
-          return true;
+          return result['isRunning'];
         } catch (e) {
           print('Failed to run Monster: $e');
           return false;
@@ -296,33 +348,33 @@ class InstallerService {
         return false;
       }
     } else {
-      fToast.init(navigatorKey.currentContext!);
-      Widget toast = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(25.0),
-          color: Colors.red[200],
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check),
-            SizedBox(width: 12.0),
-            Text("Must Install on Desktop"),
-          ],
-        ),
-      );
-      fToast.showToast(
-        child: toast,
-        toastDuration: const Duration(seconds: 2),
-        positionedToastBuilder: (context, child) {
-          return Positioned(
-            top: 16.0,
-            right: 16.0,
-            child: child,
-          );
-        },
-      );
+      // fToast.init(navigatorKey.currentContext!);
+      // Widget toast = Container(
+      //   padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      //   decoration: BoxDecoration(
+      //     borderRadius: BorderRadius.circular(25.0),
+      //     color: Colors.red[200],
+      //   ),
+      //   child: const Row(
+      //     mainAxisSize: MainAxisSize.min,
+      //     children: [
+      //       Icon(Icons.check),
+      //       SizedBox(width: 12.0),
+      //       Text("Must Install on Desktop"),
+      //     ],
+      //   ),
+      // );
+      // fToast.showToast(
+      //   child: toast,
+      //   toastDuration: const Duration(seconds: 2),
+      //   positionedToastBuilder: (context, child) {
+      //     return Positioned(
+      //       top: 16.0,
+      //       right: 16.0,
+      //       child: child,
+      //     );
+      //   },
+      // );
       return false;
     }
   }

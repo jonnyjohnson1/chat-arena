@@ -52,7 +52,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
 
   initSuggestionsData() async {
     suggestionsMap = await getSuggestionsMap() ?? {};
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   Future<void> initData() async {

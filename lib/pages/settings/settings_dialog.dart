@@ -1,7 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/services/env_installer.dart';
+import 'package:chat/shared/activity_icon.dart';
+import 'package:chat/shared/backend_connected_service_button.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -36,9 +42,13 @@ class _SettingsDialogState extends State<SettingsDialog>
     super.dispose();
   }
 
+  late ValueNotifier<InstallerService> installerService;
+
   @override
   void initState() {
     super.initState();
+    installerService =
+        Provider.of<ValueNotifier<InstallerService>>(context, listen: false);
     _tabController = TabController(length: 2, vsync: this);
     Future.delayed(const Duration(milliseconds: 90), () {
       if (mounted) {
@@ -71,7 +81,7 @@ class _SettingsDialogState extends State<SettingsDialog>
     return false;
   }
 
-  final int futureWaitDuration = 230;
+  final int futureWaitDuration = 290;
 
   Future<bool> _togglecalcImageGen() async {
     await Future.delayed(Duration(milliseconds: futureWaitDuration));
@@ -187,15 +197,25 @@ class _SettingsDialogState extends State<SettingsDialog>
                   Stack(
                     alignment: Alignment.centerRight,
                     children: [
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
+                            const Text(
                               'Settings',
                               style: TextStyle(fontSize: 20),
                             ),
+                            const SizedBox(
+                              width: 4,
+                            ),
+                            ValueListenableBuilder(
+                                valueListenable: installerService,
+                                builder: (context, installService, _) {
+                                  return ActivityIcon(
+                                      isRunning:
+                                          installService.backendConnected);
+                                }),
                           ],
                         ),
                       ),
@@ -213,7 +233,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                         _buildVerticalTab(
                             Icons.display_settings, 'Display Settings', 0),
                         _buildVerticalTab(
-                            Icons.memory_sharp, 'Api Endpoints', 1),
+                            Icons.memory_sharp, 'Api Connections', 1),
                         Expanded(
                           child: Container(
                             decoration: const BoxDecoration(
@@ -247,15 +267,25 @@ class _SettingsDialogState extends State<SettingsDialog>
                   Stack(
                     alignment: Alignment.centerRight,
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
+                            const Text(
                               'Settings',
                               style: TextStyle(fontSize: 20),
                             ),
+                            const SizedBox(
+                              width: 4,
+                            ),
+                            ValueListenableBuilder(
+                                valueListenable: installerService,
+                                builder: (context, installService, _) {
+                                  return ActivityIcon(
+                                      isRunning:
+                                          installService.backendConnected);
+                                }),
                           ],
                         ),
                       ),
@@ -277,7 +307,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                               _buildVerticalTab(Icons.display_settings,
                                   'Display Settings', 0),
                               _buildVerticalTab(
-                                  Icons.memory_sharp, 'Api Endpoints', 1),
+                                  Icons.memory_sharp, 'Api Connections', 1),
                             ],
                           ),
                         ),
@@ -491,6 +521,12 @@ class _SettingsDialogState extends State<SettingsDialog>
     }
   }
 
+  Future<bool> _isDesktopPlatform() async {
+    if (kIsWeb) return false;
+    return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+    // || await IsIosAppOnMac().isiOSAppOnMac();
+  }
+
   Widget _buildAPISettingsPage() {
     InputDecoration inputDecoration = const InputDecoration(
       border: OutlineInputBorder(),
@@ -502,6 +538,58 @@ class _SettingsDialogState extends State<SettingsDialog>
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
         child: Column(
           children: [
+            ValueListenableBuilder(
+                valueListenable: installerService,
+                builder: (context, installService, _) {
+                  return FutureBuilder(
+                      future: _isDesktopPlatform(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) return Container(height: 22);
+                        return ServiceToggle(
+                            isConnected: installService.backendConnected,
+                            // Only a desktop app with a local connection can
+                            // attempt connect/disconnect
+                            onTap: snapshot.data! &&
+                                    displayConfigData.value.apiConfig
+                                        .isLocalhost()
+                                ? (isConnected) async {
+                                    if (isConnected) {
+                                      print("connect!");
+                                      // connect
+                                      var result = await installerService.value
+                                          .turnToposOn(displayConfigData
+                                              .value.apiConfig
+                                              .getDefault());
+                                      print(
+                                          'Monster is running at ${result['url']}');
+                                      bool connected = result['isRunning'];
+                                      installerService.value.backendConnected =
+                                          connected;
+                                      installerService.notifyListeners();
+                                    } else {
+                                      print("disconnect!");
+                                      // // disconnect
+                                      installerService.value
+                                          .stopToposService(displayConfigData
+                                              .value.apiConfig
+                                              .getDefault())
+                                          .then(
+                                        (disconnected) {
+                                          if (disconnected) {
+                                            installerService
+                                                .value.backendConnected = false;
+                                            installerService.notifyListeners();
+                                          }
+                                        },
+                                      );
+                                    }
+                                  }
+                                : null);
+                      });
+                }),
+            const SizedBox(height: 8),
+            Divider(),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -561,11 +649,11 @@ class _SettingsDialogState extends State<SettingsDialog>
               children: [
                 ElevatedButton(
                   onPressed: () => pingEndpoint(false),
-                  child: Text("Test"),
+                  child: const Text("Test"),
                 ),
                 Text(responseMessageCustom),
               ],
-            )
+            ),
           ],
         ),
       ),

@@ -464,6 +464,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.2"
+  is_ios_app_on_mac:
+    dependency: "direct main"
+    description:
+      name: is_ios_app_on_mac
+      sha256: e99d506a02620dfd94d0b4194426adf35f1b111815d003dcf92b557f78c32286
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1+2"
   json_annotation:
     dependency: transitive
     description:

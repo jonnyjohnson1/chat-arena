@@ -48,4 +48,13 @@ class APIConfig {
 
   String getDefault() =>
       customEndpoint.isEmpty ? defaultEndpoint : customEndpoint;
+
+  bool isLocalhost() {
+    final endpoint = getDefault();
+    final uri = Uri.parse(endpoint);
+    return uri.host == "0.0.0.0" ||
+        uri.host == "localhost" ||
+        uri.host.startsWith("127.") ||
+        uri.host.endsWith(".local");
+  }
 }

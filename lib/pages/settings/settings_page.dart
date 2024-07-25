@@ -1,10 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/services/env_installer.dart';
+import 'package:chat/shared/backend_connected_service_button.dart';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
 
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
@@ -33,11 +38,14 @@ class _SettingsPageState extends State<SettingsPage>
   String responseMessageDefault = "";
   String responseMessageCustom = "";
 
+  late ValueNotifier<InstallerService> installerService;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-
+    installerService =
+        Provider.of<ValueNotifier<InstallerService>>(context, listen: false);
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
 
@@ -334,11 +342,69 @@ class _SettingsPageState extends State<SettingsPage>
     _customEndpointController.text =
         displayConfigData.value.apiConfig.customEndpoint;
 
+    Future<bool> _isDesktopPlatform() async {
+      if (kIsWeb) return false;
+      return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+      // || await IsIosAppOnMac().isiOSAppOnMac();
+    }
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
         child: Column(
           children: [
+            ValueListenableBuilder(
+                valueListenable: installerService,
+                builder: (context, installService, _) {
+                  return FutureBuilder(
+                      future: _isDesktopPlatform(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) return Container(height: 22);
+                        return ServiceToggle(
+                            isConnected: installService.backendConnected,
+                            // Only a desktop app with a local connection can
+                            // attempt connect/disconnect
+                            onTap: snapshot.data! &&
+                                    displayConfigData.value.apiConfig
+                                        .isLocalhost()
+                                ? (isConnected) async {
+                                    if (isConnected) {
+                                      print("connect!");
+                                      // connect
+                                      var result = await installerService.value
+                                          .turnToposOn(displayConfigData
+                                              .value.apiConfig
+                                              .getDefault());
+                                      print(
+                                          'Monster is running at ${result['url']}');
+                                      bool connected = result['isRunning'];
+                                      installerService.value.backendConnected =
+                                          connected;
+                                      installerService.notifyListeners();
+                                    } else {
+                                      print("disconnect!");
+                                      // // disconnect
+                                      installerService.value
+                                          .stopToposService(displayConfigData
+                                              .value.apiConfig
+                                              .getDefault())
+                                          .then(
+                                        (disconnected) {
+                                          if (disconnected) {
+                                            installerService
+                                                .value.backendConnected = false;
+                                            installerService.notifyListeners();
+                                          }
+                                        },
+                                      );
+                                    }
+                                  }
+                                : null);
+                      });
+                }),
+            const SizedBox(height: 8),
+            Divider(),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

@@ -13,6 +13,7 @@ import 'package:chat/models/scripts.dart';
 import 'package:chat/models/user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -80,7 +81,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
     hintStyle: TextStyle(color: Colors.black38),
   );
   TextStyle style = const TextStyle(fontSize: 14);
-  bool _isDesktopPlatform() {
+  Future<bool> _isDesktopPlatform() async {
     if (kIsWeb) return false;
     return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
   }
@@ -182,165 +183,238 @@ class _StarterHomePageState extends State<StarterHomePage> {
                   if (scripts == null) {
                     return const CupertinoActivityIndicator();
                   }
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (showInstallerScreen)
-                          InstallerScreen(
-                            installerService: installerService,
-                            onInstall: () async {
-                              // Handle the install button tap
-                              bool isInstalled = await installerService.value
-                                  .checkToposCLIInstalled();
-                              debugPrint(
-                                  "\t[ topos backend installed :: $isInstalled ]");
-                              await installerService.value
-                                  .runInstallScript(); // run installer
-                              // check if topos backend is now installed
-                              isInstalled = await installerService.value
-                                  .checkToposCLIInstalled(autoTurnOn: false);
-                              debugPrint(
-                                  "\t[ topos backend installed :: $isInstalled ]");
-                              if (isInstalled) {
-                                debugPrint(
-                                    "\t[ topos successfully installed ]");
-                                // completion commands
-                                onToposInstallationComplete();
-                              } else {
-                                debugPrint(
-                                    "\t[ topos was not successfully installed ]");
-                              }
-                            },
-                            onReturnHome: () {
-                              setState(() {
-                                showInstallerScreen = false;
-                              });
-                            },
-                          )
-                        else
-                          Column(
-                            children: [
-                              Text(
-                                "Demos",
-                                style: TextStyle(
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge!
-                                        .color!
-                                        .withOpacity(.74)),
-                              ),
-                              Wrap(
-                                spacing:
-                                    8.0, // space between items horizontally
-                                runSpacing:
-                                    8.0, // space between items vertically
-                                children: scripts.demos.map((script) {
-                                  return ScriptItem(
-                                    script: script,
-                                    onScriptSelectionTap: () {
-                                      setState(() {
-                                        selectedScript.value = script;
-                                        selectedScript.notifyListeners();
-                                        debugPrint(
-                                            "\t[ selected script :: ${script.name} ]");
-                                        displayConfigData.value.demoMode = true;
-                                        displayConfigData.notifyListeners();
-                                      });
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                              const SizedBox(
-                                height: 20,
-                              ), // whitespace to center the demo options
-                              if (_isDesktopPlatform() &&
-                                  !installerService.value.backendInstalled)
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
+                  return FutureBuilder(
+                      future: IsIosAppOnMac().isiOSAppOnMac(),
+                      builder: (context, isIosAppOnMac) {
+                        return FutureBuilder(
+                            future: _isDesktopPlatform(),
+                            builder: (context, isDesktop) {
+                              if (!isDesktop.hasData || !isIosAppOnMac.hasData)
+                                return Container();
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    GetStarted(
-                                      onTap: () {
-                                        setState(() {
-                                          showInstallerScreen = true;
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              // if platform is not desktop/linux/macos display url option
-                              if (!_isDesktopPlatform() ||
-                                  !installerService.value.backendConnected)
-                                AnimatedOpacity(
-                                  opacity: opacityNotifier.value,
-                                  duration: const Duration(seconds: 1),
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        "API URL",
-                                        style: TextStyle(
-                                            color: Theme.of(context)
-                                                .textTheme
-                                                .bodyLarge!
-                                                .color!
-                                                .withOpacity(.74)),
-                                      ),
-                                      SizedBox(
-                                        width: 200,
-                                        height: 38,
-                                        child: TextField(
-                                          style: TextStyle(
-                                              color: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyLarge!
-                                                  .color!
-                                                  .withOpacity(.74)),
-                                          textAlign: TextAlign.center,
-                                          decoration: inputDecoration.copyWith(
-                                              enabledBorder:
-                                                  const OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: Color.fromARGB(
-                                                      255,
-                                                      201,
-                                                      201,
-                                                      201), // Default border color
+                                    if (showInstallerScreen)
+                                      InstallerScreen(
+                                        installerService: installerService,
+                                        onInstall: () async {
+                                          // Handle the install button tap
+                                          bool isInstalled =
+                                              await installerService.value
+                                                  .checkToposCLIInstalled();
+                                          debugPrint(
+                                              "\t[ topos backend installed :: $isInstalled ]");
+                                          await installerService.value
+                                              .runInstallScript(); // run installer
+                                          // check if topos backend is now installed
+                                          isInstalled = await installerService
+                                              .value
+                                              .checkToposCLIInstalled(
+                                                  autoTurnOn: false);
+                                          debugPrint(
+                                              "\t[ topos backend installed :: $isInstalled ]");
+                                          if (isInstalled) {
+                                            debugPrint(
+                                                "\t[ topos successfully installed ]");
+                                            // completion commands
+                                            onToposInstallationComplete();
+                                          } else {
+                                            debugPrint(
+                                                "\t[ topos was not successfully installed ]");
+                                          }
+                                        },
+                                        onReturnHome: () {
+                                          setState(() {
+                                            showInstallerScreen = false;
+                                          });
+                                        },
+                                      )
+                                    else
+                                      Column(
+                                        children: [
+                                          Text(
+                                            "Demos",
+                                            style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyLarge!
+                                                    .color!
+                                                    .withOpacity(.74)),
+                                          ),
+                                          Wrap(
+                                            spacing:
+                                                8.0, // space between items horizontally
+                                            runSpacing:
+                                                8.0, // space between items vertically
+                                            children:
+                                                scripts.demos.map((script) {
+                                              return ScriptItem(
+                                                script: script,
+                                                onScriptSelectionTap: () {
+                                                  setState(() {
+                                                    selectedScript.value =
+                                                        script;
+                                                    selectedScript
+                                                        .notifyListeners();
+                                                    debugPrint(
+                                                        "\t[ selected script :: ${script.name} ]");
+                                                    displayConfigData
+                                                        .value.demoMode = true;
+                                                    displayConfigData
+                                                        .notifyListeners();
+                                                  });
+                                                },
+                                              );
+                                            }).toList(),
+                                          ),
+                                          const SizedBox(
+                                            height: 20,
+                                          ), // whitespace to center the demo options
+                                          if (isDesktop.data! &&
+                                              !installerService
+                                                  .value.backendInstalled &&
+                                              !installerService
+                                                  .value.isConnecting.value)
+                                            Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                GetStarted(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      showInstallerScreen =
+                                                          true;
+                                                    });
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          // if platform is not desktop/linux/macos display url option
+                                          if (!isDesktop.data! ||
+                                              !installerService
+                                                  .value.backendConnected)
+                                            // isIosAppOnMac.data! ||
+                                            if (installerService
+                                                .value.isConnecting.value)
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    "Connecting...",
+                                                    style: TextStyle(
+                                                        fontSize: 13,
+                                                        color: Theme.of(context)
+                                                            .textTheme
+                                                            .bodyLarge!
+                                                            .color!
+                                                            .withOpacity(.74)),
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 8,
+                                                  ),
+                                                  const CupertinoActivityIndicator(
+                                                    radius: 8,
+                                                  ),
+                                                ],
+                                              )
+                                            else
+                                              AnimatedOpacity(
+                                                opacity: opacityNotifier.value,
+                                                duration:
+                                                    const Duration(seconds: 1),
+                                                child: Column(
+                                                  children: [
+                                                    Text(
+                                                      "API URL",
+                                                      style: TextStyle(
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .textTheme
+                                                                  .bodyLarge!
+                                                                  .color!
+                                                                  .withOpacity(
+                                                                      .74)),
+                                                    ),
+                                                    SizedBox(
+                                                      width: 200,
+                                                      height: 38,
+                                                      child: TextField(
+                                                        style: TextStyle(
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .textTheme
+                                                                .bodyLarge!
+                                                                .color!
+                                                                .withOpacity(
+                                                                    .74)),
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        decoration: inputDecoration
+                                                            .copyWith(
+                                                                enabledBorder:
+                                                                    const OutlineInputBorder(
+                                                                  borderSide:
+                                                                      BorderSide(
+                                                                    color: Color
+                                                                        .fromARGB(
+                                                                            255,
+                                                                            201,
+                                                                            201,
+                                                                            201), // Default border color
+                                                                  ),
+                                                                ),
+                                                                hintText:
+                                                                    "Enter your endpoint"),
+                                                        onSubmitted:
+                                                            (value) async {
+                                                          displayConfigData
+                                                                  .value
+                                                                  .apiConfig
+                                                                  .customEndpoint =
+                                                              value;
+                                                          displayConfigData
+                                                              .notifyListeners();
+                                                          await pingEndpoint(
+                                                              false);
+                                                        },
+                                                        onChanged:
+                                                            (value) async {
+                                                          displayConfigData
+                                                                  .value
+                                                                  .apiConfig
+                                                                  .customEndpoint =
+                                                              value;
+                                                          displayConfigData
+                                                              .notifyListeners();
+                                                          await pingEndpoint(
+                                                              false);
+                                                        },
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 3),
+                                                    Text(
+                                                      responseMessageCustom,
+                                                      style: TextStyle(
+                                                          fontSize: 12,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .textTheme
+                                                                  .bodyLarge!
+                                                                  .color!
+                                                                  .withOpacity(
+                                                                      .74)),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                              hintText: "Enter your endpoint"),
-                                          onSubmitted: (value) async {
-                                            displayConfigData.value.apiConfig
-                                                .customEndpoint = value;
-                                            displayConfigData.notifyListeners();
-                                            await pingEndpoint(false);
-                                          },
-                                          onChanged: (value) async {
-                                            displayConfigData.value.apiConfig
-                                                .customEndpoint = value;
-                                            displayConfigData.notifyListeners();
-                                            await pingEndpoint(false);
-                                          },
-                                        ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        responseMessageCustom,
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: Theme.of(context)
-                                                .textTheme
-                                                .bodyLarge!
-                                                .color!
-                                                .withOpacity(.74)),
-                                      ),
-                                    ],
-                                  ),
+                                  ],
                                 ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  );
+                              );
+                            });
+                      });
                 },
               );
             },

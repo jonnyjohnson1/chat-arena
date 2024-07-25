@@ -22,4 +22,11 @@ fi
 echo "Step 3: Installing the package..."
 pip install .
 
+echo "Topos package installed!"
+
+# Step 4: Set the spacy trf
+which topos
+echo "Step 4: Downloading spacy model..."
+topos set --spacy trf
+
 echo "Installation complete!"
