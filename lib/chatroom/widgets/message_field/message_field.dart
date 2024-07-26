@@ -90,6 +90,8 @@ class _MessageFieldState extends State<MessageField> {
     return FloatingActionButton(
       mini: true,
       elevation: 1,
+      hoverElevation: 3,
+      highlightElevation: 3,
       child: const Icon(Icons.arrow_upward,
           color: Color.fromARGB(255, 124, 124, 124)),
       onPressed: () {

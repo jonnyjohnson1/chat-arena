@@ -1,0 +1,74 @@
+#!/bin/bash
+WORK_DIR=$1
+cd $WORK_DIR
+
+which topos
+echo $(which topos)
+# Create a test file
+# echo "Test content" > testfile.txt
+
+# Attempt to move the test file to the user's Downloads folder
+# mv testfile.txt ~/Downloads/testfile.txt
+
+# Check if the file was moved successfully
+# if [ -f ~/Downloads/testfile.txt ]; then
+#   echo "File moved successfully to ~/Downloads/testfile.txt"
+# else
+#   echo "Failed to move the file"
+# fi
+
+# Step 1: Download GitHub repo
+
+
+
+echo "Step 1: Downloading GitHub repository..."
+if [ -d "topos-cli" ]; then
+  echo "Directory topos-cli already exists. Removing it..."
+  rm -rf "topos-cli"
+fi
+
+echo "Cloning the repository..."
+git clone https://github.com/jonnyjohnson1/topos-cli
+
+echo "Finished downloading the laterst github!"
+cd topos-cli
+
+
+# Step 2: Check if poetry exists and build
+if command -v poetry &> /dev/null
+then
+    echo "Poetry exists. Building with Poetry..."
+    poetry build
+else
+    echo "Poetry not found. Installing Poetry..."
+    curl -sSL https://install.python-poetry.org | python3 -
+    export PATH="$HOME/.local/bin:$PATH"
+    echo "Building with Poetry..."
+    poetry build
+fi
+
+# Upgrade pip
+echo "Upgrading pip..."
+/Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m pip install --upgrade pip
+
+# Step 3: Install the package
+echo "Step 3: Installing the package..."
+pip3 install .
+
+echo "Topos package installed!"
+
+# Dynamically set the PATH for the user's local bin directory
+USER_BASE_PATH=$(python3 -m site --user-base)/bin
+export PATH="$USER_BASE_PATH:$PATH"
+
+# Step 4: Set the spacy model size
+which topos
+echo "Step 4: Downloading spacy model..."
+topos set --spacy small
+
+# echo "Topos located here ->"
+# which topos
+echo "Installation complete!"
+
+# Save path so we can use in dart
+echo $(which topos) > ~/topos_path.txt

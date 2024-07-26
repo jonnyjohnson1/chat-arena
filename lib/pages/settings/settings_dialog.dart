@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:chat/chatroom/widgets/empty_home_page/install_screen.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/services/env_installer.dart';
+import 'package:chat/services/platform_types.dart';
 import 'package:chat/shared/activity_icon.dart';
 import 'package:chat/shared/backend_connected_service_button.dart';
 import 'package:flutter/foundation.dart';
@@ -20,7 +22,7 @@ class SettingsDialog extends StatefulWidget {
 }
 
 class _SettingsDialogState extends State<SettingsDialog>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool _isExpanded = false;
   bool didInit = false;
   late ValueNotifier<DisplayConfigData> displayConfigData;
@@ -184,159 +186,177 @@ class _SettingsDialogState extends State<SettingsDialog>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 700) {
-          // Mobile layout
-          return AlertDialog(
-            content: SizedBox(
-              width: constraints.maxWidth * 0.9,
-              height: constraints.maxHeight * 0.8,
-              child: Column(
-                children: [
-                  Stack(
-                    alignment: Alignment.centerRight,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Settings',
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            const SizedBox(
-                              width: 4,
-                            ),
-                            ValueListenableBuilder(
-                                valueListenable: installerService,
-                                builder: (context, installService, _) {
-                                  return ActivityIcon(
-                                      isRunning:
-                                          installService.backendConnected);
-                                }),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  ),
-                  Expanded(
+    return FutureBuilder<bool>(
+        future: isDesktopPlatform(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return Container();
+          if (snapshot.data!) {
+            _tabController = TabController(length: 3, vsync: this);
+          }
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 700) {
+                // Mobile layout
+                return AlertDialog(
+                  content: SizedBox(
+                    width: constraints.maxWidth * 0.9,
+                    height: constraints.maxHeight * 0.8,
                     child: Column(
                       children: [
-                        _buildVerticalTab(
-                            Icons.display_settings, 'Display Settings', 0),
-                        _buildVerticalTab(
-                            Icons.memory_sharp, 'Api Connections', 1),
-                        Expanded(
-                          child: Container(
-                            decoration: const BoxDecoration(
-                                color: Colors.white,
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(18))),
-                            child: TabBarView(
-                              controller: _tabController,
-                              children: [
-                                _buildDisplaySettingsPage(),
-                                _buildAPISettingsPage()
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        } else {
-          // Desktop/iPad layout
-          return AlertDialog(
-            content: SizedBox(
-              width: constraints.maxWidth * 0.8,
-              height: constraints.maxHeight * 0.6,
-              child: Column(
-                children: [
-                  Stack(
-                    alignment: Alignment.centerRight,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Stack(
+                          alignment: Alignment.centerRight,
                           children: [
-                            const Text(
-                              'Settings',
-                              style: TextStyle(fontSize: 20),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    'Settings',
+                                    style: TextStyle(fontSize: 20),
+                                  ),
+                                  const SizedBox(
+                                    width: 4,
+                                  ),
+                                  ValueListenableBuilder(
+                                      valueListenable: installerService,
+                                      builder: (context, installService, _) {
+                                        return ActivityIcon(
+                                            isRunning: installService
+                                                .backendConnected);
+                                      }),
+                                ],
+                              ),
                             ),
-                            const SizedBox(
-                              width: 4,
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
                             ),
-                            ValueListenableBuilder(
-                                valueListenable: installerService,
-                                builder: (context, installService, _) {
-                                  return ActivityIcon(
-                                      isRunning:
-                                          installService.backendConnected);
-                                }),
                           ],
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  ),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 250,
+                        Expanded(
                           child: Column(
                             children: [
                               _buildVerticalTab(Icons.display_settings,
                                   'Display Settings', 0),
                               _buildVerticalTab(
                                   Icons.memory_sharp, 'Api Connections', 1),
+                              if (snapshot.data!)
+                                _buildVerticalTab(
+                                    Icons.install_desktop, 'Install Steps', 2),
+                              Expanded(
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(18))),
+                                  child: TabBarView(
+                                    controller: _tabController,
+                                    children: [
+                                      _buildDisplaySettingsPage(),
+                                      _buildAPISettingsPage(),
+                                      if (snapshot.data!) _buildInstallPage()
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ],
-                          ),
-                        ),
-                        const VerticalDivider(),
-                        Expanded(
-                          child: Container(
-                            decoration: const BoxDecoration(
-                                color: Colors.white,
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(18))),
-                            child: TabBarView(
-                              controller: _tabController,
-                              children: [
-                                _buildDisplaySettingsPage(),
-                                _buildAPISettingsPage()
-                              ],
-                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
+                );
+              } else {
+                // Desktop/iPad layout
+                return AlertDialog(
+                  content: SizedBox(
+                    width: constraints.maxWidth * 0.8,
+                    height: constraints.maxHeight * 0.6,
+                    child: Column(
+                      children: [
+                        Stack(
+                          alignment: Alignment.centerRight,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    'Settings',
+                                    style: TextStyle(fontSize: 20),
+                                  ),
+                                  const SizedBox(
+                                    width: 4,
+                                  ),
+                                  ValueListenableBuilder(
+                                      valueListenable: installerService,
+                                      builder: (context, installService, _) {
+                                        return ActivityIcon(
+                                            isRunning: installService
+                                                .backendConnected);
+                                      }),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        ),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 250,
+                                child: Column(
+                                  children: [
+                                    _buildVerticalTab(Icons.display_settings,
+                                        'Display Settings', 0),
+                                    _buildVerticalTab(Icons.memory_sharp,
+                                        'Api Connections', 1),
+                                    if (snapshot.data!)
+                                      _buildVerticalTab(Icons.install_desktop,
+                                          'Install Steps', 2),
+                                  ],
+                                ),
+                              ),
+                              const VerticalDivider(),
+                              Expanded(
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(18))),
+                                  child: TabBarView(
+                                    controller: _tabController,
+                                    children: [
+                                      _buildDisplaySettingsPage(),
+                                      _buildAPISettingsPage(),
+                                      if (snapshot.data!) _buildInstallPage()
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+            },
           );
-        }
-      },
-    );
+        });
   }
 
   Widget _buildVerticalTab(IconData icon, String title, int index) {
@@ -521,10 +541,87 @@ class _SettingsDialogState extends State<SettingsDialog>
     }
   }
 
-  Future<bool> _isDesktopPlatform() async {
-    if (kIsWeb) return false;
-    return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
-    // || await IsIosAppOnMac().isiOSAppOnMac();
+  Future<void> onToposInstallationComplete() async {
+    // set value of installer to installed
+    bool backendConnected =
+        await installerService.value.checkBackendConnected();
+    installerService.value.backendConnected = backendConnected;
+    installerService.value.backendInstalled = true;
+    debugPrint("backendConnected :: $backendConnected");
+    // try to turn on the server
+    if (!backendConnected) {
+      debugPrint("checking topos is installed ");
+      bool isRunning =
+          await installerService.value.checkToposCLIInstalled(autoTurnOn: true);
+      installerService.value.backendConnected = isRunning;
+    }
+    installerService.notifyListeners();
+    installerService.value.printEnvironment();
+  }
+
+  Future<void> onToposUninstallationComplete() async {
+    // set value of installer to installed
+    bool backendConnected =
+        await installerService.value.checkBackendConnected();
+    installerService.value.backendConnected = backendConnected;
+    installerService.value.backendInstalled = false;
+    debugPrint("backendConnected :: $backendConnected");
+    installerService.notifyListeners();
+    installerService.value.printEnvironment();
+  }
+
+  Widget _buildInstallPage() {
+    InputDecoration inputDecoration = const InputDecoration(
+      border: OutlineInputBorder(),
+      contentPadding: EdgeInsets.symmetric(horizontal: 10),
+    );
+    TextStyle style = const TextStyle(fontSize: 14);
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
+        child: Column(
+          children: [
+            InstallerScreen(
+              installerService: installerService,
+              displayConfigData: displayConfigData,
+              onInstall: () async {
+                // Handle the install button tap
+                bool isInstalled =
+                    await installerService.value.checkToposCLIInstalled();
+                debugPrint("\t[ topos backend installed :: $isInstalled ]");
+                await installerService.value
+                    .runInstallScript(); // run installer
+                // check if topos backend is now installed
+                isInstalled = await installerService.value
+                    .checkToposCLIInstalled(autoTurnOn: false);
+                debugPrint("\t[ topos backend installed :: $isInstalled ]");
+                if (isInstalled) {
+                  debugPrint("\t[ topos successfully installed ]");
+                  // completion commands
+                  await onToposInstallationComplete();
+                } else {
+                  debugPrint("\t[ topos was not successfully installed ]");
+                }
+              },
+              onUninstall: () async {
+                await installerService.value.uninstallTopos(); // run installer
+                // check if topos backend is now installed
+                bool isInstalled = await installerService.value
+                    .checkToposCLIInstalled(autoTurnOn: false);
+                if (isInstalled) {
+                  debugPrint("\t[ topos successfully uninstalled ]");
+                  await onToposUninstallationComplete();
+                } else {
+                  debugPrint("\t[ topos was not successfully uninstalled ]");
+                }
+              },
+              showReturnButton: false,
+              onReturnHome: () {},
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildAPISettingsPage() {
@@ -542,7 +639,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                 valueListenable: installerService,
                 builder: (context, installService, _) {
                   return FutureBuilder(
-                      future: _isDesktopPlatform(),
+                      future: isDesktopPlatform(),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) return Container(height: 22);
                         return ServiceToggle(
@@ -561,7 +658,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                                               .value.apiConfig
                                               .getDefault());
                                       print(
-                                          'Monster is running at ${result['url']}');
+                                          'Topos is running at ${result['url']}');
                                       bool connected = result['isRunning'];
                                       installerService.value.backendConnected =
                                           connected;

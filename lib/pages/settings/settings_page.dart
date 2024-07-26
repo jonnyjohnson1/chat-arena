@@ -376,7 +376,7 @@ class _SettingsPageState extends State<SettingsPage>
                                               .value.apiConfig
                                               .getDefault());
                                       print(
-                                          'Monster is running at ${result['url']}');
+                                          'Topos is running at ${result['url']}');
                                       bool connected = result['isRunning'];
                                       installerService.value.backendConnected =
                                           connected;

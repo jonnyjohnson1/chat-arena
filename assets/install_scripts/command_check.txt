@@ -1,0 +1,13 @@
+#!/bin/bash
+WORK_DIR=$1
+cd $WORK_DIR
+
+# Get the string of topos path from ~/topos_path.txt
+TOPOS_PATH=$(cat ~/topos_path.txt)
+
+# Check if the command exists
+if [ -x "$TOPOS_PATH" ]; then
+    echo "exists"
+else
+    echo "not found"
+fi

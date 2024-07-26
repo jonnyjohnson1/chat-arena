@@ -78,4 +78,4 @@ flutter:
     - assets/app-config.json
     - assets/steering-suggestions.json
     - assets/scripts.json
-    # - assets/install_scripts/
+    - assets/install_scripts/

@@ -152,11 +152,13 @@ class _StarterHomePageState extends State<StarterHomePage> {
         await installerService.value.checkBackendConnected();
     installerService.value.backendConnected = backendConnected;
     installerService.value.backendInstalled = true;
-
+    debugPrint("backendConnected :: $backendConnected");
     // try to turn on the server
     if (!backendConnected) {
-      await installerService.value.checkBackendConnected();
-      await installerService.value.checkToposCLIInstalled(autoTurnOn: true);
+      debugPrint("checking topos is installed ");
+      bool isRunning =
+          await installerService.value.checkToposCLIInstalled(autoTurnOn: true);
+      installerService.value.backendConnected = isRunning;
     }
     installerService.notifyListeners();
     installerService.value.printEnvironment();
@@ -198,6 +200,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
                                     if (showInstallerScreen)
                                       InstallerScreen(
                                         installerService: installerService,
+                                        displayConfigData: displayConfigData,
                                         onInstall: () async {
                                           // Handle the install button tap
                                           bool isInstalled =
@@ -224,6 +227,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
                                                 "\t[ topos was not successfully installed ]");
                                           }
                                         },
+                                        onUninstall: () {},
                                         onReturnHome: () {
                                           setState(() {
                                             showInstallerScreen = false;
