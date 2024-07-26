@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:chat/chatroom/widgets/empty_home_page/install_screen.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/models/spacy_size.dart';
 import 'package:chat/services/env_installer.dart';
 import 'package:chat/services/platform_types.dart';
 import 'package:chat/shared/activity_icon.dart';
@@ -570,6 +571,8 @@ class _SettingsDialogState extends State<SettingsDialog>
     installerService.value.printEnvironment();
   }
 
+  SpacyModel _selectedModel = SpacyModel.trf;
+
   Widget _buildInstallPage() {
     InputDecoration inputDecoration = const InputDecoration(
       border: OutlineInputBorder(),
@@ -584,13 +587,16 @@ class _SettingsDialogState extends State<SettingsDialog>
             InstallerScreen(
               installerService: installerService,
               displayConfigData: displayConfigData,
+              onSelected: (SpacyModel model) {
+                _selectedModel = model;
+              },
               onInstall: () async {
                 // Handle the install button tap
                 bool isInstalled =
                     await installerService.value.checkToposCLIInstalled();
                 debugPrint("\t[ topos backend installed :: $isInstalled ]");
                 await installerService.value
-                    .runInstallScript(); // run installer
+                    .runInstallScript(_selectedModel); // run installer
                 // check if topos backend is now installed
                 isInstalled = await installerService.value
                     .checkToposCLIInstalled(autoTurnOn: false);

@@ -8,9 +8,11 @@ import 'package:chat/models/backend_connected.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/demo_controller.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/models/spacy_size.dart';
 import 'package:chat/services/env_installer.dart';
 import 'package:chat/models/scripts.dart';
 import 'package:chat/models/user.dart';
+import 'package:chat/services/platform_types.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
@@ -61,6 +63,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
     backendConnector.addListener(_handleBackendConnectorChange);
   }
 
+  SpacyModel _selectedModel = SpacyModel.trf;
   @override
   void dispose() {
     backendConnector.removeListener(_handleBackendConnectorChange);
@@ -81,10 +84,6 @@ class _StarterHomePageState extends State<StarterHomePage> {
     hintStyle: TextStyle(color: Colors.black38),
   );
   TextStyle style = const TextStyle(fontSize: 14);
-  Future<bool> _isDesktopPlatform() async {
-    if (kIsWeb) return false;
-    return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
-  }
 
   String responseMessageDefault = "";
   String responseMessageCustom = "";
@@ -189,7 +188,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
                       future: IsIosAppOnMac().isiOSAppOnMac(),
                       builder: (context, isIosAppOnMac) {
                         return FutureBuilder(
-                            future: _isDesktopPlatform(),
+                            future: isDesktopPlatform(),
                             builder: (context, isDesktop) {
                               if (!isDesktop.hasData || !isIosAppOnMac.hasData)
                                 return Container();
@@ -201,6 +200,9 @@ class _StarterHomePageState extends State<StarterHomePage> {
                                       InstallerScreen(
                                         installerService: installerService,
                                         displayConfigData: displayConfigData,
+                                        onSelected: (SpacyModel model) {
+                                          _selectedModel = model;
+                                        },
                                         onInstall: () async {
                                           // Handle the install button tap
                                           bool isInstalled =
@@ -209,7 +211,8 @@ class _StarterHomePageState extends State<StarterHomePage> {
                                           debugPrint(
                                               "\t[ topos backend installed :: $isInstalled ]");
                                           await installerService.value
-                                              .runInstallScript(); // run installer
+                                              .runInstallScript(
+                                                  _selectedModel); // run installer
                                           // check if topos backend is now installed
                                           isInstalled = await installerService
                                               .value

@@ -10,6 +10,7 @@ import 'package:chat/services/env_installer.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/models/scripts.dart';
 import 'package:chat/services/message_processor.dart';
+import 'package:chat/services/platform_types.dart';
 import 'package:chat/services/static_queries.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/shared/image_viewer.dart';
@@ -150,17 +151,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     }
   }
 
-  Future<bool> _isDesktopPlatform() async {
-    if (kIsWeb) return false;
-    return Platform.isWindows ||
-        Platform.isLinux ||
-        Platform.isMacOS ||
-        await IsIosAppOnMac().isiOSAppOnMac();
-  }
-
   Widget _chatroomPageUI(BuildContext context) {
     return FutureBuilder(
-        future: _isDesktopPlatform(),
+        future: isDesktopPlatform(includeIosAppOnMac: true),
         builder: (context, isDesktop) {
           if (!isDesktop.hasData) return Container();
           return Column(

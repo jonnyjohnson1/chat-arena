@@ -14,3 +14,18 @@ String getSpacyModelString(SpacyModel model) {
       return "en_core_web_sm"; // default case
   }
 }
+
+String getSimpleSpacyModelString(SpacyModel model) {
+  switch (model) {
+    case SpacyModel.small:
+      return "small";
+    case SpacyModel.med:
+      return "med";
+    case SpacyModel.large:
+      return "large";
+    case SpacyModel.trf:
+      return "trf";
+    default:
+      return "small"; // default case
+  }
+}

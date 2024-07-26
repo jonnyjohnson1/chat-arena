@@ -12,6 +12,7 @@ import 'package:chat/pages/home_scaffold/app_bar.dart';
 import 'package:chat/pages/home_scaffold/drawer.dart';
 import 'package:chat/pages/home_scaffold/widgets/scripts_list.dart';
 import 'package:chat/services/env_installer.dart';
+import 'package:chat/services/platform_types.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
@@ -170,14 +171,6 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
     overlayState.insert(suggestionStartTimeTagoverlayEntry!);
   }
 
-  Future<bool> _isDesktopPlatform() async {
-    if (kIsWeb) return false;
-    return Platform.isWindows ||
-        Platform.isLinux ||
-        Platform.isMacOS ||
-        await IsIosAppOnMac().isiOSAppOnMac();
-  }
-
   removeHoverInfoTag(
       // BuildContext context,
       ) async {
@@ -198,7 +191,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
             initSize = true;
           }
           return FutureBuilder<bool>(
-              future: _isDesktopPlatform(),
+              future: isDesktopPlatform(includeIosAppOnMac: true),
               builder: (context, isDesktop) {
                 if (!isDesktop.hasData) {
                   return Container(
@@ -455,7 +448,8 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                     bottomSelectedIndex,
                                     overlayIsOpen,
                                     context, onMenuTap: () async {
-                                  await _isDesktopPlatform()
+                                  await isDesktopPlatform(
+                                          includeIosAppOnMac: true)
                                       ? setState(() {
                                           if (!startDrawerOpen.value) {
                                             startDrawerOpen.value = true;
@@ -506,7 +500,8 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                             );
                                           });
                                 }, onAnalyticsTap: () async {
-                                  await _isDesktopPlatform()
+                                  await isDesktopPlatform(
+                                          includeIosAppOnMac: true)
                                       ? setState(() {
                                           analyticsDrawerIsOpen =
                                               !analyticsDrawerIsOpen;

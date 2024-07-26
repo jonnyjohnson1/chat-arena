@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/spacy_size.dart';
+import 'package:chat/services/platform_types.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -32,14 +33,6 @@ class InstallerService {
   final ValueNotifier<bool> isConnecting = ValueNotifier(false);
 
   FToast fToast = FToast();
-
-  Future<bool> _isDesktopPlatform() async {
-    if (kIsWeb) return false;
-    return Platform.isWindows ||
-        Platform.isLinux ||
-        Platform.isMacOS ||
-        await IsIosAppOnMac().isiOSAppOnMac();
-  }
 
   List<String> endingStatements = [
     "Installation complete!",
@@ -384,7 +377,7 @@ class InstallerService {
     }
   }
 
-  Future<void> runInstallScript() async {
+  Future<void> runInstallScript(SpacyModel model) async {
     try {
       String scriptAssetPath;
       String scriptContent;
@@ -402,6 +395,14 @@ class InstallerService {
       // Load the script content from assets
       scriptContent = await rootBundle.loadString(scriptAssetPath);
 
+      // replace the set spacy model in the script with the one selected by user
+      String spacyModel = getSimpleSpacyModelString(model);
+
+      // Replace the spacy model in the script content
+      scriptContent = scriptContent.replaceFirst(
+        RegExp(r'topos set --spacy \w+'),
+        'topos set --spacy $spacyModel',
+      );
       // Get a temporary directory to write the script file
       final tempDir = await getTemporaryDirectory();
       final scriptFile = File(
@@ -506,7 +507,7 @@ class InstallerService {
   }
 
   Future<bool> checkToposCLIInstalled({bool autoTurnOn = true}) async {
-    if (await _isDesktopPlatform()) {
+    if (await isDesktopPlatform(includeIosAppOnMac: true)) {
       debugPrint("\t[ running on desktop ]");
       bool toposIsInstalled = await checkIfCommandExists(await getToposPath());
       if (toposIsInstalled) {

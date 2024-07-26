@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/services/env_installer.dart';
+import 'package:chat/services/platform_types.dart';
 import 'package:chat/shared/backend_connected_service_button.dart';
 
 import 'package:flutter/cupertino.dart';
@@ -342,12 +343,6 @@ class _SettingsPageState extends State<SettingsPage>
     _customEndpointController.text =
         displayConfigData.value.apiConfig.customEndpoint;
 
-    Future<bool> _isDesktopPlatform() async {
-      if (kIsWeb) return false;
-      return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
-      // || await IsIosAppOnMac().isiOSAppOnMac();
-    }
-
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
@@ -357,7 +352,7 @@ class _SettingsPageState extends State<SettingsPage>
                 valueListenable: installerService,
                 builder: (context, installService, _) {
                   return FutureBuilder(
-                      future: _isDesktopPlatform(),
+                      future: isDesktopPlatform(),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) return Container(height: 22);
                         return ServiceToggle(

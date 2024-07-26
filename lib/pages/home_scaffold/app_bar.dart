@@ -5,6 +5,7 @@ import 'package:chat/models/display_configs.dart';
 import 'package:chat/pages/home_scaffold/widgets/demo_mode_title.dart';
 import 'package:chat/pages/settings/settings_dialog.dart';
 import 'package:chat/services/env_installer.dart';
+import 'package:chat/services/platform_types.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -23,16 +24,8 @@ buildAppBar(
     required Function onAnalyticsTap,
     required Function onChatsTap,
     required Function overlayPopupController}) {
-  Future<bool> _isDesktopPlatform() async {
-    if (kIsWeb) return false;
-    return Platform.isWindows ||
-        Platform.isLinux ||
-        Platform.isMacOS ||
-        await IsIosAppOnMac().isiOSAppOnMac();
-  }
-
   return FutureBuilder(
-      future: _isDesktopPlatform(),
+      future: isDesktopPlatform(includeIosAppOnMac: true),
       builder: (context, isDesktop) {
         if (!isDesktop.hasData) return Container();
         return Container(

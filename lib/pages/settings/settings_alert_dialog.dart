@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:chat/pages/settings/settings_page.dart';
+import 'package:chat/services/platform_types.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
@@ -8,18 +9,11 @@ import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
 class SettingsDialog extends StatelessWidget {
   final bool isMobile;
   const SettingsDialog({this.isMobile = false, Key? key}) : super(key: key);
-  Future<bool> _isDesktopPlatform() async {
-    if (kIsWeb) return false;
-    return Platform.isWindows ||
-        Platform.isLinux ||
-        Platform.isMacOS ||
-        await IsIosAppOnMac().isiOSAppOnMac();
-  }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: _isDesktopPlatform(),
+        future: isDesktopPlatform(includeIosAppOnMac: true),
         builder: (context, isDesktop) {
           if (!isDesktop.hasData) {
             return Container();
