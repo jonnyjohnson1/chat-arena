@@ -17,11 +17,11 @@ import 'package:chat/pages/home_scaffold/games/debate/debate_game_settings.dart'
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/debate_auth_websocket_service.dart';
-
-import '../../../../models/messages.dart';
+import 'package:chat/models/messages.dart';
+import 'package:chat/models/messages.dart' as uiMessage;
 
 class DebateGamePage extends StatefulWidget {
-  Conversation? conversation; // Remove final keyword
+  Conversation? conversation;
   final ValueNotifier<List<Conversation>> conversations;
 
   DebateGamePage({Key? key, this.conversation, required this.conversations}) : super(key: key);
@@ -31,31 +31,20 @@ class DebateGamePage extends StatefulWidget {
 }
 
 class _DebateGamePageState extends State<DebateGamePage> {
-  // Flag to indicate if the page is still loading data
   bool isLoading = true;
-
-  // List to store all messages in the debate
   late List<Message> messages = [];
-
-  // WebSocket service for real-time communication
   late DebateAuthWebSocketService _webSocketService;
-
-  // Default model configuration for the debate
   ModelConfig selectedModel = ModelConfig(
       model: const LanguageModel(model: 'dolphin-llama3', name: "dolphin-llama3", size: 21314),
       temperature: 0.06,
       numGenerations: 1
   );
 
-  // Notifiers for various app-wide states
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late ValueNotifier<Conversation?> currentSelectedConversation;
   late ValueNotifier<User> userModel;
-
-  // Notifier to indicate if a message is being generated
   ValueNotifier<bool> isGenerating = ValueNotifier(false);
 
-  // Variables to track generation progress and performance
   String generatedChat = "";
   double toksPerSec = 0.0;
   double completionTime = 0.0;
@@ -64,24 +53,20 @@ class _DebateGamePageState extends State<DebateGamePage> {
   @override
   void initState() {
     super.initState();
+    debugPrint('\t[ DebateGamePage :: initState ]');
 
-    // Initialize providers
     currentSelectedConversation = Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
     displayConfigData = Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     userModel = Provider.of<ValueNotifier<User>>(context, listen: false);
 
-    // Initialize WebSocket service
     _webSocketService = DebateAuthWebSocketService('0.0.0.0:13341');
 
-    // Load initial data and set up WebSocket
     initData();
     _initializeWebSocket();
 
-    debugPrint("\t[ Debate :: GamePage initState ]");
-
-    // If no topic is set, prompt for one after a short delay
     if (widget.conversation?.gameModel == null || widget.conversation!.gameModel.topic.isEmpty) {
       Future.delayed(const Duration(milliseconds: 400), () async {
+        debugPrint('\t\t[ Fetching debate game settings ]');
         Map<String, dynamic> debateGameSettings = await getGameSettings(context);
         String topic = debateGameSettings['topic'];
         if (topic.isNotEmpty) {
@@ -93,33 +78,14 @@ class _DebateGamePageState extends State<DebateGamePage> {
     }
   }
 
-  Future<void> _addNewAccounts() async {
-    // This could be populated from a form in your UI
-    Map<String, String> newAccounts = {
-      'newUser1': 'password1',
-      'newUser2': 'password2',
-    };
-
-    bool success = await _webSocketService.adminAddAccounts(newAccounts);
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('New accounts added successfully')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add new accounts')),
-      );
-    }
-  }
-
-  // Initialize data by loading messages from the database
   Future<void> initData() async {
-    debugPrint("[ init data ]");
+    debugPrint('\t[ DebateGamePage :: initData ]');
     if (widget.conversation != null) {
       try {
         messages = await ConversationDatabase.instance.readAllMessages(widget.conversation!.id);
+        debugPrint('\t\t[ Loaded ${messages.length} messages ]');
       } catch (e) {
-        print(e);
+        debugPrint('\t\t[ Error loading messages: $e ]');
       }
       currentSelectedConversation.value = widget.conversation;
       currentSelectedConversation.notifyListeners();
@@ -129,16 +95,18 @@ class _DebateGamePageState extends State<DebateGamePage> {
     });
   }
 
-  // Initialize WebSocket connection
   Future<void> _initializeWebSocket() async {
-    bool loggedIn = await _webSocketService.login(userModel.value.username, 'password'); // Replace with actual password handling
+    debugPrint('\t[ DebateGamePage :: _initializeWebSocket ]');
+    bool loggedIn = await _webSocketService.login(userModel.value.username, 'password');
     if (loggedIn) {
+      debugPrint('\t\t[ WebSocket login successful ]');
       bool sessionCreated = await _webSocketService.createOrJoinSession();
       if (sessionCreated) {
+        debugPrint('\t\t[ WebSocket session created ]');
         bool connected = await _webSocketService.connectWebSocket();
         if (connected) {
           _listenToWebSocketMessages();
-          debugPrint("\t[ WebSocket connected successfully ]");
+          debugPrint('\t\t[ WebSocket connected successfully ]');
         } else {
           _showError('Failed to connect to WebSocket');
         }
@@ -150,226 +118,188 @@ class _DebateGamePageState extends State<DebateGamePage> {
     }
   }
 
-  // Listen for incoming WebSocket messages
   void _listenToWebSocketMessages() {
+    debugPrint('\t[ DebateGamePage :: _listenToWebSocketMessages ]');
     _webSocketService.messages.listen((message) {
       final data = json.decode(message);
       _handleWebSocketMessage(data);
     });
   }
 
-  // Handle different types of WebSocket messages
   void _handleWebSocketMessage(Map<String, dynamic> data) {
-    try {
-      debugPrint('\t[ Received WebSocket message: ${json.encode(data)} ]');
+    debugPrint('\t[ DebateGamePage :: _handleWebSocketMessage ]');
+    debugPrint('\t\t[ Received message type: ${data['status']} ]');
 
+    try {
       switch (data['status']) {
         case 'message_processed':
-          debugPrint('\t\t[ Message processed: ${data['message_id']} ]');
-          // Handle initial message processing
-          // Example: Update UI to show message was received by server
-          setState(() {
-            // Find the message in the messages list and update its status
-            int index = messages.indexWhere((m) => m.id == data['message_id']);
-            if (index != -1) {
-              // Assuming you have a method to update the message status
-              //@note:@todo:@next:
-              // messages[index].updateStatus('Processed');
-            }
-          });
+          _handleMessageProcessed(data);
           break;
-
         case 'initial_clusters':
-          debugPrint('Received initial clusters: ${data['clusters']}');
-          // Handle initial cluster data
-          // Example: Display initial argument clusters
-          _displayClusters(data['clusters'], isInitial: true);
+          _handleInitialClusters(data);
           break;
-
         case 'updated_clusters':
-          debugPrint('Received updated clusters: ${data['clusters']}');
-          // Handle updated cluster data
-          // Example: Update displayed argument clusters
-          _displayClusters(data['clusters'], isInitial: false);
+          _handleUpdatedClusters(data);
           break;
-
         case 'wepcc_result':
-          debugPrint('Received WEPCC result for cluster: ${data['cluster_id']}');
-          debugPrint('WEPCC details: ${data['wepcc_result']}');
-          // Handle WEPCC (Warrant, Evidence, Persuasiveness, Claim, Counterclaim) result
-          // Example: Update UI with WEPCC analysis
-          _updateWEPCCAnalysis(data['cluster_id'], data['wepcc_result']);
+          _handleWEPCCResult(data);
           break;
-
         case 'final_results':
-          debugPrint('Received final debate results');
-          debugPrint('Aggregated scores: ${data['aggregated_scores']}');
-          debugPrint('Addressed clusters: ${data['addressed_clusters']}');
-          debugPrint('Unaddressed clusters: ${data['unaddressed_clusters']}');
-
-          // Convert cluster IDs to strings
-          Map<String, List<List<dynamic>>> addressedClusters = {};
-          Map<String, List<List<dynamic>>> unaddressedClusters = {};
-
-          data['addressed_clusters'].forEach((userId, clusters) {
-            addressedClusters[userId] = (clusters as List<dynamic>).map((cluster) =>
-            [cluster[0].toString(), cluster[1]]).toList();
-          });
-
-          data['unaddressed_clusters'].forEach((userId, clusters) {
-            unaddressedClusters[userId] = (clusters as List<dynamic>).map((cluster) =>
-            [cluster[0].toString(), cluster[1]]).toList();
-          });
-
-          _displayFinalResults(
-              data['aggregated_scores'],
-              addressedClusters,
-              unaddressedClusters,
-              data['results']
-          );
+          _handleFinalResults(data);
           break;
-
         default:
-          debugPrint('Unknown message type received: ${data['status']}');
+          debugPrint('\t\t[ Unknown message type received: ${data['status']} ]');
+      }
+
+      // Notify listeners after each update
+      currentSelectedConversation.notifyListeners();
+
+    } catch (e, stackTrace) {
+      debugPrint('\t\t[ Error handling WebSocket message: $e ]');
+      debugPrint('\t\t[ Stack trace: $stackTrace ]');
+    }
+  }
+
+  void _handleMessageProcessed(Map<String, dynamic> data) {
+    debugPrint('\t[ DebateGamePage :: _handleMessageProcessed ]');
+    String? userMessageId = data['user_message_id'] as String?;
+    String? serviceId = data['service_id'] as String?;
+    if (userMessageId != null) {
+      int index = messages.indexWhere((m) => m.id == userMessageId);
+      if (index != -1) {
+        debugPrint('\t\t[ Message processed: $userMessageId ]');
+        // Update message status if needed
+        setState(() {
+          messages[index].status = 'Integrating';
+
+          if (serviceId != null) {
+            messages[index].serviceId = serviceId;
+          }
+        });
+      } else {
+        debugPrint('\t\t[ Message not found: $userMessageId ]');
+      }
+    } else {
+      debugPrint('\t\t[ Invalid message_id received ]');
+    }
+  }
+
+  void _handleInitialClusters(Map<String, dynamic> data) {
+    debugPrint('\t[ DebateGamePage :: _handleInitialClusters ]');
+    if (data['clusters'] != null) {
+      widget.conversation?.debateData.initialClusters = data['clusters'];
+      _updateMermaidChart(data['clusters']);
+      debugPrint('\t\t[ Initial clusters processed ]');
+    } else {
+      debugPrint('\t\t[ No initial clusters data received ]');
+    }
+  }
+
+  void _handleUpdatedClusters(Map<String, dynamic> data) {
+    debugPrint('\t[ DebateGamePage :: _handleUpdatedClusters ]');
+    if (data['clusters'] != null) {
+      widget.conversation?.debateData.updatedClusters = data['clusters'];
+      _updateMermaidChart(data['clusters']);
+      debugPrint('\t\t[ Updated clusters processed ]');
+    } else {
+      debugPrint('\t\t[ No updated clusters data received ]');
+    }
+  }
+
+  void _handleWEPCCResult(Map<String, dynamic> data) {
+    debugPrint('\t[ DebateGamePage :: _handleWEPCCResult ]');
+    try {
+      // Use dynamic type for initial assignment to allow for different types
+      dynamic rawClusterId = data['cluster_id'];
+      String clusterId;
+
+      // Convert the clusterId to String, regardless of its original type
+      if (rawClusterId is int) {
+        clusterId = rawClusterId.toString();
+      } else if (rawClusterId is String) {
+        clusterId = rawClusterId;
+      } else {
+        throw FormatException('Invalid cluster_id type: ${rawClusterId.runtimeType}');
+      }
+
+      Map<String, dynamic>? wepccResult = data['wepcc_result'] as Map<String, dynamic>?;
+
+      if (wepccResult != null) {
+        widget.conversation?.debateData.wepccResults[clusterId] = wepccResult;
+        debugPrint('\t\t[ WEPCC result processed for cluster: $clusterId ]');
+      } else {
+        debugPrint('\t\t[ Warning: Null WEPCC result received for cluster: $clusterId ]');
       }
     } catch (e, stackTrace) {
-      debugPrint('Error handling WebSocket message: $e');
-      debugPrint('Stack trace: $stackTrace');
-      // Optionally, you could show an error message to the user here
+      debugPrint('\t\t[ Error handling WEPCC result: $e ]');
+      debugPrint('\t\t[ Stack trace: $stackTrace ]');
+      // You might want to add some error recovery logic here
+    }
+  }
+
+  void _handleFinalResults(Map<String, dynamic> data) {
+    debugPrint('\t[ DebateGamePage :: _handleFinalResults ]');
+
+    if (data['aggregated_scores'] != null) {
+      widget.conversation?.debateData.aggregatedScores = Map<String, dynamic>.from(data['aggregated_scores']);
     }
 
-    // Update UI based on received data
-    setState(() {
-      // Update relevant state variables based on the received data
-      // This will trigger a rebuild of the widget tree
+    if (data['addressed_clusters'] != null) {
+      widget.conversation?.debateData.addressedClusters = (data['addressed_clusters'] as Map<String, dynamic>).map(
+              (key, value) => MapEntry(
+              key,
+              (value as List<dynamic>).map((item) => [item[0].toString(), item[1]]).toList()
+          )
+      );
+    }
+
+    if (data['unaddressed_clusters'] != null) {
+      widget.conversation?.debateData.unaddressedClusters = (data['unaddressed_clusters'] as Map<String, dynamic>).map(
+              (key, value) => MapEntry(
+              key,
+              (value as List<dynamic>).map((item) => [item[0].toString(), item[1]]).toList()
+          )
+      );
+    }
+
+    if (data['results'] != null) {
+      widget.conversation?.debateData.results = List<dynamic>.from(data['results']);
+    }
+
+    _updateMermaidChart(data);
+
+    debugPrint('\t\t[ Final results processed and stored ]');
+  }
+
+  void _updateMermaidChart(Map<String, dynamic> data) {
+    debugPrint('\t[ DebateGamePage :: _updateMermaidChart ]');
+    String mermaidSyntax = _generateMermaidSyntax(data);
+    widget.conversation?.debateData.mermaidChartData = mermaidSyntax;
+    debugPrint('\t\t[ Mermaid chart data updated ]');
+  }
+
+  String _generateMermaidSyntax(Map<String, dynamic> data) {
+    debugPrint('\t[ DebateGamePage :: _generateMermaidSyntax ]');
+    StringBuffer syntax = StringBuffer('graph TD;\n');
+
+    // Example implementation - adjust based on your specific data structure
+    data['clusters']?.forEach((clusterId, clusterData) {
+      syntax.writeln('  $clusterId[Cluster $clusterId]');
+      clusterData['claims']?.forEach((claim) {
+        syntax.writeln('  $clusterId --> ${claim['id']}[${claim['content']}]');
+      });
     });
+
+    debugPrint('\t\t[ Mermaid syntax generated ]');
+    return syntax.toString();
   }
 
-// Helper methods (implement these based on your UI requirements)
-
-  void _displayClusters(Map<String, dynamic> clusters, {required bool isInitial}) {
-    // Implement logic to display clusters in your UI
-    print('${isInitial ? "Initial" : "Updated"} clusters displayed');
-  }
-
-  void _updateWEPCCAnalysis(String clusterId, Map<String, dynamic> wepccResult) {
-    // Implement logic to update UI with WEPCC analysis
-    print('WEPCC analysis updated for cluster $clusterId');
-  }
-
-  void _displayFinalResults(
-      Map<String, dynamic> aggregatedScores,
-      Map<String, dynamic> addressedClusters,
-      Map<String, dynamic> unaddressedClusters,
-      List<dynamic> results
-      ) {
-    // Implement logic to display final debate results
-    debugPrint('Final debate results displayed');
-    debugPrint('Aggregated scores: $aggregatedScores');
-    debugPrint('Addressed clusters: $addressedClusters');
-    debugPrint('Unaddressed clusters: $unaddressedClusters');
-    debugPrint('Results: $results');
-
-    // Update UI components to show the final results
-    // For example:
-    // setState(() {
-    //   finalScores = aggregatedScores;
-    //   finalAddressedClusters = addressedClusters;
-    //   finalUnaddressedClusters = unaddressedClusters;
-    //   finalResults = results;
-    // });
-  }
-
-
-  // Callback function to handle chat generation progress and completion
-  void generationCallback(Map<String, dynamic>? event) async {
-    if (event != null) {
-      EventGenerationResponse response = EventGenerationResponse.fromMap(event);
-
-      generatedChat = response.generation;
-      if (response.isCompleted) {
-        debugPrint("\t\t[ chat completed ]");
-        isGenerating.value = false;
-        messages[currentIdx].isGenerating = false;
-        completionTime = response.completionTime;
-        messages[currentIdx].completionTime = completionTime;
-        isGenerating.notifyListeners();
-
-        setState(() {});
-
-        // Save the final message to the database
-        await ConversationDatabase.instance.createMessage(messages[currentIdx]);
-
-        // Perform post-conversation analyses if enabled
-        if (displayConfigData.value.showSidebarBaseAnalytics) {
-          await _performPostConversationAnalyses();
-        }
-      } else {
-        // Update generation progress
-        toksPerSec = response.toksPerSec;
-        completionTime = response.completionTime;
-        _updateMessageWithGenerationProgress();
-      }
-    }
-  }
-
-  // Perform post-conversation analyses
-  Future<void> _performPostConversationAnalyses() async {
-    ConversationData? data = await LocalLLMInterface(displayConfigData.value.apiConfig)
-        .getChatAnalysis(widget.conversation!.id);
-    widget.conversation!.conversationAnalytics.value = data;
-    widget.conversation!.conversationAnalytics.notifyListeners();
-
-    if (displayConfigData.value.calcImageGen) {
-      ImageFile? imageFile = await LocalLLMInterface(displayConfigData.value.apiConfig)
-          .getConvToImage(widget.conversation!.id);
-      if (imageFile != null) {
-        widget.conversation!.convToImagesList.value.add(imageFile);
-        widget.conversation!.convToImagesList.notifyListeners();
-      }
-    }
-  }
-
-  // Update message with generation progress
-  void _updateMessageWithGenerationProgress() {
-    try {
-      messages[currentIdx].message!.value = generatedChat;
-      messages[currentIdx].completionTime = completionTime;
-      messages[currentIdx].isGenerating = true;
-      messages[currentIdx].toksPerSec = toksPerSec;
-      messages[currentIdx].message!.notifyListeners();
-    } catch (e) {
-      print("Error updating message with the latest result: ${e.toString()}");
-    }
-  }
-
-  // Callback function to handle message analysis results
-  void analysisCallBackFunction(dynamic userMessage, dynamic chatBotMessage) async {
-    if (userMessage.isNotEmpty) {
-      _updateMessageAnalytics(userMessage, isUserMessage: true);
-    }
-    if (chatBotMessage.isNotEmpty) {
-      _updateMessageAnalytics(chatBotMessage, isUserMessage: false);
-    }
-  }
-
-  // Update message analytics
-  void _updateMessageAnalytics(dynamic messageData, {required bool isUserMessage}) {
-    String msgId = messageData.keys.first;
-    int idx = messages.indexWhere((element) => element.id == msgId);
-    messages[idx].baseAnalytics.value = messageData[msgId];
-    messages[idx].baseAnalytics.notifyListeners();
-  }
-
-  // Send a message to the model for processing
-  void sendMessagetoModel(String text) async {
-    debugPrint("[ Submitting: $text ]");
+  void sendMessageToModel(String text, String userMessageId) async {
+    debugPrint('\t[ DebateGamePage :: sendMessageToModel ]');
     final newChatBotMsgId = const Uuid().v4();
 
-    // Send message via WebSocket
-    _webSocketService.sendMessage(text, userModel.value.uid);
+    _webSocketService.sendMessage(text, userMessageId, userModel.value.uid);
 
-    // Create a new message object for the chatbot's response
     Message message = Message(
         id: newChatBotMsgId,
         conversationID: widget.conversation!.id,
@@ -388,7 +318,10 @@ class _DebateGamePageState extends State<DebateGamePage> {
       isGenerating.value = true;
     });
 
-    // Process the message using LocalLLMInterface (this might be replaced with WebSocket handling in the future)
+    debugPrint('\t\t[ Message sent to model: $text ]');
+
+    // Note: The actual message processing is now handled by the WebSocket
+    // We keep this call for any local processing that might still be needed
     LocalLLMInterface(displayConfigData.value.apiConfig).newChatMessage(
         text,
         messages,
@@ -402,7 +335,121 @@ class _DebateGamePageState extends State<DebateGamePage> {
     );
   }
 
-  // Get the topic text for display
+  void generationCallback(Map<String, dynamic>? event) async {
+    // Implementation remains the same
+    // debugPrint('\t[ DebateGamePage :: generationCallback ]');
+    if (event != null) {
+      double completionTime = 0.0;
+
+      EventGenerationResponse response = EventGenerationResponse.fromMap(event);
+
+      generatedChat = response.generation;
+      if (response.isCompleted) {
+        debugPrint("\t\t[ chat completed ]");
+        // end token is received
+        isGenerating.value = false;
+        messages[currentIdx].isGenerating = false;
+        completionTime = response.completionTime;
+        messages[currentIdx].completionTime = completionTime;
+        isGenerating.notifyListeners();
+
+        setState(() {});
+        // add the final message to the database
+        ConversationDatabase.instance.createMessage(messages[currentIdx]);
+
+        // Run the individual chat message analysis here
+        if (displayConfigData.value.calcMsgMermaidChart) {
+          String message = messages[currentIdx - 1].message!.value;
+          if (message.split(" ").length >=
+              6) // run_mermaid_check // if tokens > 6
+              {
+            print("mermaid chart here");
+            await LocalLLMInterface(displayConfigData.value.apiConfig)
+                .genMermaidChart(messages[currentIdx - 1],
+                widget.conversation!.id, selectedModel,
+                fullConversation: false);
+
+            print("got");
+            // LocalLLMInterface(displayConfigData.value.apiConfig)
+            //     .genMermaidChartWS(messages[currentIdx - 1],
+            //         widget.conversation!.id, selectedModel,
+            //         fullConversation: false);
+          }
+        }
+
+        // Run all the post conversation analyses here
+        // run sidebar calculations if config says so
+        if (displayConfigData.value.showSidebarBaseAnalytics) {
+          ConversationData? data =
+          await LocalLLMInterface(displayConfigData.value.apiConfig)
+              .getChatAnalysis(widget.conversation!.id);
+          // return analysis to the Conversation object
+          widget.conversation!.conversationAnalytics.value = data;
+          widget.conversation!.conversationAnalytics.notifyListeners();
+
+          // get an image depiction of the conversation
+          if (displayConfigData.value.calcImageGen) {
+            ImageFile? imageFile =
+            await LocalLLMInterface(displayConfigData.value.apiConfig)
+                .getConvToImage(widget.conversation!.id);
+            if (imageFile != null) {
+              // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
+              widget.conversation!.convToImagesList.value.add(imageFile);
+              widget.conversation!.convToImagesList.notifyListeners();
+            }
+          }
+        }
+      } else {
+        // This branch handles all the streaming updates
+        // debugPrint(generatedChat);
+        toksPerSec = response.toksPerSec;
+        while (generatedChat.startsWith("\n")) {
+          generatedChat = generatedChat.substring(2);
+        }
+        completionTime = response.completionTime;
+        try {
+          messages[currentIdx].message!.value = generatedChat;
+          messages[currentIdx].completionTime = completionTime;
+          messages[currentIdx].isGenerating = true;
+          messages[currentIdx].toksPerSec = toksPerSec;
+
+          // Notify the value listeners
+          messages[currentIdx].message!.notifyListeners();
+        } catch (e) {
+          print(
+              "Error updating message with the latest result: ${e.toString()}");
+          print("The generation was: $generatedChat");
+        }
+        // setState(() {});
+      }
+    } else {
+      // return null event generation
+      // return const EventGenerationResponse(generation: "", progress: 0.0);
+    }
+  }
+
+  void analysisCallBackFunction(dynamic userMessage, dynamic chatBotMessage) async {
+    // Implementation remains the same
+    debugPrint('\t[ DebateGamePage :: analysisCallBackFunction ]');
+    // Add your implementation here
+    if (userMessage.isNotEmpty) {
+      String userMsgId = userMessage.keys.first;
+      int idx = messages
+          .indexWhere((uiMessage.Message element) => element.id == userMsgId);
+      // Set the message's analytics value
+      messages[idx].baseAnalytics.value = userMessage[userMsgId];
+      messages[idx].baseAnalytics.notifyListeners();
+    }
+    if (chatBotMessage.isNotEmpty) {
+      String botMsgId = chatBotMessage.keys.first;
+      int idx = messages
+          .indexWhere((uiMessage.Message element) => element.id == botMsgId);
+      // Set the message's analytics value
+      messages[idx].baseAnalytics.value = chatBotMessage[botMsgId];
+      messages[idx].baseAnalytics.notifyListeners();
+    }
+  }
+
   String getTopicText(Conversation? conversation) {
     if (conversation?.gameModel != null) {
       return conversation!.gameModel.topic ?? "";
@@ -410,38 +457,44 @@ class _DebateGamePageState extends State<DebateGamePage> {
     return "insert topic";
   }
 
-  // Show error message
   void _showError(String message) {
+    debugPrint('\t[ DebateGamePage :: _showError: $message ]');
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
-
 
   @override
   Widget build(BuildContext context) {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
-        : ChatRoomPage(
-      key: widget.conversation != null
-          ? Key(widget.conversation!.id)
-          : Key(DateTime.now().toIso8601String()),
-      messages: messages,
-      isGenerating: isGenerating,
-      conversation: widget.conversation,
-      showGeneratingText: true,
-      showModelSelectButton: true,
-      selectedModelConfig: selectedModel,
-      onSelectedModelChange: (LanguageModel? newValue) {
-        selectedModel.model = newValue!;
-      },
-      showTopTitle: true,
-      topTitleHeading: "Topic:",
-      topTitleText: getTopicText(widget.conversation),
-      onNewMessage: _handleNewMessage,
+        : Column(
+      children: [
+        Expanded(
+          child: ChatRoomPage(
+            key: widget.conversation != null
+                ? Key(widget.conversation!.id)
+                : Key(DateTime.now().toIso8601String()),
+            messages: messages,
+            isGenerating: isGenerating,
+            conversation: widget.conversation,
+            showGeneratingText: true,
+            showModelSelectButton: true,
+            selectedModelConfig: selectedModel,
+            onSelectedModelChange: (LanguageModel? newValue) {
+              selectedModel.model = newValue!;
+            },
+            showTopTitle: true,
+            topTitleHeading: "Topic:",
+            topTitleText: getTopicText(widget.conversation),
+            onNewMessage: _handleNewMessage,
+          ),
+        ),
+        // You can add a brief summary of debate status here if needed
+      ],
     );
   }
 
-  // Handle new message from user
   Future<void> _handleNewMessage(Conversation? conv, String text, List<ImageFile> images) async {
+    debugPrint('\t[ DebateGamePage :: _handleNewMessage ]');
     if (widget.conversation == null) {
       await _createNewConversation(text);
     }
@@ -451,15 +504,15 @@ class _DebateGamePageState extends State<DebateGamePage> {
     await _updateConversationState();
   }
 
-// Replace the _createNewConversation method with this:
   Future<void> _createNewConversation(String text) async {
+    debugPrint('\t[ DebateGamePage :: _createNewConversation ]');
     Conversation newConversation = Conversation(
       id: const Uuid().v4(),
       lastMessage: text,
-      gameType: GameType.chat,
+      gameType: GameType.debate,
       time: DateTime.now(),
       primaryModel: selectedModel.model.name,
-      title: "Chat",
+      title: "Debate",
     );
     await ConversationDatabase.instance.create(newConversation);
     widget.conversations.value.insert(0, newConversation);
@@ -467,16 +520,18 @@ class _DebateGamePageState extends State<DebateGamePage> {
     currentSelectedConversation.value = newConversation;
     currentSelectedConversation.notifyListeners();
 
-    // Update the local conversation reference
     setState(() {
       widget.conversation = newConversation;
     });
+    debugPrint('\t\t[ New conversation created: ${newConversation.id} ]');
   }
 
-  // Add a new message to the conversation
   Future<void> _addNewMessage(String text, List<ImageFile> images) async {
+    debugPrint('\t[ DebateGamePage :: _addNewMessage ]');
+    String userMessageId = const Uuid().v4();
+
     Message message = Message(
-        id: const Uuid().v4(),
+        id: userMessageId,
         conversationID: widget.conversation!.id,
         message: ValueNotifier(text),
         images: images,
@@ -494,25 +549,29 @@ class _DebateGamePageState extends State<DebateGamePage> {
     setState(() {
       isGenerating.value = true;
     });
-    sendMessagetoModel(text);
+    sendMessageToModel(text, userMessageId);
+    debugPrint('\t\t[ New message added: ${message.id} ]');
   }
 
-  // Update the conversation state
   Future<void> _updateConversationState() async {
+    debugPrint('\t[ DebateGamePage :: _updateConversationState ]');
     await ConversationDatabase.instance.update(widget.conversation!);
     int idx = widget.conversations.value.indexWhere((element) => element.id == widget.conversation!.id);
     widget.conversations.value[idx] = widget.conversation!;
     widget.conversations.value.sort((a, b) => b.time!.compareTo(a.time!));
     widget.conversations.notifyListeners();
+    debugPrint('\t\t[ Conversation state updated ]');
   }
 
   @override
   void dispose() {
+    debugPrint('\t[ DebateGamePage :: dispose ]');
     _webSocketService.close();
     super.dispose();
   }
 
   Future<void> _showAddAccountsDialog() async {
+    debugPrint('\t[ DebateGamePage :: _showAddAccountsDialog ]');
     TextEditingController usernameController = TextEditingController();
     TextEditingController passwordController = TextEditingController();
 
@@ -552,11 +611,29 @@ class _DebateGamePageState extends State<DebateGamePage> {
                   usernameController.text: passwordController.text,
                 };
                 await _webSocketService.adminAddAccounts(newAccounts);
+                debugPrint('\t\t[ New account added: ${usernameController.text} ]');
               },
             ),
           ],
         );
       },
     );
+  }
+
+  void _resetDebateState() {
+    debugPrint('\t[ DebateGamePage :: _resetDebateState ]');
+    widget.conversation?.debateData.reset();
+    // Notify listeners that the debate state has been reset
+    currentSelectedConversation.notifyListeners();
+    debugPrint('\t\t[ Debate state reset ]');
+  }
+
+  void _startNewGeneration() {
+    debugPrint('\t[ DebateGamePage :: _startNewGeneration ]');
+    _resetDebateState();
+    // Additional logic for starting a new generation
+    // This might involve sending a message to the server to indicate a new generation
+    // _webSocketService.sendMessage("NEW_GENERATION", userModel.value.uid);
+    debugPrint('\t\t[ New generation started ]');
   }
 }

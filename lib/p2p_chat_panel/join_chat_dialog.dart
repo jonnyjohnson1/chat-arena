@@ -1,3 +1,5 @@
+// join_chat_dialog.dart
+
 import 'dart:math';
 import 'package:chat/models/game_models/debate.dart';
 import 'package:flutter/material.dart';

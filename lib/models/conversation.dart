@@ -6,6 +6,8 @@ import 'package:chat/theming/theming_config.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'debate_data.dart';
+
 const String tableConversations = 'conversations';
 
 class ConversationFields {
@@ -44,22 +46,24 @@ class Conversation {
   ValueNotifier<List<Message>> metaConvMessages;
   ValueNotifier<List<ConversationSummary>> convSummaryMessages;
   Map<String, dynamic>? gameAnalytics;
+  late DebateData debateData;
 
-  Conversation(
-      {this.title,
-      this.lastMessage,
-      this.image,
-      this.primaryModel,
-      this.time,
-      this.gameType,
-      this.gameModel,
-      this.gameSettings,
-      this.gameAnalytics,
-      required this.id})
-      : conversationAnalytics = ValueNotifier<ConversationData?>(null),
+  Conversation({
+    this.title,
+    this.lastMessage,
+    this.image,
+    this.primaryModel,
+    this.time,
+    this.gameType,
+    this.gameModel,
+    this.gameSettings,
+    this.gameAnalytics,
+    required this.id,
+  })  : conversationAnalytics = ValueNotifier<ConversationData?>(null),
         convToImagesList = ValueNotifier<List<ImageFile>>([]),
         metaConvMessages = ValueNotifier<List<Message>>([]),
-        convSummaryMessages = ValueNotifier<List<ConversationSummary>>([]);
+        convSummaryMessages = ValueNotifier<List<ConversationSummary>>([]),
+        debateData = DebateData();
 
   // Convert the Conversation instance to a Map
   Map<String, dynamic> toMap() {
@@ -106,21 +110,17 @@ class Conversation {
       gameType = GameType.p2pchat;
     }
     return Conversation(
-        id: json[ConversationFields.id] as String,
-        title: json[ConversationFields.title] as String?,
-        lastMessage: json[ConversationFields.lastMessage] as String?,
-        image: json[ConversationFields.image] as String?,
-        time: json[ConversationFields.time] != null
-            ? DateTime.parse(json[ConversationFields.time] as String)
-            : null,
-        primaryModel: json[ConversationFields.primaryModel] as String?,
-        gameType: gameType);
+      id: json[ConversationFields.id] as String,
+      title: json[ConversationFields.title] as String?,
+      lastMessage: json[ConversationFields.lastMessage] as String?,
+      image: json[ConversationFields.image] as String?,
+      time: json[ConversationFields.time] != null
+          ? DateTime.parse(json[ConversationFields.time] as String)
+          : null,
+      primaryModel: json[ConversationFields.primaryModel] as String?,
+      gameType: gameType,
+    );
   }
-
-  // String toJson() => json.encode(toMap());
-
-  // factory Conversation.fromJson(String source) =>
-  //     Conversation.fromMap(json.decode(source));
 
   @override
   String toString() =>
@@ -166,5 +166,31 @@ class Conversation {
       default:
         return null;
     }
+  }
+
+  // New method to update debate data
+  void updateDebateData({
+    Map<String, dynamic>? initialClusters,
+    Map<String, dynamic>? updatedClusters,
+    Map<String, dynamic>? wepccResults,
+    Map<String, dynamic>? aggregatedScores,
+    Map<String, List<List<dynamic>>>? addressedClusters,
+    Map<String, List<List<dynamic>>>? unaddressedClusters,
+    List<dynamic>? results,
+    String? mermaidChartData,
+  }) {
+    if (initialClusters != null) debateData.initialClusters = initialClusters;
+    if (updatedClusters != null) debateData.updatedClusters = updatedClusters;
+    if (wepccResults != null) debateData.wepccResults = wepccResults;
+    if (aggregatedScores != null) debateData.aggregatedScores = aggregatedScores;
+    if (addressedClusters != null) debateData.addressedClusters = addressedClusters;
+    if (unaddressedClusters != null) debateData.unaddressedClusters = unaddressedClusters;
+    if (results != null) debateData.results = results;
+    if (mermaidChartData != null) debateData.mermaidChartData = mermaidChartData;
+  }
+
+  // Method to reset debate data
+  void resetDebateData() {
+    debateData.reset();
   }
 }

@@ -142,12 +142,13 @@ class DebateAuthWebSocketService {
     }
   }
 
-  void sendMessage(String message, String userId) {
+  void sendMessage(String message, String userMessageId, String userId) {
     debugPrint('\t[ Sending message: $message ]');
     if (_channel != null) {
       _channel!.sink.add(json.encode({
         'message': message,
         'user_id': userId,
+        'user_message_id': userMessageId,
         'generation_nonce': DateTime.now().millisecondsSinceEpoch.toString(),
       }));
       debugPrint('\t\t[ Message sent ]');
