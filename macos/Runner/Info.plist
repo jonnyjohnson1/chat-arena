@@ -45,5 +45,12 @@
 	<string>NSApplication</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<!-- These are required for binaries built by PyInstaller -->
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+	<true/>
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
 </dict>
 </plist>

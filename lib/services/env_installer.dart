@@ -99,6 +99,109 @@ class InstallerService {
   //     return false;
   //   }
   // }
+  Future<bool> testingEnv() async {
+    try {
+      // Create a temporary directory and script file
+      final tempDir = await getTemporaryDirectory();
+      final scriptFile = File('${tempDir.path}/check_command.sh');
+
+      var toposPath = await getToposPath();
+
+      // Write the check_command.sh script to the file with more detailed environment information
+      await scriptFile.writeAsString('''
+    #!/bin/zsh
+    echo "Testing the application environment..."
+    echo "Current working directory:"
+    pwd
+    echo "Current user:"
+    whoami
+    echo "Operating system information:"
+    uname -a
+    echo "Shell being used:"
+    echo \$SHELL
+    echo "Environment variables:"
+    env
+
+  WORK_DIR=\$1
+  cd \$WORK_DIR
+
+  echo "Current working directory:"
+  pwd
+
+  # Get the string of topos path from ~/topos_path.txt
+  # TOPOS_PATH=\$(cat ~/Downloads/topos_path.txt)
+  
+  TOPOS_PATH=$toposPath
+  echo \$TOPOS_PATH
+
+  # Run the topos command
+  which \$TOPOS_PATH 
+
+  # Create a test file
+  echo "Test content" > testfile.txt
+
+  # Attempt to move the test file to the user's Downloads folder
+  mv testfile.txt ~/Downloads/testfile.txt
+
+  echo "Step 1: Downloading GitHub repository..."
+  # git clone https://github.com/jonnyjohnson1/topos-cli ~/Downloads/topos-cli
+  
+  echo "Showing files..."
+  ls
+  cd Downloads/topos-cli
+
+  # Step 2: Check if poetry exists and build
+  if command -v poetry &> /dev/null
+  then
+      echo "Poetry exists. Building with Poetry..."
+      poetry build
+  else
+      echo "Poetry not found. Installing Poetry..."
+      curl -sSL https://install.python-poetry.org | python -
+      export PATH="\$HOME/.local/bin:\$PATH"
+      echo "Building with Poetry..."
+      poetry build
+  fi
+
+  # Step 3: Install the package
+  echo "Step 3: Installing the package..."
+  pip install .
+
+  echo "Topos package installed!"
+
+  # Step 4: Set the spacy trf
+  which topos
+  echo "Step 4: Downloading spacy model..."
+  topos set --spacy trf
+
+  echo "Installation complete!"
+  
+  topos-cli
+    ''');
+
+      // Make the script executable
+      await runCommand('chmod', ['+x', scriptFile.path]);
+
+      // Run the script and capture the output
+      await runCommand('/bin/sh', [scriptFile.path]);
+      var result = await Process.run('/bin/sh', [scriptFile.path]);
+
+      // Print and store the output
+      debugPrint("stdout: ${result.stdout.toString()}");
+      _addOutput(result.stdout.toString());
+
+      // Determine if the command was successful based on specific output
+      bool commandExists = result.stdout
+          .toString()
+          .contains('Testing the application environment...');
+      debugPrint("command_exists :: $commandExists");
+
+      return commandExists;
+    } catch (e) {
+      debugPrint("Error checking environment: $e");
+      return false;
+    }
+  }
 
   Future<bool> checkIfCommandExists(String command) async {
     try {
@@ -108,7 +211,7 @@ class InstallerService {
 
       // Write the check_command.sh script to the file
       await scriptFile.writeAsString('''
-    #!/bin/bash
+    #!/bin/zsh
     WORK_DIR=\$1
     cd \$WORK_DIR
 
@@ -132,6 +235,7 @@ class InstallerService {
       // debugPrint("stderr: ${result.stderr.toString()}");
       debugPrint(
           "command_exists :: ${result.stdout.toString().trim() == 'exists'}");
+
       return result.stdout.toString().trim() == 'exists';
     } catch (e) {
       debugPrint("Error checking command: $e");
@@ -188,7 +292,7 @@ class InstallerService {
 
     // Write the run_topos.sh script to the file
     await scriptFile.writeAsString('''
-  #!/bin/bash
+  #!/bin/zsh
   WORK_DIR=\$1
   cd \$WORK_DIR
 
@@ -255,7 +359,7 @@ class InstallerService {
 
     // Write the run_topos.sh script to the file
     await scriptFile.writeAsString('''
-  #!/bin/bash
+  #!/bin/zsh
   WORK_DIR=\$1
   cd \$WORK_DIR
 
@@ -327,7 +431,7 @@ class InstallerService {
 
     // Write the uninstall_topos.sh script to the file
     await scriptFile.writeAsString('''
-  #!/bin/bash
+  #!/bin/zsh
   WORK_DIR=\$1
   cd \$WORK_DIR
 

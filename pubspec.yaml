@@ -44,6 +44,7 @@ dependencies:
   webviewx_plus: ^0.5.0
   fluttertoast: ^8.2.6
   is_ios_app_on_mac: ^0.0.1+2
+  serious_python: ^0.7.1
   
 dev_dependencies:
   flutter_test:
@@ -78,4 +79,4 @@ flutter:
     - assets/app-config.json
     - assets/steering-suggestions.json
     - assets/scripts.json
-    - assets/install_scripts/
+    - app/app.zip

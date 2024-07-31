@@ -174,9 +174,6 @@ class InstallerScreen extends StatelessWidget {
                               shrinkWrap: true,
                               itemCount: displayOutput.length,
                               itemBuilder: (context, index) {
-                                String text = displayOutput[
-                                    displayOutput.length - 1 - index];
-                                print("empty: ${text.isEmpty}, $text");
                                 return Text(
                                   displayOutput[
                                       displayOutput.length - 1 - index],
@@ -204,19 +201,21 @@ class InstallerScreen extends StatelessWidget {
                 ),
               ),
               ElevatedButton(
-                onPressed: onInstall,
+                onPressed: () async {
+                  installerService.value.testingEnv();
+                },
                 child: Text(
-                  "Update",
+                  "Test Env",
                   style: textStyle,
                 ),
               ),
-              ElevatedButton(
-                onPressed: onInstall,
-                child: Text(
-                  "Check for Updates",
-                  style: textStyle,
-                ),
-              ),
+              // ElevatedButton(
+              //   onPressed: onInstall,
+              //   child: Text(
+              //     "Check for Updates",
+              //     style: textStyle,
+              //   ),
+              // ),
             ],
           ),
         ],
