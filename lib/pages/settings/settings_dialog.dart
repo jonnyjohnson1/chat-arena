@@ -738,11 +738,13 @@ class _SettingsDialogState extends State<SettingsDialog>
                     decoration: inputDecoration.copyWith(
                         hintText: "Enter your endpoint"),
                     onSubmitted: (value) {
-                      displayConfigData.value.apiConfig.customEndpoint = value;
+                      displayConfigData.value.apiConfig.customEndpoint =
+                          value.trim();
                       displayConfigData.notifyListeners();
                     },
                     onChanged: (value) {
-                      displayConfigData.value.apiConfig.customEndpoint = value;
+                      displayConfigData.value.apiConfig.customEndpoint =
+                          value.trim();
                       displayConfigData.notifyListeners();
                     },
                   ),

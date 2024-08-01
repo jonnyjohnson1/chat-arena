@@ -383,7 +383,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
                                                                   .value
                                                                   .apiConfig
                                                                   .customEndpoint =
-                                                              value;
+                                                              value.trim();
                                                           displayConfigData
                                                               .notifyListeners();
                                                           await pingEndpoint(
@@ -395,7 +395,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
                                                                   .value
                                                                   .apiConfig
                                                                   .customEndpoint =
-                                                              value;
+                                                              value.trim();
                                                           displayConfigData
                                                               .notifyListeners();
                                                           await pingEndpoint(

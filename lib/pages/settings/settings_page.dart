@@ -1,16 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/services/env_installer.dart';
 import 'package:chat/services/platform_types.dart';
 import 'package:chat/shared/backend_connected_service_button.dart';
-
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
 
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
@@ -444,11 +438,13 @@ class _SettingsPageState extends State<SettingsPage>
                     decoration: inputDecoration.copyWith(
                         hintText: "Enter your endpoint"),
                     onSubmitted: (value) {
-                      displayConfigData.value.apiConfig.customEndpoint = value;
+                      displayConfigData.value.apiConfig.customEndpoint =
+                          value.trim();
                       displayConfigData.notifyListeners();
                     },
                     onChanged: (value) {
-                      displayConfigData.value.apiConfig.customEndpoint = value;
+                      displayConfigData.value.apiConfig.customEndpoint =
+                          value.trim();
                       displayConfigData.notifyListeners();
                     },
                   ),
