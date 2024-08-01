@@ -586,12 +586,14 @@ class InstallerService {
     if (backendConnected) {
       backendInstalled = true;
     } else {
-      // await uninstallTopos();
-      print("Checking backend installation...");
-      backendInstalled = await checkToposCLIInstalled();
-      if (backendInstalled) {
-        backendConnected = await checkBackendConnected();
-        print("Backend connected :: $backendConnected");
+      if (!kIsWeb) {
+        // await uninstallTopos();
+        print("Checking backend installation...");
+        backendInstalled = await checkToposCLIInstalled();
+        if (backendInstalled) {
+          backendConnected = await checkBackendConnected();
+          print("Backend connected :: $backendConnected");
+        }
       }
     }
     if (backendConnected) {

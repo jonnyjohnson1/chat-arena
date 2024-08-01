@@ -701,8 +701,10 @@ class _SettingsDialogState extends State<SettingsDialog>
                   width: 200,
                   height: 38,
                   child: TextField(
-                    controller:
-                        TextEditingController(text: "http://0.0.0.0:13341"),
+                    controller: TextEditingController(
+                        text: kIsWeb
+                            ? "https://0.0.0.0:13341"
+                            : "http://0.0.0.0:13341"),
                     readOnly: true,
                     decoration: inputDecoration,
                     style: style,

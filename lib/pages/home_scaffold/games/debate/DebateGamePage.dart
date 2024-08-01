@@ -11,7 +11,6 @@ import 'package:chat/models/llm.dart';
 import 'package:chat/models/user.dart';
 import 'package:chat/pages/home_scaffold/games/debate/debate_game_settings.dart';
 import 'package:chat/services/conversation_database.dart';
-import 'package:chat/services/debate_llm_interface.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/tools.dart';
 import 'package:flutter/material.dart';

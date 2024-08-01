@@ -170,6 +170,10 @@ class _StarterHomePageState extends State<StarterHomePage> {
     });
   }
 
+  Future<bool> platformType() async {
+    return kIsWeb ? false : await IsIosAppOnMac().isiOSAppOnMac();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<InstallerService>(
@@ -185,7 +189,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
                     return const CupertinoActivityIndicator();
                   }
                   return FutureBuilder(
-                      future: IsIosAppOnMac().isiOSAppOnMac(),
+                      future: platformType(),
                       builder: (context, isIosAppOnMac) {
                         return FutureBuilder(
                             future: isDesktopPlatform(),

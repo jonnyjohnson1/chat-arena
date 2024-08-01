@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class DisplayConfigData {
   bool showInMessageNER;
   bool calculateInMessageNER;
@@ -42,7 +44,8 @@ class APIConfig {
   String customEndpoint;
 
   APIConfig({
-    this.defaultEndpoint = "http://0.0.0.0:13341",
+    this.defaultEndpoint =
+        kIsWeb ? "https://0.0.0.0:13341" : "http://0.0.0.0:13341",
     this.customEndpoint = "",
   });
 
