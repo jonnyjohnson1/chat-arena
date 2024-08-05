@@ -94,7 +94,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     userModel = Provider.of<ValueNotifier<User>>(context, listen: false);
     initData();
-    debugPrint("\t[ P2PChat :: GamePage initState ]");
+    print("\t[ P2PChat :: GamePage initState ]");
 
     if (widget.conversation!.gameModel == null ||
         widget.conversation!.gameModel.serverHostAddress.isEmpty) {
@@ -107,7 +107,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
             : 'ws://0.0.0.0:13394';
         // var host = Uri.parse(url).host;
 
-        debugPrint("\t[ using url $url to connect to server ]");
+        print("\t[ using url $url to connect to server ]");
         client.url = url;
 
         // here we must create a conversation id on init so the server has a reference to it
@@ -137,7 +137,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
           "username": gameSettings.username,
         };
 
-        debugPrint("\t[ connecting to :: url ${client.url} ]");
+        print("\t[ connecting to :: url ${client.url} ]");
         client.connect(data, listenerCallback, websocketDisconnectListener,
             websocketErrorListener);
         setState(() {
@@ -147,7 +147,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
       });
     } else {
       // this path is the join chat option
-      debugPrint('\t[ joining server ]');
+      print('\t[ joining server ]');
       P2PChatGame gameSettings = widget.conversation!.gameModel;
 
       String url = gameSettings.serverHostAddress != null
@@ -332,7 +332,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     TextEditingController usernameController = TextEditingController();
     TextEditingController serverHostAddressController = TextEditingController();
     TextEditingController maxParticipantsController = TextEditingController();
-    debugPrint("\t[ P2PChat :: Get Chat Settings ]");
+    print("\t[ P2PChat :: Get Chat Settings ]");
 
     P2PChatGame? p2pChatGameSettings;
 
@@ -411,10 +411,9 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
         ? "Anon${generateRandom4Digits()}"
         : usernameController.text;
 
-    debugPrint("\t\t[ Username: $username ]");
-    debugPrint(
-        "\t\t[ Server Host Address: ${serverHostAddressController.text} ]");
-    debugPrint("\t\t[ Max Participants: ${maxParticipantsController.text} ]");
+    print("\t\t[ Username: $username ]");
+    print("\t\t[ Server Host Address: ${serverHostAddressController.text} ]");
+    print("\t\t[ Max Participants: ${maxParticipantsController.text} ]");
 
     return P2PChatGame(
         username: username,
