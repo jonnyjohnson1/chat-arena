@@ -1,8 +1,6 @@
 
                                                                                      
-<pre align="center">                                                                               
-'                                                                                                 
-'                                                                                                 
+<pre align="center">
 '     ____   ___                                      _                                           
 '    6MMMMb/ `MM                                     dM.                                          
 '   8P    YM  MM                   /                ,MMb                                          
@@ -14,8 +12,6 @@
 '  YM      6  MM    MM MM'   MM   MM             ,MMMMMMMMb   MM     MM        MM    MM MM'   MM  
 '   8b    d9  MM    MM MM.  ,MM   YM.  ,         d'      YM.  MM     YM    d9  MM    MM MM.  ,MM  
 '    YMMMM9  _MM_  _MM_`YMMM9'Yb.  YMMM9       _dM_     _dMM__MM_     YMMMM9  _MM_  _MM_`YMMM9'Yb.
-'                                                                                                 
-'                                                                                                   
 </pre>
 <p align="center">
   <img src="https://github.com/jonnyjohnson1/chat-arena/blob/main/ui_screenshot.png" style="max-width: 100%; height: auto; max-height: 350px;" alt="UI Chat Debates" />
