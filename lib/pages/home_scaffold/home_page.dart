@@ -1,8 +1,10 @@
+import 'dart:io';
+
 import 'package:chat/models/backend_connected.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/demo_controller.dart';
 import 'package:chat/models/display_configs.dart';
-import 'package:chat/models/env_installer.dart';
+import 'package:chat/services/env_installer.dart';
 import 'package:chat/models/scripts.dart';
 import 'package:chat/models/sys_resources.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
@@ -10,7 +12,9 @@ import 'package:chat/pages/home_scaffold/home_page_layout_manager.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/message_processor.dart';
 import 'package:chat/services/scripts.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chat/services/tools.dart';
@@ -47,14 +51,18 @@ class _HomePageState extends State<HomePage> {
       durBetweenMessages: 2000,
       isTypeWritten: true,
       autoPlay: false));
+  late GlobalKey<NavigatorState> navigatorKey;
 
   late ValueNotifier<InstallerService> installerService;
   @override
   void initState() {
     _loadModelListFromAppConfig;
     refreshConversationDatabase();
-    installerService = ValueNotifier(
-        InstallerService(apiConfig: displayConfigData.value.apiConfig));
+    navigatorKey =
+        Provider.of<GlobalKey<NavigatorState>>(context, listen: false);
+    installerService = ValueNotifier(InstallerService(
+        navigatorKey: navigatorKey,
+        apiConfig: displayConfigData.value.apiConfig));
     initEnvironment();
     getUserID();
     getUserName();
@@ -63,15 +71,33 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
+  Future<void> printPlatform() async {
+    if (kIsWeb) {
+      print("Running on the Web");
+    } else if (Platform.isWindows) {
+      print("Running on Windows");
+    } else if (Platform.isLinux) {
+      print("Running on Linux");
+    } else if (Platform.isMacOS) {
+      print("Running on macOS");
+    } else if (Platform.isIOS) {
+      if (await IsIosAppOnMac().isiOSAppOnMac()) {
+        print("Running on iOS app on Mac");
+      } else {
+        print("Running on iOS");
+      }
+    } else if (Platform.isAndroid) {
+      print("Running on Android");
+    } else {
+      print("Unknown platform");
+    }
+  }
+
   void initEnvironment() async {
-    await installerService.value.initEnvironment();
-    installerService.notifyListeners();
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      print("Backend installed: ${installerService.value.backendInstalled}");
-      print("Backend connected: ${installerService.value.backendConnected}");
-      print("Python installed: ${installerService.value.pythonInstalled}");
-      print(
-          "Backend fully installed: ${installerService.value.isBackendFullyInstalled()}");
+    printPlatform();
+    installerService.value.initEnvironment().then((_) async {
+      installerService.notifyListeners();
+      installerService.value.printEnvironment();
     });
   }
 
