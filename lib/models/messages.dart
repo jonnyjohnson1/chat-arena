@@ -50,12 +50,13 @@ class Message {
   double toksPerSec;
   double? completionTime;
   final MessageType? type;
-  final String? status;
+  String? status;
   final String? name;
   bool isGenerating;
   List<ImageFile>? images;
   ValueNotifier<Map<String, dynamic>> baseAnalytics;
   ValueNotifier<String> mermaidChart;
+  String serviceId;
 
   Message({
     required this.id,
@@ -74,6 +75,7 @@ class Message {
     this.images,
     ValueNotifier<Map<String, dynamic>>? baseAnalytics,
     ValueNotifier<String>? mermaidChart,
+    this.serviceId = "",
   })  : baseAnalytics =
             baseAnalytics ?? ValueNotifier<Map<String, dynamic>>({}),
         mermaidChart = mermaidChart ?? ValueNotifier<String>("");
