@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
   MessageProcessor messageProcessor = MessageProcessor();
 
   ValueNotifier<List<Conversation>> conversations = ValueNotifier([]);
-  ValueNotifier<User> userId = ValueNotifier(User(uid: "", username: ""));
+  ValueNotifier<User> userId = ValueNotifier(User(uid: ""));
   ValueNotifier<Scripts?> scripts = ValueNotifier(null);
   ValueNotifier<Script?> selectedScript = ValueNotifier(null);
   ValueNotifier<BackendService?> backendConnector =
@@ -65,7 +65,6 @@ class _HomePageState extends State<HomePage> {
         apiConfig: displayConfigData.value.apiConfig));
     initEnvironment();
     getUserID();
-    getUserName();
     // load senderID from sharedPrefs if none: ,
     getScripts();
     super.initState();
@@ -116,16 +115,6 @@ class _HomePageState extends State<HomePage> {
       await prefs.setString('userId', _uid);
     }
     userId.value.uid = _uid;
-  }
-
-  void getUserName() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? _username = prefs.getString('username');
-    if (_username == null) {
-      _username = Tools().getRandomString(12);
-      await prefs.setString('username', _username);
-    }
-    userId.value.username = _username;
   }
 
   bool isLoadingConversations = false;

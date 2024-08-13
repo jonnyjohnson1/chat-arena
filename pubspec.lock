@@ -320,6 +320,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  fluttertoast:
+    dependency: "direct main"
+    description:
+      name: fluttertoast
+      sha256: "7eae679e596a44fdf761853a706f74979f8dd3cd92cf4e23cae161fda091b847"
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.2.6"
   freezed_annotation:
     dependency: transitive
     description:
@@ -456,6 +464,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.2"
+  is_ios_app_on_mac:
+    dependency: "direct main"
+    description:
+      name: is_ios_app_on_mac
+      sha256: e99d506a02620dfd94d0b4194426adf35f1b111815d003dcf92b557f78c32286
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1+2"
   json_annotation:
     dependency: transitive
     description:
@@ -616,6 +632,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.3+1"
+  package_info_plus:
+    dependency: transitive
+    description:
+      name: package_info_plus
+      sha256: "4de6c36df77ffbcef0a5aefe04669d33f2d18397fea228277b852a2d4e58e860"
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.0.1"
+  package_info_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: package_info_plus_platform_interface
+      sha256: ac1f4a4847f1ade8e6a87d1f39f5d7c67490738642e2542f559ec38c37489a66
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.1"
   path:
     dependency: "direct main"
     description:
@@ -776,6 +808,54 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.1"
+  serious_python:
+    dependency: "direct main"
+    description:
+      name: serious_python
+      sha256: b1ab5d22b93ebbfcf1c9b2af6f86695dbb5e89a6d682fd17dcd93f9672b034cf
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.1"
+  serious_python_android:
+    dependency: transitive
+    description:
+      name: serious_python_android
+      sha256: "5581613d62b7ba8cc29e63424439a4b72c2b96f792dc395dc3b94e71c0fb9826"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.1"
+  serious_python_darwin:
+    dependency: transitive
+    description:
+      name: serious_python_darwin
+      sha256: "7fb11a3e27f5da00c9343811bf8bcd2d4ee9e5d6b6cd2ad5998529065175e2b2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.1"
+  serious_python_linux:
+    dependency: transitive
+    description:
+      name: serious_python_linux
+      sha256: e33645cab337138d100ba3017ba210c27d129c5733c19c5e04f73f24f9420166
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.1"
+  serious_python_platform_interface:
+    dependency: transitive
+    description:
+      name: serious_python_platform_interface
+      sha256: "510dd375facc32dc90182a80155251613396b814066827658fa3630d98bb2de6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.1"
+  serious_python_windows:
+    dependency: transitive
+    description:
+      name: serious_python_windows
+      sha256: c4643708c32ced67f9581013f7dd8b7f064e0b37a6c976996b1e1dbbac90389e
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.1"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -949,6 +1029,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.0"
+  toml:
+    dependency: transitive
+    description:
+      name: toml
+      sha256: "9968de24e45b632bf1a654fe1ac7b6fe5261c349243df83fd262397799c45a2d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.15.0"
   typed_data:
     dependency: transitive
     description:

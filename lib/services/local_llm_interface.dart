@@ -214,8 +214,8 @@ class LocalLLMInterface {
             }
 
           case 'error':
-            print(decoded['message']);
-            throw Exception('Server error: ${decoded['message']}');
+            print(decoded['error']);
+            print("handle error");
           default:
             print("CASE!!!!");
             print(decoded['status']);
