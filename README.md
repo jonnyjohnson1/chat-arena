@@ -1,5 +1,3 @@
-
-                                                                                     
 <pre align="center">
 '     ____   ___                                      _                                           
 '    6MMMMb/ `MM                                     dM.                                          
