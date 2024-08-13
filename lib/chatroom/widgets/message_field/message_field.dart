@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 
 class MessageField extends StatefulWidget {
   ValueNotifier<bool>? isGenerating;
-  bool isDesktop;
   final onSubmit;
   final onPause;
   final onLoadImage;
 
   MessageField(
       {this.isGenerating,
-      this.isDesktop = true,
       this.onPause,
       this.onSubmit,
       this.onLoadImage,
@@ -40,25 +38,21 @@ class _MessageFieldState extends State<MessageField> {
         });
       },
       child: Padding(
-        padding: EdgeInsets.only(left: widget.isDesktop ? 5.0 : 0, right: 12),
+        padding: const EdgeInsets.only(left: 5.0, right: 12),
         child: Row(
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             IconButton(
-              icon: const Icon(
-                Icons.attach_file,
-                color: Color.fromARGB(255, 124, 124, 124),
-              ),
+              icon: const Icon(Icons.attach_file),
               onPressed: () async {
                 await widget.onLoadImage();
               },
             ),
             Expanded(
               child: Padding(
-                padding:
-                    EdgeInsets.fromLTRB(widget.isDesktop ? 8.0 : 0, 2, 8, 2),
+                padding: const EdgeInsets.fromLTRB(8.0, 2, 8, 2),
                 child: CupertinoTextField(
                   controller: controller,
                   keyboardType: TextInputType.text,
@@ -89,9 +83,7 @@ class _MessageFieldState extends State<MessageField> {
   Widget _sendMessageButton(BuildContext _context) {
     return FloatingActionButton(
       mini: true,
-      elevation: 1,
-      hoverElevation: 3,
-      highlightElevation: 3,
+      tooltip: "Send",
       child: const Icon(Icons.arrow_upward,
           color: Color.fromARGB(255, 124, 124, 124)),
       onPressed: () {

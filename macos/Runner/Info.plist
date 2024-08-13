@@ -22,10 +22,16 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
-	<key>LSApplicationCategoryType</key>
-	<string>public.app-category.productivity</string>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>$(PRODUCT_COPYRIGHT)</string>
+	<key>NSMainNibFile</key>
+	<string>MainMenu</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>To load local images to the chat, the app will require access to the photo library.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app requires read and write access to the photo library so you can save generaedchat images.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -33,24 +39,5 @@
 		<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
 		<true/>
 	</dict>
-	<key>NSHumanReadableCopyright</key>
-	<string>$(PRODUCT_COPYRIGHT)</string>
-	<key>NSMainNibFile</key>
-	<string>MainMenu</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>This app requires read and write access to the photo library so you can save generaedchat images.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>To load local images to the chat, the app will require access to the photo library.</string>
-	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
-	<key>UIFileSharingEnabled</key>
-	<true/>
-	<!-- These are required for binaries built by PyInstaller -->
-	<key>com.apple.security.cs.allow-jit</key>
-	<true/>
-	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
-	<true/>
-	<key>com.apple.security.cs.disable-library-validation</key>
-	<true/>
 </dict>
 </plist>

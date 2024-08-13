@@ -1,5 +1,3 @@
-// p2p_chat_panel.dart
-
 import 'dart:io';
 
 import 'package:chat/models/game_models/debate.dart';

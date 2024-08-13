@@ -5,11 +5,6 @@ clean:
 web:
 	flutter run -d chrome
 
-deploy:
-	flutter clean
-	flutter build web
-	firebase deploy
-
 icons:
 	flutter pub run flutter_launcher_icons
 

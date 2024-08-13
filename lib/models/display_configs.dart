@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class DisplayConfigData {
   bool showInMessageNER;
   bool calculateInMessageNER;
@@ -44,20 +42,10 @@ class APIConfig {
   String customEndpoint;
 
   APIConfig({
-    this.defaultEndpoint =
-        kIsWeb ? "https://0.0.0.0:13341" : "http://0.0.0.0:13341",
+    this.defaultEndpoint = "http://0.0.0.0:13341",
     this.customEndpoint = "",
   });
 
   String getDefault() =>
       customEndpoint.isEmpty ? defaultEndpoint : customEndpoint;
-
-  bool isLocalhost() {
-    final endpoint = getDefault();
-    final uri = Uri.parse(endpoint);
-    return uri.host == "0.0.0.0" ||
-        uri.host == "localhost" ||
-        uri.host.startsWith("127.") ||
-        uri.host.endsWith(".local");
-  }
 }
