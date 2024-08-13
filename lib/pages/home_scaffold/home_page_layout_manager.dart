@@ -224,7 +224,6 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                   ],
                   child: SelectionArea(
                     child: Scaffold(
-                      drawerScrimColor: const Color.fromARGB(57, 61, 61, 61),
                       key: _scaffoldKey,
                       endDrawer: Drawer(
                           child: Container(
@@ -462,8 +461,6 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                       : showModalBottomSheet<void>(
                                           context: context,
                                           enableDrag: true,
-                                          barrierColor: const Color.fromARGB(
-                                              57, 61, 61, 61),
                                           isScrollControlled: true,
                                           shape: const RoundedRectangleBorder(
                                               borderRadius: BorderRadius.only(
@@ -519,8 +516,6 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                   showModalBottomSheet<void>(
                                       context: context,
                                       enableDrag: true,
-                                      barrierColor:
-                                          const Color.fromARGB(57, 61, 61, 61),
                                       isScrollControlled: true,
                                       shape: const RoundedRectangleBorder(
                                           borderRadius: BorderRadius.only(

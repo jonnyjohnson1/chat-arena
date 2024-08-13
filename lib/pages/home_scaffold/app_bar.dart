@@ -40,9 +40,9 @@ buildAppBar(
                     Theme.of(context).colorScheme.secondaryContainer,
                 child: IconButton(
                   tooltip: "Games",
-                  icon: Icon(
-                    isDesktop.data! ? Icons.menu : Icons.grid_goldenratio,
-                    color: const Color.fromARGB(255, 124, 124, 124),
+                  icon: const Icon(
+                    Icons.menu,
+                    color: Color.fromARGB(255, 124, 124, 124),
                     size: 24,
                   ),
                   padding: const EdgeInsets.all(5),

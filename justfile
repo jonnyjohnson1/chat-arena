@@ -10,9 +10,6 @@ deploy:
 	flutter build web
 	firebase deploy
 
-local:
-	firebase serve --only hosting
-
 icons:
 	flutter pub run flutter_launcher_icons
 
