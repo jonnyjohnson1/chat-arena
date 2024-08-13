@@ -8,11 +8,9 @@ import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:chat/pages/home_scaffold/games/debate/DebateGamePage.dart';
 import 'package:chat/pages/home_scaffold/games/info_page.dart';
 import 'package:chat/pages/home_scaffold/games/p2pchat/P2PChatGamePage.dart';
-import 'package:chat/services/env_installer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 
 import '../../theming/theming_config.dart';
 
@@ -43,15 +41,6 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
     initialPage: 1,
     keepPage: true,
   );
-
-  late ValueNotifier<InstallerService> installerService;
-
-  @override
-  void initState() {
-    super.initState();
-    installerService =
-        Provider.of<ValueNotifier<InstallerService>>(context, listen: false);
-  }
 
   // page changed sets the drawer screen and sets the title
   void pageChanged(int index) {
@@ -86,10 +75,7 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
               widget.onSettingsDrawerTap!(page);
             }
           }),
-        if (widget.isMobile)
-          MultiProvider(providers: [
-            ChangeNotifierProvider.value(value: installerService)
-          ], child: const SettingsDrawer()),
+        if (widget.isMobile) const SettingsDrawer(),
         ConversationsList(
           conversations: widget.conversations,
           onDelete: (bool deleted) {

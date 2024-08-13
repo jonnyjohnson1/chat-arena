@@ -40,37 +40,37 @@ class LocalLLMInterface {
   String chatSummaryEndpoint = "websocket_chat_summary";
   String mermaidChartEndpoint = "websocket_mermaid_chart";
 
-  bool get isLocal => false;
+  bool get isLocal => true;
   String get wsPrefix => isLocal ? 'ws' : 'wss';
   String get getUrlStart => isLocal ? "http://" : "https://";
   WebSocketChannel? webSocket;
 
   void initChatWebsocket() {
-    String extractedDiAPI = makeWebSocketAddress(httpAddress);
+    String extractedDiAPI = httpAddress.split('/').last;
     // Use ws for debugging, and wss for
-    webSocket =
-        WebSocketChannel.connect(Uri.parse('$extractedDiAPI/$chatEndpoint'));
+    webSocket = WebSocketChannel.connect(
+        Uri.parse('$wsPrefix://$extractedDiAPI/$chatEndpoint'));
   }
 
   void initMetaChatWebsocket() {
-    String extractedDiAPI = makeWebSocketAddress(httpAddress);
+    String extractedDiAPI = httpAddress.split('/').last;
     // Use ws for debugging, and wss for
     webSocket = WebSocketChannel.connect(
-        Uri.parse('$extractedDiAPI/$metaChatEndpoint'));
+        Uri.parse('$wsPrefix://$extractedDiAPI/$metaChatEndpoint'));
   }
 
   void initChatSummaryWebsocket() {
-    String extractedDiAPI = makeWebSocketAddress(httpAddress);
+    String extractedDiAPI = httpAddress.split('/').last;
     // Use ws for debugging, and wss for
     webSocket = WebSocketChannel.connect(
-        Uri.parse('$extractedDiAPI/$chatSummaryEndpoint'));
+        Uri.parse('$wsPrefix://$extractedDiAPI/$chatSummaryEndpoint'));
   }
 
   void initMermaidChartWebsocket() {
-    String extractedDiAPI = makeWebSocketAddress(httpAddress);
+    String extractedDiAPI = httpAddress.split('/').last;
     // Use ws for debugging, and wss for
     webSocket = WebSocketChannel.connect(
-        Uri.parse('$extractedDiAPI/$mermaidChartEndpoint'));
+        Uri.parse('$wsPrefix://$extractedDiAPI/$mermaidChartEndpoint'));
   }
 
   void newChatMessage(

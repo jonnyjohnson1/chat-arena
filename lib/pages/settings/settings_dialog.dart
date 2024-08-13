@@ -1,16 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:chat/chatroom/widgets/empty_home_page/install_screen.dart';
 import 'package:chat/models/display_configs.dart';
-import 'package:chat/models/spacy_size.dart';
-import 'package:chat/services/env_installer.dart';
-import 'package:chat/services/platform_types.dart';
-import 'package:chat/shared/activity_icon.dart';
-import 'package:chat/shared/backend_connected_service_button.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -23,7 +14,7 @@ class SettingsDialog extends StatefulWidget {
 }
 
 class _SettingsDialogState extends State<SettingsDialog>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
   bool didInit = false;
   late ValueNotifier<DisplayConfigData> displayConfigData;
@@ -45,13 +36,9 @@ class _SettingsDialogState extends State<SettingsDialog>
     super.dispose();
   }
 
-  late ValueNotifier<InstallerService> installerService;
-
   @override
   void initState() {
     super.initState();
-    installerService =
-        Provider.of<ValueNotifier<InstallerService>>(context, listen: false);
     _tabController = TabController(length: 2, vsync: this);
     Future.delayed(const Duration(milliseconds: 90), () {
       if (mounted) {
@@ -84,7 +71,7 @@ class _SettingsDialogState extends State<SettingsDialog>
     return false;
   }
 
-  final int futureWaitDuration = 290;
+  final int futureWaitDuration = 230;
 
   Future<bool> _togglecalcImageGen() async {
     await Future.delayed(Duration(milliseconds: futureWaitDuration));
@@ -187,177 +174,139 @@ class _SettingsDialogState extends State<SettingsDialog>
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-        future: isDesktopPlatform(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return Container();
-          if (snapshot.data!) {
-            _tabController = TabController(length: 3, vsync: this);
-          }
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth < 700) {
-                // Mobile layout
-                return AlertDialog(
-                  content: SizedBox(
-                    width: constraints.maxWidth * 0.9,
-                    height: constraints.maxHeight * 0.8,
-                    child: Column(
-                      children: [
-                        Stack(
-                          alignment: Alignment.centerRight,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 700) {
+          // Mobile layout
+          return AlertDialog(
+            content: SizedBox(
+              width: constraints.maxWidth * 0.9,
+              height: constraints.maxHeight * 0.8,
+              child: Column(
+                children: [
+                  Stack(
+                    alignment: Alignment.centerRight,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text(
-                                    'Settings',
-                                    style: TextStyle(fontSize: 20),
-                                  ),
-                                  const SizedBox(
-                                    width: 4,
-                                  ),
-                                  ValueListenableBuilder(
-                                      valueListenable: installerService,
-                                      builder: (context, installService, _) {
-                                        return ActivityIcon(
-                                            isRunning: installService
-                                                .backendConnected);
-                                      }),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
+                            Text(
+                              'Settings',
+                              style: TextStyle(fontSize: 20),
                             ),
                           ],
                         ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildVerticalTab(
+                            Icons.display_settings, 'Display Settings', 0),
+                        _buildVerticalTab(
+                            Icons.memory_sharp, 'Api Endpoints', 1),
                         Expanded(
+                          child: Container(
+                            decoration: const BoxDecoration(
+                                color: Colors.white,
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(18))),
+                            child: TabBarView(
+                              controller: _tabController,
+                              children: [
+                                _buildDisplaySettingsPage(),
+                                _buildAPISettingsPage()
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else {
+          // Desktop/iPad layout
+          return AlertDialog(
+            content: SizedBox(
+              width: constraints.maxWidth * 0.8,
+              height: constraints.maxHeight * 0.6,
+              child: Column(
+                children: [
+                  Stack(
+                    alignment: Alignment.centerRight,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Settings',
+                              style: TextStyle(fontSize: 20),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 250,
                           child: Column(
                             children: [
                               _buildVerticalTab(Icons.display_settings,
                                   'Display Settings', 0),
                               _buildVerticalTab(
-                                  Icons.memory_sharp, 'Api Connections', 1),
-                              if (snapshot.data!)
-                                _buildVerticalTab(
-                                    Icons.install_desktop, 'Install Steps', 2),
-                              Expanded(
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(18))),
-                                  child: TabBarView(
-                                    controller: _tabController,
-                                    children: [
-                                      _buildDisplaySettingsPage(),
-                                      _buildAPISettingsPage(),
-                                      if (snapshot.data!) _buildInstallPage()
-                                    ],
-                                  ),
-                                ),
-                              ),
+                                  Icons.memory_sharp, 'Api Endpoints', 1),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              } else {
-                // Desktop/iPad layout
-                return AlertDialog(
-                  content: SizedBox(
-                    width: constraints.maxWidth * 0.8,
-                    height: constraints.maxHeight * 0.6,
-                    child: Column(
-                      children: [
-                        Stack(
-                          alignment: Alignment.centerRight,
-                          children: [
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text(
-                                    'Settings',
-                                    style: TextStyle(fontSize: 20),
-                                  ),
-                                  const SizedBox(
-                                    width: 4,
-                                  ),
-                                  ValueListenableBuilder(
-                                      valueListenable: installerService,
-                                      builder: (context, installService, _) {
-                                        return ActivityIcon(
-                                            isRunning: installService
-                                                .backendConnected);
-                                      }),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        ),
+                        const VerticalDivider(),
                         Expanded(
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 250,
-                                child: Column(
-                                  children: [
-                                    _buildVerticalTab(Icons.display_settings,
-                                        'Display Settings', 0),
-                                    _buildVerticalTab(Icons.memory_sharp,
-                                        'Api Connections', 1),
-                                    if (snapshot.data!)
-                                      _buildVerticalTab(Icons.install_desktop,
-                                          'Install Steps', 2),
-                                  ],
-                                ),
-                              ),
-                              const VerticalDivider(),
-                              Expanded(
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(18))),
-                                  child: TabBarView(
-                                    controller: _tabController,
-                                    children: [
-                                      _buildDisplaySettingsPage(),
-                                      _buildAPISettingsPage(),
-                                      if (snapshot.data!) _buildInstallPage()
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                          child: Container(
+                            decoration: const BoxDecoration(
+                                color: Colors.white,
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(18))),
+                            child: TabBarView(
+                              controller: _tabController,
+                              children: [
+                                _buildDisplaySettingsPage(),
+                                _buildAPISettingsPage()
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                );
-              }
-            },
+                ],
+              ),
+            ),
           );
-        });
+        }
+      },
+    );
   }
 
   Widget _buildVerticalTab(IconData icon, String title, int index) {
@@ -542,94 +491,6 @@ class _SettingsDialogState extends State<SettingsDialog>
     }
   }
 
-  Future<void> onToposInstallationComplete() async {
-    // set value of installer to installed
-    bool backendConnected =
-        await installerService.value.checkBackendConnected();
-    installerService.value.backendConnected = backendConnected;
-    installerService.value.backendInstalled = true;
-    debugPrint("backendConnected :: $backendConnected");
-    // try to turn on the server
-    if (!backendConnected) {
-      debugPrint("checking topos is installed ");
-      bool isRunning =
-          await installerService.value.checkToposCLIInstalled(autoTurnOn: true);
-      installerService.value.backendConnected = isRunning;
-    }
-    installerService.notifyListeners();
-    installerService.value.printEnvironment();
-  }
-
-  Future<void> onToposUninstallationComplete() async {
-    // set value of installer to installed
-    bool backendConnected =
-        await installerService.value.checkBackendConnected();
-    installerService.value.backendConnected = backendConnected;
-    installerService.value.backendInstalled = false;
-    debugPrint("backendConnected :: $backendConnected");
-    installerService.notifyListeners();
-    installerService.value.printEnvironment();
-  }
-
-  SpacyModel _selectedModel = SpacyModel.trf;
-
-  Widget _buildInstallPage() {
-    InputDecoration inputDecoration = const InputDecoration(
-      border: OutlineInputBorder(),
-      contentPadding: EdgeInsets.symmetric(horizontal: 10),
-    );
-    TextStyle style = const TextStyle(fontSize: 14);
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
-        child: Column(
-          children: [
-            InstallerScreen(
-              installerService: installerService,
-              displayConfigData: displayConfigData,
-              onSelected: (SpacyModel model) {
-                _selectedModel = model;
-              },
-              onInstall: () async {
-                // Handle the install button tap
-                bool isInstalled =
-                    await installerService.value.checkToposCLIInstalled();
-                debugPrint("\t[ topos backend installed :: $isInstalled ]");
-                await installerService.value
-                    .runInstallScript(_selectedModel); // run installer
-                // check if topos backend is now installed
-                isInstalled = await installerService.value
-                    .checkToposCLIInstalled(autoTurnOn: false);
-                debugPrint("\t[ topos backend installed :: $isInstalled ]");
-                if (isInstalled) {
-                  debugPrint("\t[ topos successfully installed ]");
-                  // completion commands
-                  await onToposInstallationComplete();
-                } else {
-                  debugPrint("\t[ topos was not successfully installed ]");
-                }
-              },
-              onUninstall: () async {
-                await installerService.value.uninstallTopos(); // run installer
-                // check if topos backend is now installed
-                bool isInstalled = await installerService.value
-                    .checkToposCLIInstalled(autoTurnOn: false);
-                if (isInstalled) {
-                  debugPrint("\t[ topos successfully uninstalled ]");
-                  await onToposUninstallationComplete();
-                } else {
-                  debugPrint("\t[ topos was not successfully uninstalled ]");
-                }
-              },
-              showReturnButton: false,
-              onReturnHome: () {},
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildAPISettingsPage() {
     InputDecoration inputDecoration = const InputDecoration(
       border: OutlineInputBorder(),
@@ -641,58 +502,6 @@ class _SettingsDialogState extends State<SettingsDialog>
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
         child: Column(
           children: [
-            ValueListenableBuilder(
-                valueListenable: installerService,
-                builder: (context, installService, _) {
-                  return FutureBuilder(
-                      future: isDesktopPlatform(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) return Container(height: 22);
-                        return ServiceToggle(
-                            isConnected: installService.backendConnected,
-                            // Only a desktop app with a local connection can
-                            // attempt connect/disconnect
-                            onTap: snapshot.data! &&
-                                    displayConfigData.value.apiConfig
-                                        .isLocalhost()
-                                ? (isConnected) async {
-                                    if (isConnected) {
-                                      print("connect!");
-                                      // connect
-                                      var result = await installerService.value
-                                          .turnToposOn(displayConfigData
-                                              .value.apiConfig
-                                              .getDefault());
-                                      print(
-                                          'Topos is running at ${result['url']}');
-                                      bool connected = result['isRunning'];
-                                      installerService.value.backendConnected =
-                                          connected;
-                                      installerService.notifyListeners();
-                                    } else {
-                                      print("disconnect!");
-                                      // // disconnect
-                                      installerService.value
-                                          .stopToposService(displayConfigData
-                                              .value.apiConfig
-                                              .getDefault())
-                                          .then(
-                                        (disconnected) {
-                                          if (disconnected) {
-                                            installerService
-                                                .value.backendConnected = false;
-                                            installerService.notifyListeners();
-                                          }
-                                        },
-                                      );
-                                    }
-                                  }
-                                : null);
-                      });
-                }),
-            const SizedBox(height: 8),
-            Divider(),
-            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -701,10 +510,8 @@ class _SettingsDialogState extends State<SettingsDialog>
                   width: 200,
                   height: 38,
                   child: TextField(
-                    controller: TextEditingController(
-                        text: kIsWeb
-                            ? "https://0.0.0.0:13341"
-                            : "http://0.0.0.0:13341"),
+                    controller:
+                        TextEditingController(text: "http://0.0.0.0:13341"),
                     readOnly: true,
                     decoration: inputDecoration,
                     style: style,
@@ -738,13 +545,11 @@ class _SettingsDialogState extends State<SettingsDialog>
                     decoration: inputDecoration.copyWith(
                         hintText: "Enter your endpoint"),
                     onSubmitted: (value) {
-                      displayConfigData.value.apiConfig.customEndpoint =
-                          value.trim();
+                      displayConfigData.value.apiConfig.customEndpoint = value;
                       displayConfigData.notifyListeners();
                     },
                     onChanged: (value) {
-                      displayConfigData.value.apiConfig.customEndpoint =
-                          value.trim();
+                      displayConfigData.value.apiConfig.customEndpoint = value;
                       displayConfigData.notifyListeners();
                     },
                   ),
@@ -756,11 +561,11 @@ class _SettingsDialogState extends State<SettingsDialog>
               children: [
                 ElevatedButton(
                   onPressed: () => pingEndpoint(false),
-                  child: const Text("Test"),
+                  child: Text("Test"),
                 ),
                 Text(responseMessageCustom),
               ],
-            ),
+            )
           ],
         ),
       ),
