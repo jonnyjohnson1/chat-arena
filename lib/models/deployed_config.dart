@@ -27,6 +27,7 @@ class DeployedConfig {
   static Future<DeployedConfig> loadFromJsonAsset() async {
     final String data =
         await rootBundle.loadString('assets/deploy-config.json');
+    print(data);
     final Map<String, dynamic> jsonResult = json.decode(data);
     return DeployedConfig.fromJson(jsonResult);
   }

@@ -1,4 +1,5 @@
 import 'package:chat/pages/home_scaffold/home_page.dart';
+import 'package:chat/shared/custom_scroll_behavior.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
     final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
     return MaterialApp(
       title: 'Chat Arena',
+      // scrollBehavior: CustomScrollBehavior(),
       debugShowCheckedModeBanner: false,
       builder: FToastBuilder(),
       theme: ThemeData(
@@ -40,3 +42,5 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+class WebCustomScrollBehavior {}

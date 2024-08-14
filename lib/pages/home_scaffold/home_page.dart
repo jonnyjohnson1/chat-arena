@@ -75,14 +75,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> getDeployedConfig() async {
-    deployedConfig.value = await DeployedConfig.loadFromJsonAsset();
-    if (deployedConfig.value.cloudHosted) {
-      // ensures the default https configuration is a https: or wss: address
-      displayConfigData.value.apiConfig.setSecure();
-      installerService.value.apiConfig.setSecure();
-    }
-
-    initEnvironment();
+    DeployedConfig.loadFromJsonAsset().then((loadedConfig) {
+      deployedConfig.value = loadedConfig;
+      if (deployedConfig.value.cloudHosted) {
+        // ensures the default https configuration is a https: or wss: address
+        displayConfigData.value.apiConfig.setSecure();
+        installerService.value.apiConfig.setSecure();
+      }
+      initEnvironment();
+    });
   }
 
   Future<void> printPlatform() async {
@@ -105,6 +106,8 @@ class _HomePageState extends State<HomePage> {
     } else {
       print("Unknown platform");
     }
+    print(
+        "Default address :: ${displayConfigData.value.apiConfig.getDefault()}");
   }
 
   void initEnvironment() async {

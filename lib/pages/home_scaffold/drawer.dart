@@ -8,8 +8,10 @@ import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:chat/pages/home_scaffold/games/debate/DebateGamePage.dart';
 import 'package:chat/pages/home_scaffold/games/info_page.dart';
 import 'package:chat/pages/home_scaffold/games/p2pchat/P2PChatGamePage.dart';
+import 'package:chat/pages/home_scaffold/web_drawer.dart';
 import 'package:chat/services/env_installer.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -23,13 +25,42 @@ class PageViewDrawer extends StatefulWidget {
   final ValueNotifier<List<Conversation>> conversations;
   final Function? onSettingsDrawerTap;
 
-  const PageViewDrawer(
+  const PageViewDrawer._internal(
       {required this.body,
       required this.title,
       required this.conversations,
       this.isMobile = false,
       this.onSettingsDrawerTap,
       super.key});
+
+  static Widget create({
+    required ValueNotifier<Widget> body,
+    required ValueNotifier<String> title,
+    required ValueNotifier<List<Conversation>> conversations,
+    bool isMobile = false,
+    Function? onSettingsDrawerTap,
+    Key? key,
+  }) {
+    if (kIsWeb) {
+      return WebViewDrawer(
+        body: body,
+        title: title,
+        conversations: conversations,
+        isMobile: isMobile,
+        onSettingsDrawerTap: onSettingsDrawerTap,
+        key: key,
+      );
+    } else {
+      return PageViewDrawer._internal(
+        body: body,
+        title: title,
+        conversations: conversations,
+        isMobile: isMobile,
+        onSettingsDrawerTap: onSettingsDrawerTap,
+        key: key,
+      );
+    }
+  }
 
   @override
   State<PageViewDrawer> createState() => _PageViewDrawerState();

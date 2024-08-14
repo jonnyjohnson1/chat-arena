@@ -6,6 +6,8 @@ web:
 	flutter run -d chrome
 
 local:
+	flutter clean
+	flutter build web
 	firebase serve --only hosting
 	
 deploy:

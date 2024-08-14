@@ -2,8 +2,10 @@ import 'package:chat/analytics_drawer/conversation_steering_drawer.dart';
 import 'package:chat/analytics_drawer/topic_drawer.dart';
 import 'package:chat/analytics_drawer/base_anal_drawer.dart';
 import 'package:chat/models/conversation.dart';
+import 'package:chat/pages/home_scaffold/web_analytics_drawer.dart';
 import 'package:chat/theming/theming_config.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -14,13 +16,43 @@ class AnalyticsViewDrawer extends StatefulWidget {
   final ValueNotifier<List<Conversation>> conversations;
   final Function? onSettingsDrawerTap;
 
-  const AnalyticsViewDrawer(
-      {required this.body,
-      required this.title,
-      required this.conversations,
-      this.isMobile = false,
-      this.onSettingsDrawerTap,
-      super.key});
+  const AnalyticsViewDrawer._internal({
+    required this.body,
+    required this.title,
+    required this.conversations,
+    this.isMobile = false,
+    this.onSettingsDrawerTap,
+    Key? key,
+  }) : super(key: key);
+
+  static Widget create({
+    required ValueNotifier<Widget> body,
+    required ValueNotifier<String> title,
+    required ValueNotifier<List<Conversation>> conversations,
+    bool isMobile = false,
+    Function? onSettingsDrawerTap,
+    Key? key,
+  }) {
+    if (kIsWeb) {
+      return WebAnalyticsViewDrawer(
+        body: body,
+        title: title,
+        conversations: conversations,
+        isMobile: isMobile,
+        onSettingsDrawerTap: onSettingsDrawerTap,
+        key: key,
+      );
+    } else {
+      return AnalyticsViewDrawer._internal(
+        body: body,
+        title: title,
+        conversations: conversations,
+        isMobile: isMobile,
+        onSettingsDrawerTap: onSettingsDrawerTap,
+        key: key,
+      );
+    }
+  }
 
   @override
   State<AnalyticsViewDrawer> createState() => _AnalyticsViewDrawerState();

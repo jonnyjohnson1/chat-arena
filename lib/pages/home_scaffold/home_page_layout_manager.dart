@@ -230,7 +230,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                         color: Colors.white,
                         child: SafeArea(
                           bottom: false,
-                          child: AnalyticsViewDrawer(
+                          child: AnalyticsViewDrawer.create(
                             isMobile: isMobile,
                             onSettingsDrawerTap: (String page) {
                               if (page == "gamemanager") {
@@ -298,7 +298,8 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                                                       top:
                                                                           45.0),
                                                               child:
-                                                                  PageViewDrawer(
+                                                                  PageViewDrawer
+                                                                      .create(
                                                                 onSettingsDrawerTap:
                                                                     (String
                                                                         page) {
@@ -385,8 +386,8 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                                       padding:
                                                           const EdgeInsets.only(
                                                               top: 45.0),
-                                                      child:
-                                                          AnalyticsViewDrawer(
+                                                      child: AnalyticsViewDrawer
+                                                          .create(
                                                         onSettingsDrawerTap:
                                                             (String page) {
                                                           if (page ==
@@ -544,7 +545,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                                       .size
                                                       .height -
                                                   85,
-                                              child: PageViewDrawer(
+                                              child: PageViewDrawer.create(
                                                 isMobile: isMobile,
                                                 onSettingsDrawerTap:
                                                     (String page) {
