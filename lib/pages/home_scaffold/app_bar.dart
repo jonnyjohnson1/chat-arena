@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/deployed_config.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/pages/home_scaffold/widgets/demo_mode_title.dart';
 import 'package:chat/pages/settings/settings_dialog.dart';
@@ -235,11 +236,17 @@ buildAppBar(
                                   Provider.of<ValueNotifier<InstallerService>>(
                                       context,
                                       listen: false);
+                              ValueNotifier<DeployedConfig> deployedConfig =
+                                  Provider.of<ValueNotifier<DeployedConfig>>(
+                                      context,
+                                      listen: false);
                               showDialog(
                                 context: context,
                                 builder: (context) => MultiProvider(providers: [
                                   ChangeNotifierProvider.value(
                                       value: displayConfigData),
+                                  ChangeNotifierProvider.value(
+                                      value: deployedConfig),
                                   ChangeNotifierProvider.value(value: installer)
                                 ], child: SettingsDialog(isMobile: isMobile)),
                               );

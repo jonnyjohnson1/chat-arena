@@ -689,6 +689,7 @@ class LocalLLMInterface {
       Message message, String convId, ModelConfig model,
       {bool fullConversation = false}) async {
     final uri = httpAddress + "/generate_mermaid_chart";
+
     final url = Uri.parse(uri);
     final headers = {
       "accept": "application/json; charset=utf-8",

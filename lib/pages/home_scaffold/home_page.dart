@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:chat/models/backend_connected.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/demo_controller.dart';
+import 'package:chat/models/deployed_config.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/services/env_installer.dart';
 import 'package:chat/models/scripts.dart';
@@ -10,6 +11,7 @@ import 'package:chat/models/sys_resources.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:chat/pages/home_scaffold/home_page_layout_manager.dart';
 import 'package:chat/services/conversation_database.dart';
+import 'package:chat/services/json_loader.dart';
 import 'package:chat/services/message_processor.dart';
 import 'package:chat/services/scripts.dart';
 import 'package:flutter/foundation.dart';
@@ -35,6 +37,8 @@ class _HomePageState extends State<HomePage> {
       ValueNotifier(MemoryConfig(totalMemory: 17, usedMemory: 0.0));
   ValueNotifier<DisplayConfigData> displayConfigData =
       ValueNotifier(DisplayConfigData());
+  ValueNotifier<DeployedConfig> deployedConfig =
+      ValueNotifier(DeployedConfig.init());
   ValueNotifier<Conversation?> currentSelectedConversation =
       ValueNotifier(null);
   MessageProcessor messageProcessor = MessageProcessor();
@@ -58,16 +62,27 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     _loadModelListFromAppConfig;
     refreshConversationDatabase();
+    getDeployedConfig();
     navigatorKey =
         Provider.of<GlobalKey<NavigatorState>>(context, listen: false);
     installerService = ValueNotifier(InstallerService(
         navigatorKey: navigatorKey,
         apiConfig: displayConfigData.value.apiConfig));
-    initEnvironment();
     getUserID();
     // load senderID from sharedPrefs if none: ,
     getScripts();
     super.initState();
+  }
+
+  Future<void> getDeployedConfig() async {
+    deployedConfig.value = await DeployedConfig.loadFromJsonAsset();
+    if (deployedConfig.value.cloudHosted) {
+      // ensures the default https configuration is a https: or wss: address
+      displayConfigData.value.apiConfig.setSecure();
+      installerService.value.apiConfig.setSecure();
+    }
+
+    initEnvironment();
   }
 
   Future<void> printPlatform() async {
@@ -146,6 +161,8 @@ class _HomePageState extends State<HomePage> {
       providers: [
         ChangeNotifierProvider<ValueNotifier<InstallerService>>.value(
             value: installerService),
+        ChangeNotifierProvider<ValueNotifier<DeployedConfig>>.value(
+            value: deployedConfig),
         ChangeNotifierProvider<ValueNotifier<BackendService?>>.value(
             value: backendConnector),
         ChangeNotifierProvider<ValueNotifier<Conversation?>>.value(

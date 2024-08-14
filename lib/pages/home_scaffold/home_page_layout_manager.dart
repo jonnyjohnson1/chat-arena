@@ -15,7 +15,6 @@ import 'package:chat/services/env_installer.dart';
 import 'package:chat/services/platform_types.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
 import 'package:provider/provider.dart';
 
 class HomePageLayoutManager extends StatefulWidget {

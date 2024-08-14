@@ -44,10 +44,17 @@ class APIConfig {
   String customEndpoint;
 
   APIConfig({
-    this.defaultEndpoint =
-        kIsWeb ? "https://0.0.0.0:13341" : "http://0.0.0.0:13341",
+    this.defaultEndpoint = "http://0.0.0.0:13341",
     this.customEndpoint = "",
   });
+
+  void setSecure() {
+    if (defaultEndpoint.startsWith("http://")) {
+      defaultEndpoint = defaultEndpoint.replaceFirst("http://", "https://");
+    } else if (defaultEndpoint.startsWith("ws://")) {
+      defaultEndpoint = defaultEndpoint.replaceFirst("ws://", "wss://");
+    }
+  }
 
   String getDefault() =>
       customEndpoint.isEmpty ? defaultEndpoint : customEndpoint;

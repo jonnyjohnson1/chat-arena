@@ -24,7 +24,6 @@ If you are using this project, we want to hear from you!
 Backend Here: [github](https://github.com/jonnyjohnson1/topos-cli).
 
 ---
-
 *Latest News* 🔥
 - [2024/07] Chat Arena released to app store & play store! [App Store](https://testflight.apple.com/join/TTwkvdqW), [Play Store](https://play.google.com/store/apps/details?id=com.dialogues.ch)
 

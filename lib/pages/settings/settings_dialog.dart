@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:chat/chatroom/widgets/empty_home_page/install_screen.dart';
+import 'package:chat/models/deployed_config.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/spacy_size.dart';
 import 'package:chat/services/env_installer.dart';
@@ -46,12 +47,15 @@ class _SettingsDialogState extends State<SettingsDialog>
   }
 
   late ValueNotifier<InstallerService> installerService;
+  late ValueNotifier<DeployedConfig> deployedConfig;
 
   @override
   void initState() {
     super.initState();
     installerService =
         Provider.of<ValueNotifier<InstallerService>>(context, listen: false);
+    deployedConfig =
+        Provider.of<ValueNotifier<DeployedConfig>>(context, listen: false);
     _tabController = TabController(length: 2, vsync: this);
     Future.delayed(const Duration(milliseconds: 90), () {
       if (mounted) {
@@ -702,7 +706,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                   height: 38,
                   child: TextField(
                     controller: TextEditingController(
-                        text: kIsWeb
+                        text: kIsWeb && deployedConfig.value.cloudHosted
                             ? "https://0.0.0.0:13341"
                             : "http://0.0.0.0:13341"),
                     readOnly: true,
