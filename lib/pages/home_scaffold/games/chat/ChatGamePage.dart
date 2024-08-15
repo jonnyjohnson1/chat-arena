@@ -14,13 +14,15 @@ import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/local_llm_interface.dart';
 import 'package:chat/services/message_processor.dart';
 import 'package:chat/services/tools.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/models/messages.dart' as uiMessage;
 import 'package:provider/provider.dart';
 import 'dart:math';
+import 'package:url_launcher/url_launcher.dart';
 
 late final dynamic
-    llmInterface; // Can be LocalLLMInterface or DebateLLMInterface
+llmInterface; // Can be LocalLLMInterface or DebateLLMInterface
 
 class ChatGamePage extends StatefulWidget {
   Conversation? conversation;
@@ -157,7 +159,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
   ValueNotifier<bool> isGenerating = ValueNotifier(false);
 
   // handles the chat response
-  generationCallback(Map<String, dynamic>? event) async {
+  void generationCallback(Map<String, dynamic>? event) async {
     if (event != null) {
       double completionTime = 0.0;
 
@@ -166,7 +168,6 @@ class _ChatGamePageState extends State<ChatGamePage> {
       generatedChat = response.generation;
       if (response.isCompleted) {
         debugPrint("\t\t[ chat completed ]");
-        // end token is received
         isGenerating.value = false;
         messages[currentIdx].isGenerating = false;
         completionTime = response.completionTime;
@@ -174,78 +175,68 @@ class _ChatGamePageState extends State<ChatGamePage> {
         isGenerating.notifyListeners();
 
         setState(() {});
-        // add the final message to the database
         ConversationDatabase.instance.createMessage(messages[currentIdx]);
 
-        // Run the individual chat message analysis here
-        if (displayConfigData.value.calcMsgMermaidChart) {
-          String message = messages[currentIdx - 1].message!.value;
-          if (message.split(" ").length >=
-              6) // run_mermaid_check // if tokens > 6
-          {
-            print("mermaid chart here");
-            await LocalLLMInterface(displayConfigData.value.apiConfig)
-                .genMermaidChart(messages[currentIdx - 1],
-                    widget.conversation!.id, selectedModel,
-                    fullConversation: false);
-
-            print("got");
-            // LocalLLMInterface(displayConfigData.value.apiConfig)
-            //     .genMermaidChartWS(messages[currentIdx - 1],
-            //         widget.conversation!.id, selectedModel,
-            //         fullConversation: false);
-          }
-        }
-
-        // Run all the post conversation analyses here
-        // run sidebar calculations if config says so
-        if (displayConfigData.value.showSidebarBaseAnalytics) {
-          ConversationData? data =
-              await LocalLLMInterface(displayConfigData.value.apiConfig)
-                  .getChatAnalysis(widget.conversation!.id);
-          // return analysis to the Conversation object
-          widget.conversation!.conversationAnalytics.value = data;
-          widget.conversation!.conversationAnalytics.notifyListeners();
-
-          // get an image depiction of the conversation
-          if (displayConfigData.value.calcImageGen) {
-            ImageFile? imageFile =
-                await LocalLLMInterface(displayConfigData.value.apiConfig)
-                    .getConvToImage(widget.conversation!.id);
-            if (imageFile != null) {
-              // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
-              widget.conversation!.convToImagesList.value.add(imageFile);
-              widget.conversation!.convToImagesList.notifyListeners();
-            }
-          }
-        }
+        // Store the plain text
+        messages[currentIdx].message!.value = generatedChat;
       } else {
-        // This branch handles all the streaming updates
-        // debugPrint(generatedChat);
         toksPerSec = response.toksPerSec;
         while (generatedChat.startsWith("\n")) {
           generatedChat = generatedChat.substring(2);
         }
         completionTime = response.completionTime;
         try {
+          // Store the plain text
           messages[currentIdx].message!.value = generatedChat;
           messages[currentIdx].completionTime = completionTime;
           messages[currentIdx].isGenerating = true;
           messages[currentIdx].toksPerSec = toksPerSec;
 
-          // Notify the value listeners
           messages[currentIdx].message!.notifyListeners();
         } catch (e) {
           print(
               "Error updating message with the latest result: ${e.toString()}");
           print("The generation was: $generatedChat");
         }
-        // setState(() {});
       }
-    } else {
-      // return null event generation
-      // return const EventGenerationResponse(generation: "", progress: 0.0);
     }
+  }
+
+  // Process text with URLs and convert them into clickable links
+  RichText _processTextWithUrls(String text) {
+    final urlRegExp = RegExp(
+      r'(\bhttps?:\/\/[^\s]+)',
+      caseSensitive: false,
+    );
+
+    List<TextSpan> spans = [];
+    int start = 0;
+
+    urlRegExp.allMatches(text).forEach((match) {
+      if (match.start > start) {
+        spans.add(TextSpan(text: text.substring(start, match.start)));
+      }
+      spans.add(TextSpan(
+        text: match.group(0),
+        style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+        recognizer: TapGestureRecognizer()
+          ..onTap = () {
+            launchUrl(Uri.parse(match.group(0)!));
+          },
+      ));
+      start = match.end;
+    });
+
+    if (start < text.length) {
+      spans.add(TextSpan(text: text.substring(start)));
+    }
+
+    return RichText(
+      text: TextSpan(
+        style: TextStyle(color: Colors.black),
+        children: spans,
+      ),
+    );
   }
 
   // handles the analysis from the chat response
@@ -307,7 +298,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
     displayConfigData.notifyListeners();
     final newMessageId = Tools().getRandomString(32);
     DateTime timestamp =
-        DateTime.now(); //DateTime.parse(listenerMessage["timestamp"]);
+    DateTime.now(); //DateTime.parse(listenerMessage["timestamp"]);
     String messageText = content.data.content;
     String name = content.data.userId;
     String senderID =
@@ -357,7 +348,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
       // streaming_rate = slow, med, fast
       int delay = 0;
       if (true) // medium
-      {
+          {
         delay = (105 / sqrt(1 + messageText.length))
             .floor(); // Exponentially decreasing delay based on increased text length
       } else {
@@ -409,7 +400,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
         function: () async {
           await LocalLLMInterface(displayConfigData.value.apiConfig)
               .genMermaidChart(message, widget.conversation!.id, selectedModel,
-                  fullConversation: false);
+              fullConversation: false);
         },
       ));
     }
@@ -422,8 +413,8 @@ class _ChatGamePageState extends State<ChatGamePage> {
         function: () async {
           await Future.delayed(const Duration(seconds: 2), () async {
             ConversationData? data =
-                await LocalLLMInterface(displayConfigData.value.apiConfig)
-                    .getChatAnalysis(widget.conversation!.id);
+            await LocalLLMInterface(displayConfigData.value.apiConfig)
+                .getChatAnalysis(widget.conversation!.id);
             // return analysis to the Conversation object
             widget.conversation!.conversationAnalytics.value = data;
             widget.conversation!.conversationAnalytics.notifyListeners();
@@ -439,8 +430,8 @@ class _ChatGamePageState extends State<ChatGamePage> {
       processor.addProcess(QueueProcess(
         function: () async {
           ImageFile? imageFile =
-              await LocalLLMInterface(displayConfigData.value.apiConfig)
-                  .getConvToImage(widget.conversation!.id);
+          await LocalLLMInterface(displayConfigData.value.apiConfig)
+              .getConvToImage(widget.conversation!.id);
           if (imageFile != null) {
             // append to the conversation list of images conv_to_image parameter (the display will only show the last one)
             widget.conversation!.convToImagesList.value.add(imageFile);
@@ -483,115 +474,115 @@ class _ChatGamePageState extends State<ChatGamePage> {
     return isLoading
         ? Container()
         : Column(
-            children: [
-              // Play and Pause buttons
-              ValueListenableBuilder(
-                  valueListenable: selectedScript,
-                  builder: (ctx, val, _) {
-                    return ValueListenableBuilder(
-                        valueListenable: displayConfigData,
-                        builder: (context, displayConfig, _) {
-                          if (displayConfig.demoMode) {
-                            return ValueListenableBuilder(
-                                valueListenable: demoController,
-                                builder: (context, demoCont, _) {
-                                  if (selectedScript.value != null) {
-                                    if (demoCont.state == DemoState.next) {
-                                      String messageText = selectedScript.value!
-                                          .script[demoCont.index].data.content;
-                                      Future(() async {
-                                        if (widget.conversation == null) {
-                                          await createNewConversation(
-                                              messageText, GameType.chat);
-                                        }
-                                        ScriptContent scriptContent =
-                                            selectedScript
-                                                .value!.script[demoCont.index];
-                                        //send to demo
-                                        await processDemoMessage(scriptContent,
-                                            widget.conversation!);
-                                        // if auto-play is on, we can increment to the next value here
-                                      });
-                                    }
+      children: [
+        // Play and Pause buttons
+        ValueListenableBuilder(
+            valueListenable: selectedScript,
+            builder: (ctx, val, _) {
+              return ValueListenableBuilder(
+                  valueListenable: displayConfigData,
+                  builder: (context, displayConfig, _) {
+                    if (displayConfig.demoMode) {
+                      return ValueListenableBuilder(
+                          valueListenable: demoController,
+                          builder: (context, demoCont, _) {
+                            if (selectedScript.value != null) {
+                              if (demoCont.state == DemoState.next) {
+                                String messageText = selectedScript.value!
+                                    .script[demoCont.index].data.content;
+                                Future(() async {
+                                  if (widget.conversation == null) {
+                                    await createNewConversation(
+                                        messageText, GameType.chat);
                                   }
-                                  return Container();
+                                  ScriptContent scriptContent =
+                                  selectedScript
+                                      .value!.script[demoCont.index];
+                                  //send to demo
+                                  await processDemoMessage(scriptContent,
+                                      widget.conversation!);
+                                  // if auto-play is on, we can increment to the next value here
                                 });
-                          } else {
+                              }
+                            }
                             return Container();
-                          }
-                        });
-                  }),
-              Expanded(
-                child: ChatRoomPage(
-                  key: widget.conversation != null
-                      ? Key(widget.conversation!.id)
-                      : Key(DateTime.now().toIso8601String()),
-                  messages: messages,
-                  conversation: widget.conversation,
-                  showGeneratingText: true,
-                  showModelSelectButton: true,
-                  selectedModelConfig: selectedModel,
-                  onSelectedModelChange: (LanguageModel? newValue) {
-                    selectedModel.model = newValue!;
-                  },
-                  showTopTitle: false,
-                  isGenerating: isGenerating,
-                  onResetDemoChat: () async {
-                    print("reset demo here");
-                    demoController.value.index =
-                        0; // reset controller index to zero
-                    messages.clear(); // empty messages link
-                    // reset the conversation history
-                    await ConversationDatabase.instance.delete(
-                        widget.conversation!.id); // delete the conversation
-                    setState(() {});
-                  },
-                  onNewMessage: (Conversation? conv, String text,
-                      List<ImageFile> images) async {
-                    if (widget.conversation == null) {
-                      await createNewConversation(text, GameType.chat);
+                          });
+                    } else {
+                      return Container();
                     }
-                    if (text.trim() != "") {
-                      uiMessage.Message message = uiMessage.Message(
-                          id: Tools().getRandomString(12),
-                          conversationID: widget.conversation!.id,
-                          message: ValueNotifier(text),
-                          images: images,
-                          documentID: '',
-                          name: 'User',
-                          senderID: userModel.value.uid,
-                          status: '',
-                          timestamp: DateTime.now(),
-                          type: uiMessage.MessageType.text);
-                      messages.add(message);
+                  });
+            }),
+        Expanded(
+          child: ChatRoomPage(
+            key: widget.conversation != null
+                ? Key(widget.conversation!.id)
+                : Key(DateTime.now().toIso8601String()),
+            messages: messages,
+            conversation: widget.conversation,
+            showGeneratingText: true,
+            showModelSelectButton: true,
+            selectedModelConfig: selectedModel,
+            onSelectedModelChange: (LanguageModel? newValue) {
+              selectedModel.model = newValue!;
+            },
+            showTopTitle: false,
+            isGenerating: isGenerating,
+            onResetDemoChat: () async {
+              print("reset demo here");
+              demoController.value.index =
+              0; // reset controller index to zero
+              messages.clear(); // empty messages link
+              // reset the conversation history
+              await ConversationDatabase.instance.delete(
+                  widget.conversation!.id); // delete the conversation
+              setState(() {});
+            },
+            onNewMessage: (Conversation? conv, String text,
+                List<ImageFile> images) async {
+              if (widget.conversation == null) {
+                await createNewConversation(text, GameType.chat);
+              }
+              if (text.trim() != "") {
+                uiMessage.Message message = uiMessage.Message(
+                    id: Tools().getRandomString(12),
+                    conversationID: widget.conversation!.id,
+                    message: ValueNotifier(text),
+                    images: images,
+                    documentID: '',
+                    name: 'User',
+                    senderID: userModel.value.uid,
+                    status: '',
+                    timestamp: DateTime.now(),
+                    type: uiMessage.MessageType.text);
+                messages.add(message);
 
-                      await ConversationDatabase.instance
-                          .createMessage(message);
+                await ConversationDatabase.instance
+                    .createMessage(message);
 
-                      widget.conversation!.lastMessage = text;
-                      widget.conversation!.time = DateTime.now();
+                widget.conversation!.lastMessage = text;
+                widget.conversation!.time = DateTime.now();
 
-                      setState(() {
-                        isGenerating.value = true;
-                      });
-                      sendMessagetoModel(message.message!.value);
-                      setState(() {});
-                    }
+                setState(() {
+                  isGenerating.value = true;
+                });
+                sendMessagetoModel(message.message!.value);
+                setState(() {});
+              }
 
-                    // update the lastMessage sent
-                    await ConversationDatabase.instance
-                        .update(widget.conversation!);
-                    int idx = widget.conversations.value.indexWhere(
-                        (element) => element.id == widget.conversation!.id);
-                    widget.conversations.value[idx] = widget.conversation!;
-                    widget.conversations.value.sort((a, b) {
-                      return b.time!.compareTo(a.time!);
-                    });
-                    widget.conversations.notifyListeners();
-                  },
-                ),
-              ),
-            ],
-          );
+              // update the lastMessage sent
+              await ConversationDatabase.instance
+                  .update(widget.conversation!);
+              int idx = widget.conversations.value.indexWhere(
+                      (element) => element.id == widget.conversation!.id);
+              widget.conversations.value[idx] = widget.conversation!;
+              widget.conversations.value.sort((a, b) {
+                return b.time!.compareTo(a.time!);
+              });
+              widget.conversations.notifyListeners();
+            },
+          ),
+        ),
+      ],
+    );
   }
 }

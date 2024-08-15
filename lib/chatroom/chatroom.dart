@@ -50,19 +50,19 @@ class ChatRoomPage extends StatefulWidget {
 
   ChatRoomPage(
       {required this.conversation,
-      required this.messages,
-      this.selectedModelConfig,
-      this.onSelectedModelChange,
-      this.onResetDemoChat,
-      this.isGenerating,
-      this.onNewMessage,
-      this.showGeneratingText = true,
-      this.showModelSelectButton = true,
-      this.showTopTitle = true,
-      this.topTitleHeading = "Topic:",
-      this.topTitleText = "",
-      this.sessionId = "",
-      Key? key})
+        required this.messages,
+        this.selectedModelConfig,
+        this.onSelectedModelChange,
+        this.onResetDemoChat,
+        this.isGenerating,
+        this.onNewMessage,
+        this.showGeneratingText = true,
+        this.showModelSelectButton = true,
+        this.showTopTitle = true,
+        this.topTitleHeading = "Topic:",
+        this.topTitleText = "",
+        this.sessionId = "",
+        Key? key})
       : super(key: key);
 
   @override
@@ -100,11 +100,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     backendConnector =
         Provider.of<ValueNotifier<BackendService?>>(context, listen: false);
 
-    if (widget.showModelSelectButton) {
-      assert(widget.selectedModelConfig != null &&
-          widget.onSelectedModelChange != null);
-      selectedModel = widget.selectedModelConfig;
-    }
     navigatorKey =
         Provider.of<GlobalKey<NavigatorState>>(context, listen: false);
     if (navigatorKey.currentContext != null) {
@@ -206,64 +201,26 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 ),
               Expanded(
                   child: Stack(
-                children: [
-                  MultiProvider(
-                    providers: [
-                      Provider.value(value: widget.showGeneratingText)
+                    children: [
+                      MultiProvider(
+                        providers: [
+                          Provider.value(value: widget.showGeneratingText)
+                        ],
+                        child: widget.messages.isNotEmpty
+                            ? MessageListView(
+                          this,
+                          _listViewController,
+                          widget.messages,
+                        )
+                            : StarterHomePage(
+                          profileImageUrl: 'https://via.placeholder.com/150', // Use named parameter
+                        ),
+                      ),
                     ],
-                    child: widget.messages.isNotEmpty
-                        ? MessageListView(
-                            this,
-                            _listViewController,
-                            widget.messages,
-                          )
-                        : const StarterHomePage(),
-                  ),
-                  // reset chat button
-                  // Positioned(
-                  //   right: 10,
-                  //   bottom: 0,
-                  //   child: ElevatedButton(
-                  //       style: ButtonStyle(
-                  //         minimumSize:
-                  //             MaterialStateProperty.resolveWith(
-                  //           (states) {
-                  //             return Size.zero;
-                  //           },
-                  //         ),
-                  //         padding: MaterialStateProperty.resolveWith<
-                  //             EdgeInsetsGeometry>(
-                  //           (Set<MaterialState> states) {
-                  //             return const EdgeInsets.symmetric(
-                  //                 horizontal: 6, vertical: 3);
-                  //           },
-                  //         ),
-                  //       ),
-                  //       onPressed: () async {
-                  //         if (messages.isNotEmpty) {
-                  //           setState(() {
-                  //             messages.clear();
-                  //             // delete from the messages table
-                  //             ConversationDatabase.instance
-                  //                 .deleteMessageByConvId(
-                  //                     widget.conversation!.id);
-                  //             // update the lastMessage
-                  //             widget.conversation!.lastMessage =
-                  //                 "Start a chat ->";
-                  //             widget.conversation!.time =
-                  //                 DateTime.now();
-                  //             widget.onNewText(widget
-                  //                 .conversation); // pass back to main to update states
-                  //           });
-                  //         }
-                  //       },
-                  //       child: const Text("Reset Chat")),
-                  // )
-                ],
-              )),
+                  )),
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3),
+                const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3),
                 child: Container(
                   height: 1,
                   color: selectedImages.isNotEmpty
@@ -318,34 +275,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                               ),
                             ),
 
-                          // model selector button
-                          if (widget.showModelSelectButton)
-                            ValueListenableBuilder<InstallerService>(
-                                valueListenable: installerService,
-                                builder: (context, installService, _) {
-                                  return ValueListenableBuilder<
-                                          BackendService?>(
-                                      valueListenable: backendConnector,
-                                      builder: (context, backend, _) {
-                                        print(
-                                            "${installerService.value.backendConnected}");
-                                        if (installerService
-                                            .value.backendConnected) {
-                                          return ModelSelector(
-                                            initModel: selectedModel!.model,
-                                            onSelectedModelChange:
-                                                (LanguageModel model) {
-                                              setState(() {
-                                                selectedModel!.model = model;
-                                              });
-                                              widget.onSelectedModelChange!(
-                                                  model);
-                                            },
-                                          );
-                                        }
-                                        return Container();
-                                      });
-                                }),
+                          // Removed Model Selector Button
 
                           Expanded(
                             child: ValueListenableBuilder(
@@ -361,7 +291,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                             builder: (context, script, _) {
                                               return ValueListenableBuilder(
                                                   valueListenable:
-                                                      demoController,
+                                                  demoController,
                                                   builder:
                                                       (context, demoCont, _) {
                                                     print(
@@ -370,14 +300,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                       children: [
                                                         if (script != null)
                                                           if ((demoCont
-                                                                      .autoPlay &&
-                                                                  (demoCont
-                                                                          .index !=
-                                                                      0) &&
-                                                                  demoCont.index <
-                                                                      script
-                                                                          .script
-                                                                          .length) ||
+                                                              .autoPlay &&
+                                                              (demoCont
+                                                                  .index !=
+                                                                  0) &&
+                                                              demoCont.index <
+                                                                  script
+                                                                      .script
+                                                                      .length) ||
                                                               demoCont.state ==
                                                                   DemoState
                                                                       .generating)
@@ -387,7 +317,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                               "${demoCont.index}/${script.script.length}",
                                                               style: TextStyle(
                                                                   color: Theme.of(
-                                                                          context)
+                                                                      context)
                                                                       .colorScheme
                                                                       .primary)),
                                                         const SizedBox(
@@ -395,8 +325,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                         TextButton(
                                                             onPressed: () {
                                                               demoCont.autoPlay =
-                                                                  !demoCont
-                                                                      .autoPlay;
+                                                              !demoCont
+                                                                  .autoPlay;
                                                               demoController
                                                                   .notifyListeners();
                                                             },
@@ -404,52 +334,52 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                                 "Auto-Play",
                                                                 style: TextStyle(
                                                                     decoration: !demoCont
-                                                                            .autoPlay
+                                                                        .autoPlay
                                                                         ? TextDecoration
-                                                                            .lineThrough
+                                                                        .lineThrough
                                                                         : null,
                                                                     color: demoCont
-                                                                            .autoPlay
+                                                                        .autoPlay
                                                                         ? Theme.of(context)
-                                                                            .colorScheme
-                                                                            .primary
+                                                                        .colorScheme
+                                                                        .primary
                                                                         : Colors
-                                                                            .grey))),
+                                                                        .grey))),
                                                         IconButton(
                                                           tooltip: script ==
-                                                                  null
+                                                              null
                                                               ? "select script"
                                                               : null,
                                                           icon: Icon(
                                                             script != null
                                                                 ? demoCont.index >=
-                                                                        script
-                                                                            .script
-                                                                            .length
-                                                                    ? Icons
-                                                                        .refresh
-                                                                    : demoCont.state ==
-                                                                            DemoState
-                                                                                .pause
-                                                                        ? Icons
-                                                                            .play_arrow
-                                                                        : Icons
-                                                                            .pause
+                                                                script
+                                                                    .script
+                                                                    .length
+                                                                ? Icons
+                                                                .refresh
+                                                                : demoCont.state ==
+                                                                DemoState
+                                                                    .pause
+                                                                ? Icons
+                                                                .play_arrow
                                                                 : Icons
-                                                                    .play_arrow,
+                                                                .pause
+                                                                : Icons
+                                                                .play_arrow,
                                                             color: script ==
-                                                                    null
+                                                                null
                                                                 ? Colors.grey
                                                                 : demoCont.index ==
-                                                                        script
-                                                                            .script
-                                                                            .length
-                                                                    ? Colors
-                                                                        .grey
-                                                                    : Theme.of(
-                                                                            context)
-                                                                        .colorScheme
-                                                                        .primary,
+                                                                script
+                                                                    .script
+                                                                    .length
+                                                                ? Colors
+                                                                .grey
+                                                                : Theme.of(
+                                                                context)
+                                                                .colorScheme
+                                                                .primary,
                                                           ),
                                                           onPressed: () async {
                                                             if (script !=
@@ -458,26 +388,26 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                                   "${demoCont.index} < ${script.script.length} = ${demoCont.index + 1 < script.script.length}");
 
                                                               if (demoCont
-                                                                      .index <
+                                                                  .index <
                                                                   script.script
                                                                       .length) {
                                                                 demoCont
                                                                     .state = demoCont
-                                                                            .state ==
-                                                                        DemoState
-                                                                            .pause
+                                                                    .state ==
+                                                                    DemoState
+                                                                        .pause
                                                                     ? DemoState
-                                                                        .next
+                                                                    .next
                                                                     : DemoState
-                                                                        .pause;
+                                                                    .pause;
                                                                 demoController
                                                                     .notifyListeners();
                                                                 // simulate looping through the messages here
                                                                 await Future.delayed(Duration(
                                                                     milliseconds: demoCont
-                                                                            .autoPlay
+                                                                        .autoPlay
                                                                         ? demoCont
-                                                                            .durBetweenMessages
+                                                                        .durBetweenMessages
                                                                         : 80));
                                                                 demoCont
                                                                     .index += 1;
@@ -491,7 +421,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                                 print(
                                                                     "\t[ resetting demo chat ]");
                                                                 if (widget
-                                                                        .onResetDemoChat !=
+                                                                    .onResetDemoChat !=
                                                                     null) {
                                                                   widget
                                                                       .onResetDemoChat!();
@@ -499,7 +429,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                                               }
                                                             } else {
                                                               ScaffoldMessenger
-                                                                      .of(context)
+                                                                  .of(context)
                                                                   .showSnackBar(
                                                                 const SnackBar(
                                                                   content: Center(
@@ -542,7 +472,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                           kIsWeb
                                               ? selectedImages[index].webFile
                                               : selectedImages[index]
-                                                  .localFile);
+                                              .localFile);
                                     },
                                     child: Stack(
                                       alignment: Alignment.topRight,
@@ -553,15 +483,15 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                           child: Center(
                                             child: ClipRRect(
                                               borderRadius:
-                                                  BorderRadius.circular(8.0),
+                                              BorderRadius.circular(8.0),
                                               child: kIsWeb
                                                   ? Image.network(
-                                                      selectedImages[index]
-                                                          .webFile!
-                                                          .path)
+                                                  selectedImages[index]
+                                                      .webFile!
+                                                      .path)
                                                   : Image.file(
-                                                      selectedImages[index]
-                                                          .localFile!),
+                                                  selectedImages[index]
+                                                      .localFile!),
                                             ),
                                           ),
                                         ),
@@ -603,7 +533,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         List<ImageFile> submittedImages = List.from(
                             selectedImages); // pass images list to the function
                         selectedImages =
-                            []; // clear the selected Images from the current view
+                        []; // clear the selected Images from the current view
                         if (widget.onNewMessage != null) {
                           await widget.onNewMessage!(widget.conversation, text,
                               submittedImages); // pass back to main to update states
@@ -615,7 +545,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         } else {
                           FilePickerResult? result = await FilePicker.platform
                               .pickFiles(
-                                  type: FileType.image, allowMultiple: true);
+                              type: FileType.image, allowMultiple: true);
 
                           if (result != null) {
                             result.files.forEach((PlatformFile element) {

@@ -45,7 +45,9 @@ dependencies:
   fluttertoast: ^8.2.6
   is_ios_app_on_mac: ^0.0.1+2
   serious_python: ^0.7.1
-  
+  qr_flutter: ^4.1.0
+  flutter_html: ^3.0.0-beta.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

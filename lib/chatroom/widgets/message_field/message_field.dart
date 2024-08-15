@@ -10,11 +10,11 @@ class MessageField extends StatefulWidget {
 
   MessageField(
       {this.isGenerating,
-      this.isDesktop = true,
-      this.onPause,
-      this.onSubmit,
-      this.onLoadImage,
-      Key? key})
+        this.isDesktop = true,
+        this.onPause,
+        this.onSubmit,
+        this.onLoadImage,
+        Key? key})
       : super(key: key);
 
   @override
@@ -32,6 +32,14 @@ class _MessageFieldState extends State<MessageField> {
   TextEditingController controller = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -46,32 +54,25 @@ class _MessageFieldState extends State<MessageField> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            IconButton(
-              icon: const Icon(
-                Icons.attach_file,
-                color: Color.fromARGB(255, 124, 124, 124),
-              ),
-              onPressed: () async {
-                await widget.onLoadImage();
-              },
-            ),
             Expanded(
               child: Padding(
                 padding:
-                    EdgeInsets.fromLTRB(widget.isDesktop ? 8.0 : 0, 2, 8, 2),
+                EdgeInsets.fromLTRB(widget.isDesktop ? 8.0 : 0, 2, 8, 2),
                 child: CupertinoTextField(
                   controller: controller,
+                  focusNode: _focusNode,
+                  placeholder: "What's the best way to contact you?",
                   keyboardType: TextInputType.text,
                   minLines: 1,
                   maxLines: 5,
-                  focusNode: _focusNode,
                   textInputAction: TextInputAction.send,
                   onSubmitted: (String text) {
-                    if (text.trim() != "") {
-                      widget.onSubmit(text);
-                      controller.clear();
-                      _focusNode.requestFocus();
+                    if (text.trim().isEmpty) {
+                      text = "What's the best way to contact you?";
                     }
+                    widget.onSubmit(text);
+                    controller.clear();
+                    _focusNode.requestFocus();
                   },
                   cursorColor: Colors.black38,
                   style: const TextStyle(color: Colors.black87),
@@ -95,54 +96,14 @@ class _MessageFieldState extends State<MessageField> {
       child: const Icon(Icons.arrow_upward,
           color: Color.fromARGB(255, 124, 124, 124)),
       onPressed: () {
-        if (controller.text.trim() != "") {
+        if (controller.text.trim().isEmpty) {
+          widget.onSubmit("What's the best way to contact you?");
+        } else {
           widget.onSubmit(controller.text);
-          controller.clear();
-          _focusNode.requestFocus();
         }
+        controller.clear();
+        _focusNode.requestFocus();
       },
     );
   }
-
-  Widget _pauseGenerationButton(BuildContext _context) {
-    return FloatingActionButton(
-      tooltip: "Pause",
-      child: const Icon(Icons.stop, color: Colors.black87),
-      onPressed: () {
-        if (_formKey.currentState!.validate()) {
-          widget.onPause();
-          // FocusScope.of(_context).unfocus();
-        }
-      },
-    );
-  }
-
-  // Widget _startPollButton(BuildContext _context) {
-  //   final _userData = Provider.of<UserData>(context);
-  //   return SizedBox(
-  //     height: 35,
-  //     width: 35, //this.widget._height * 0.08,
-  //     child: FloatingActionButton(
-  //       backgroundColor: Colors.white,
-  //       child: Icon(Icons.poll, color: Colors.black87),
-  //       onPressed: () {
-  //         if (_formKey.currentState.validate()) {
-  //           UserEventDatabaseService(uid: _userData.uid).sendMessage(
-  //             this.widget._eventID,
-  //             Message(
-  //               message: _messageText,
-  //               timestamp: DateTime.now(),
-  //               senderID: _userData.uid,
-  //               type: MessageType.Text,
-  //               status: null,
-  //               name: _userData.name,
-  //             ),
-  //           );
-  //           _formKey.currentState.reset();
-  //           FocusScope.of(_context).unfocus();
-  //         }
-  //       },
-  //     ),
-  //   );
-  // }
 }
