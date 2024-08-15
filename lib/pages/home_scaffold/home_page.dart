@@ -77,6 +77,14 @@ class _HomePageState extends State<HomePage> {
   Future<void> getDeployedConfig() async {
     DeployedConfig.loadFromJsonAsset().then((loadedConfig) {
       deployedConfig.value = loadedConfig;
+      if (loadedConfig.usePreloadedUrls) {
+        print("[ setting default urls ]");
+        displayConfigData.value.apiConfig.customEndpoint =
+            loadedConfig.defaultBackend;
+        installerService.value.apiConfig.customEndpoint =
+            loadedConfig.defaultBackend;
+      }
+
       if (deployedConfig.value.cloudHosted) {
         // ensures the default https configuration is a https: or wss: address
         displayConfigData.value.apiConfig.setSecure();

@@ -1,4 +1,7 @@
 {
-    "cloud-hosted": false,
+    "cloud-hosted": true,
+    "use_preloaded_urls": true,
+    "default-backend": "https://topos.hypernym.ai",
+    "default-chat-client": "https://chat.hypernym.ai",
     "default-provider": "ollama"
 }

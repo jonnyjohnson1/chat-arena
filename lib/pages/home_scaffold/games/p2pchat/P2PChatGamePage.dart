@@ -104,7 +104,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
 
         String url = gameSettings.serverHostAddress!.isNotEmpty
             ? makeWebSocketAddress(gameSettings.serverHostAddress!)
-            : 'ws://0.0.0.0:13394';
+            : "https://chat.hypernym.ai"; //'http://127.0.0.1:13394';
         // var host = Uri.parse(url).host;
 
         print("\t[ using url $url to connect to server ]");
@@ -152,7 +152,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
 
       String url = gameSettings.serverHostAddress != null
           ? makeWebSocketAddress(gameSettings.serverHostAddress!)
-          : 'wss://0.0.0.0:13394';
+          : "https://chat.hypernym.ai"; //'http://127.0.0.1:13394';
 
       client.url = url;
       if (gameSettings.initState != null) {
