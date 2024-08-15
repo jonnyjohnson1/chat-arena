@@ -212,8 +212,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                           _listViewController,
                           widget.messages,
                         )
-                            : StarterHomePage(
-                          profileImageUrl: 'https://via.placeholder.com/150', // Use named parameter
+                        : StarterHomePage(
+                          // @note:@hypercard:@setup:
+                          // profileImageUrl: 'https://via.placeholder.com/150', // Use named parameter
+                            profileImageUrl: 'https://nick.hypernym.ai/nick_transparent.png', // Nicks
                         ),
                       ),
                     ],

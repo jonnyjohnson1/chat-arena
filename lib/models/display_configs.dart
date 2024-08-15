@@ -43,9 +43,12 @@ class APIConfig {
   String defaultEndpoint;
   String customEndpoint;
 
+  //@note:@hypercard:@setup:
   APIConfig({
     this.defaultEndpoint =
-        kIsWeb ? "https://0.0.0.0:13341" : "http://0.0.0.0:13341",
+        kIsWeb ? "https://nicktopos.hypernym.ai:8000" : "http://nicktopos.hypernym.ai:8000",
+    // this.defaultEndpoint =
+    //   kIsWeb ? "http://0.0.0.0:13341" : "http://0.0.0.0:13341",
     this.customEndpoint = "",
   });
 
