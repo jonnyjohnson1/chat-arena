@@ -603,8 +603,8 @@ class InstallerService {
 
   Future<bool> checkBackendConnected() async {
     try {
-      final response =
-          await http.get(Uri.parse('${apiConfig.getDefault()}/health'));
+      final response = await http
+          .get(Uri.parse('${apiConfig.getDefaultLLMBackend()}/health'));
       return response.statusCode == 200;
     } catch (e) {
       print("Error checking backend connection: $e");
@@ -619,7 +619,7 @@ class InstallerService {
       if (toposIsInstalled) {
         if (!autoTurnOn) return true;
         try {
-          var result = await turnToposOn(apiConfig.getDefault());
+          var result = await turnToposOn(apiConfig.getDefaultLLMBackend());
           print('Topos is running at ${result['url']}');
           return result['isRunning'];
         } catch (e) {

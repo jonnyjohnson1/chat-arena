@@ -172,8 +172,8 @@ class _SettingsPageState extends State<SettingsPage>
 
   Future<void> pingEndpoint(bool isDefault) async {
     String endpoint = isDefault
-        ? displayConfigData.value.apiConfig.defaultEndpoint
-        : displayConfigData.value.apiConfig.customEndpoint;
+        ? displayConfigData.value.apiConfig.defaultBackendEndpoint
+        : displayConfigData.value.apiConfig.customBackendEndpoint;
     if (endpoint.isEmpty) {
       setState(() {
         if (isDefault) {
@@ -326,7 +326,8 @@ class _SettingsPageState extends State<SettingsPage>
     );
   }
 
-  TextEditingController _customEndpointController = TextEditingController();
+  TextEditingController _customBackendEndpointController =
+      TextEditingController();
   Widget _buildAPISettingsPage() {
     InputDecoration inputDecoration = const InputDecoration(
       border: OutlineInputBorder(),
@@ -334,8 +335,8 @@ class _SettingsPageState extends State<SettingsPage>
     );
     TextStyle style = const TextStyle(fontSize: 14);
 
-    _customEndpointController.text =
-        displayConfigData.value.apiConfig.customEndpoint;
+    _customBackendEndpointController.text =
+        displayConfigData.value.apiConfig.customBackendEndpoint;
 
     return SingleChildScrollView(
       child: Padding(
@@ -363,7 +364,7 @@ class _SettingsPageState extends State<SettingsPage>
                                       var result = await installerService.value
                                           .turnToposOn(displayConfigData
                                               .value.apiConfig
-                                              .getDefault());
+                                              .getDefaultLLMBackend());
                                       print(
                                           'Topos is running at ${result['url']}');
                                       bool connected = result['isRunning'];
@@ -376,7 +377,7 @@ class _SettingsPageState extends State<SettingsPage>
                                       installerService.value
                                           .stopToposService(displayConfigData
                                               .value.apiConfig
-                                              .getDefault())
+                                              .getDefaultLLMBackend())
                                           .then(
                                         (disconnected) {
                                           if (disconnected) {
@@ -434,16 +435,16 @@ class _SettingsPageState extends State<SettingsPage>
                   height: 38,
                   child: TextField(
                     style: style,
-                    controller: _customEndpointController,
+                    controller: _customBackendEndpointController,
                     decoration: inputDecoration.copyWith(
                         hintText: "Enter your endpoint"),
                     onSubmitted: (value) {
-                      displayConfigData.value.apiConfig.customEndpoint =
+                      displayConfigData.value.apiConfig.customBackendEndpoint =
                           value.trim();
                       displayConfigData.notifyListeners();
                     },
                     onChanged: (value) {
-                      displayConfigData.value.apiConfig.customEndpoint =
+                      displayConfigData.value.apiConfig.customBackendEndpoint =
                           value.trim();
                       displayConfigData.notifyListeners();
                     },

@@ -24,9 +24,9 @@ class LocalLLMInterface {
   LocalLLMInterface(this.apiConfig) {
     final urlPattern = r'^(http|https):\/\/[^\s/$.?#].[^\s]*$';
     final regExp = RegExp(urlPattern);
-    String baseUrl = apiConfig.customEndpoint.isEmpty
-        ? apiConfig.defaultEndpoint
-        : apiConfig.customEndpoint;
+    String baseUrl = apiConfig.customBackendEndpoint.isEmpty
+        ? apiConfig.defaultBackendEndpoint
+        : apiConfig.customBackendEndpoint;
     if (regExp.hasMatch(baseUrl)) {
       httpAddress = baseUrl;
     } else {

@@ -11,7 +11,6 @@ import 'package:chat/shared/activity_icon.dart';
 import 'package:chat/shared/backend_connected_service_button.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
 import 'package:load_switch/load_switch.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -502,8 +501,8 @@ class _SettingsDialogState extends State<SettingsDialog>
 
   Future<void> pingEndpoint(bool isDefault) async {
     String endpoint = isDefault
-        ? displayConfigData.value.apiConfig.defaultEndpoint
-        : displayConfigData.value.apiConfig.customEndpoint;
+        ? displayConfigData.value.apiConfig.defaultBackendEndpoint
+        : displayConfigData.value.apiConfig.customBackendEndpoint;
     if (endpoint.isEmpty) {
       setState(() {
         if (isDefault) {
@@ -666,7 +665,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                                       var result = await installerService.value
                                           .turnToposOn(displayConfigData
                                               .value.apiConfig
-                                              .getDefault());
+                                              .getDefaultLLMBackend());
                                       print(
                                           'Topos is running at ${result['url']}');
                                       bool connected = result['isRunning'];
@@ -679,7 +678,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                                       installerService.value
                                           .stopToposService(displayConfigData
                                               .value.apiConfig
-                                              .getDefault())
+                                              .getDefaultLLMBackend())
                                           .then(
                                         (disconnected) {
                                           if (disconnected) {
@@ -742,12 +741,12 @@ class _SettingsDialogState extends State<SettingsDialog>
                     decoration: inputDecoration.copyWith(
                         hintText: "Enter your endpoint"),
                     onSubmitted: (value) {
-                      displayConfigData.value.apiConfig.customEndpoint =
+                      displayConfigData.value.apiConfig.customBackendEndpoint =
                           value.trim();
                       displayConfigData.notifyListeners();
                     },
                     onChanged: (value) {
-                      displayConfigData.value.apiConfig.customEndpoint =
+                      displayConfigData.value.apiConfig.customBackendEndpoint =
                           value.trim();
                       displayConfigData.notifyListeners();
                     },

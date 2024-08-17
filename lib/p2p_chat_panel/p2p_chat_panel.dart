@@ -1,7 +1,7 @@
 // p2p_chat_panel.dart
 
 import 'dart:io';
-
+import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/game_models/debate.dart';
 import 'package:chat/p2p_chat_panel/conversation_list_item.dart';
 import 'package:chat/p2p_chat_panel/join_chat_dialog.dart';
@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/services/conversation_database.dart';
 import 'package:chat/services/tools.dart';
+import 'package:provider/provider.dart';
 
 class P2pConversationsList extends StatefulWidget {
   final ValueNotifier<List<Conversation>> conversations;
@@ -29,9 +30,12 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
   bool didInit = false;
   ScrollController controller = ScrollController();
   final chatALertDialogLink = LayerLink();
+  late ValueNotifier<DisplayConfigData> displayConfigData;
 
   @override
   void initState() {
+    displayConfigData =
+        Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     Future.delayed(const Duration(milliseconds: 90),
         () => mounted ? setState((() => didInit = true)) : null);
     super.initState();
@@ -57,9 +61,15 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
 
   Future<void> joinChat(P2PChatGame gameSettings, context) async {
     debugPrint("[ joinChat ]");
-    String httpsUrl = gameSettings.serverHostAddress!.isNotEmpty
-        ? makeHTTPSAddress(gameSettings.serverHostAddress!)
-        : "https://chat.hypernym.ai"; //'http://127.0.0.1:13394';
+    String httpsUrl = "";
+    // user input the url from their menu
+    if (gameSettings.serverHostAddress!.isNotEmpty) {
+      httpsUrl = makeHTTPSAddress(gameSettings.serverHostAddress!);
+    } else {
+      // use a default endping
+      httpsUrl = displayConfigData.value.apiConfig.getDefaultMessengerBackend();
+    }
+
     print("\t[ using host address $httpsUrl to check server ]");
     WebSocketChatClient testClient = WebSocketChatClient(url: httpsUrl);
     bool serverIsUp = await testClient.testEndpoint();
@@ -72,9 +82,7 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
     }
 
     if (serverIsUp) {
-      String wssUrl = gameSettings.serverHostAddress!.isNotEmpty
-          ? makeWebSocketAddress(gameSettings.serverHostAddress!)
-          : "https://chat.hypernym.ai"; //'http://127.0.0.1:13394';
+      String wssUrl = makeWebSocketAddress(httpsUrl);
       var host = Uri.parse(wssUrl).host;
       debugPrint("\t[ server check good :: connecting to $host ]");
 

@@ -102,10 +102,15 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
         P2PChatGame gameSettings = await getP2PChatSettings(context);
         widget.conversation!.gameModel = gameSettings;
 
-        String url = gameSettings.serverHostAddress!.isNotEmpty
-            ? makeWebSocketAddress(gameSettings.serverHostAddress!)
-            : "https://chat.hypernym.ai"; //'http://127.0.0.1:13394';
-        // var host = Uri.parse(url).host;
+        String url = "";
+        // user input the url from their menu
+        if (gameSettings.serverHostAddress!.isNotEmpty) {
+          url = makeWebSocketAddress(gameSettings.serverHostAddress!);
+        } else {
+          // use a default endping
+          url = makeWebSocketAddress(
+              displayConfigData.value.apiConfig.getDefaultMessengerBackend());
+        }
 
         print("\t[ using url $url to connect to server ]");
         client.url = url;
@@ -150,9 +155,15 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
       print('\t[ joining server ]');
       P2PChatGame gameSettings = widget.conversation!.gameModel;
 
-      String url = gameSettings.serverHostAddress != null
-          ? makeWebSocketAddress(gameSettings.serverHostAddress!)
-          : "https://chat.hypernym.ai"; //'http://127.0.0.1:13394';
+      String url = "";
+      // user input the url from their menu
+      if (gameSettings.serverHostAddress != null) {
+        url = makeWebSocketAddress(gameSettings.serverHostAddress!);
+      } else {
+        // use a default endping
+        url = makeWebSocketAddress(
+            displayConfigData.value.apiConfig.getDefaultMessengerBackend());
+      }
 
       client.url = url;
       if (gameSettings.initState != null) {

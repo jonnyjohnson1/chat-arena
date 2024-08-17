@@ -162,7 +162,6 @@ class _ChatGamePageState extends State<ChatGamePage> {
       double completionTime = 0.0;
 
       EventGenerationResponse response = EventGenerationResponse.fromMap(event);
-
       generatedChat = response.generation;
       if (response.isCompleted) {
         debugPrint("\t\t[ chat completed ]");

@@ -207,7 +207,6 @@ CREATE TABLE $tableMessages (
           }
         }
       }
-
       // add message to the database
       final id = await db.insert(tableMessages, message.toMap());
     } catch (e) {

@@ -40,27 +40,45 @@ class DisplayConfigData {
 }
 
 class APIConfig {
-  String defaultEndpoint;
-  String customEndpoint;
+  String defaultBackendEndpoint;
+  String customBackendEndpoint;
+  String defaultP2PChatEndpoint;
+  String customP2PChatEndpoint;
 
-  APIConfig({
-    this.defaultEndpoint = "http://0.0.0.0:13341",
-    this.customEndpoint = "",
-  });
+  APIConfig(
+      {this.defaultBackendEndpoint = "http://0.0.0.0:13341",
+      this.customBackendEndpoint = "",
+      this.defaultP2PChatEndpoint = "http://127.0.0.1:13394",
+      this.customP2PChatEndpoint = ""});
 
   void setSecure() {
-    if (defaultEndpoint.startsWith("http://")) {
-      defaultEndpoint = defaultEndpoint.replaceFirst("http://", "https://");
-    } else if (defaultEndpoint.startsWith("ws://")) {
-      defaultEndpoint = defaultEndpoint.replaceFirst("ws://", "wss://");
+    if (defaultBackendEndpoint.startsWith("http://")) {
+      // set backend endpoint
+      defaultBackendEndpoint =
+          defaultBackendEndpoint.replaceFirst("http://", "https://");
+      // set p2p chat endpoint
+      defaultP2PChatEndpoint =
+          defaultP2PChatEndpoint.replaceFirst("http://", "https://");
+    } else if (defaultBackendEndpoint.startsWith("ws://")) {
+      // set backend endpoint
+      defaultBackendEndpoint =
+          defaultBackendEndpoint.replaceFirst("ws://", "wss://");
+      // set p2p chat endpoint
+      defaultP2PChatEndpoint =
+          defaultP2PChatEndpoint.replaceFirst("ws://", "wss://");
     }
   }
 
-  String getDefault() =>
-      customEndpoint.isEmpty ? defaultEndpoint : customEndpoint;
+  String getDefaultLLMBackend() => customBackendEndpoint.isEmpty
+      ? defaultBackendEndpoint
+      : customBackendEndpoint;
+
+  String getDefaultMessengerBackend() => customBackendEndpoint.isEmpty
+      ? defaultP2PChatEndpoint
+      : customP2PChatEndpoint;
 
   bool isLocalhost() {
-    final endpoint = getDefault();
+    final endpoint = getDefaultLLMBackend();
     final uri = Uri.parse(endpoint);
     return uri.host == "0.0.0.0" ||
         uri.host == "localhost" ||

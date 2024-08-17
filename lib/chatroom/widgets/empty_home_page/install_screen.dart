@@ -61,7 +61,7 @@ class InstallerScreen extends StatelessWidget {
                                                 .value
                                                 .turnToposOn(displayConfigData
                                                     .value.apiConfig
-                                                    .getDefault());
+                                                    .getDefaultLLMBackend());
                                             print(
                                                 'Topos is running at ${result['url']}');
                                             bool connected =
@@ -76,7 +76,7 @@ class InstallerScreen extends StatelessWidget {
                                                 .stopToposService(
                                                     displayConfigData
                                                         .value.apiConfig
-                                                        .getDefault())
+                                                        .getDefaultLLMBackend())
                                                 .then(
                                               (disconnected) {
                                                 if (disconnected) {

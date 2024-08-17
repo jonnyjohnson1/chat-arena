@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/llm.dart';
 import 'package:flutter/foundation.dart';
@@ -13,9 +11,9 @@ Future<List<LanguageModel>?> getModels(APIConfig apiConfig) async {
   final urlPattern = r'^(http|https):\/\/[^\s/$.?#].[^\s]*$';
   final regExp = RegExp(urlPattern);
   String httpAddress = "";
-  String baseUrl = apiConfig.customEndpoint.isEmpty
-      ? apiConfig.defaultEndpoint
-      : apiConfig.customEndpoint;
+  String baseUrl = apiConfig.customBackendEndpoint.isEmpty
+      ? apiConfig.defaultBackendEndpoint
+      : apiConfig.customBackendEndpoint;
 
   if (regExp.hasMatch(baseUrl)) {
     httpAddress = baseUrl;

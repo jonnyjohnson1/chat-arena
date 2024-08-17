@@ -11,7 +11,6 @@ import 'package:chat/models/sys_resources.dart';
 import 'package:chat/pages/home_scaffold/games/chat/ChatGamePage.dart';
 import 'package:chat/pages/home_scaffold/home_page_layout_manager.dart';
 import 'package:chat/services/conversation_database.dart';
-import 'package:chat/services/json_loader.dart';
 import 'package:chat/services/message_processor.dart';
 import 'package:chat/services/scripts.dart';
 import 'package:flutter/foundation.dart';
@@ -77,13 +76,26 @@ class _HomePageState extends State<HomePage> {
   Future<void> getDeployedConfig() async {
     DeployedConfig.loadFromJsonAsset().then((loadedConfig) {
       deployedConfig.value = loadedConfig;
-      if (loadedConfig.usePreloadedUrls) {
-        print("[ setting default urls ]");
-        displayConfigData.value.apiConfig.customEndpoint =
+      // set default urls
+      // set the preloaded llm backend
+      if (loadedConfig.usePreloadedLlmBackend) {
+        print("[ setting default topos backend urls ]");
+        displayConfigData.value.apiConfig.customBackendEndpoint =
             loadedConfig.defaultBackend;
-        installerService.value.apiConfig.customEndpoint =
+        installerService.value.apiConfig.customBackendEndpoint =
             loadedConfig.defaultBackend;
       }
+      // set the preloaded messenger backend
+      if (loadedConfig.usePreloadedMessengerBackend) {
+        print("[ setting default messenger urls ]");
+        displayConfigData.value.apiConfig.customP2PChatEndpoint =
+            loadedConfig.defaultChatClient;
+        installerService.value.apiConfig.customBackendEndpoint =
+            loadedConfig.defaultBackend;
+      }
+
+      // convert the urls after they've been set to
+      // be http or https
 
       if (deployedConfig.value.cloudHosted) {
         // ensures the default https configuration is a https: or wss: address
@@ -115,7 +127,7 @@ class _HomePageState extends State<HomePage> {
       print("Unknown platform");
     }
     print(
-        "Default address :: ${displayConfigData.value.apiConfig.getDefault()}");
+        "Default address :: ${displayConfigData.value.apiConfig.getDefaultLLMBackend()}");
   }
 
   void initEnvironment() async {

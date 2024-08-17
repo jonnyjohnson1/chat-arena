@@ -91,11 +91,11 @@ class _StarterHomePageState extends State<StarterHomePage> {
 
   Future<void> pingEndpoint(bool isDefault) async {
     // TODO because this is only used on mobile devices
-    // inherently the defaultEndpoint path is unnecessary and can
+    // inherently the defaultBackendEndpoint path is unnecessary and can
     // be removed
     String endpoint = isDefault
-        ? displayConfigData.value.apiConfig.defaultEndpoint
-        : displayConfigData.value.apiConfig.customEndpoint;
+        ? displayConfigData.value.apiConfig.defaultBackendEndpoint
+        : displayConfigData.value.apiConfig.customBackendEndpoint;
     if (endpoint.isEmpty) {
       setState(() {
         if (isDefault) {
@@ -382,7 +382,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
                                                           displayConfigData
                                                                   .value
                                                                   .apiConfig
-                                                                  .customEndpoint =
+                                                                  .customBackendEndpoint =
                                                               value.trim();
                                                           displayConfigData
                                                               .notifyListeners();
@@ -394,7 +394,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
                                                           displayConfigData
                                                                   .value
                                                                   .apiConfig
-                                                                  .customEndpoint =
+                                                                  .customBackendEndpoint =
                                                               value.trim();
                                                           displayConfigData
                                                               .notifyListeners();
