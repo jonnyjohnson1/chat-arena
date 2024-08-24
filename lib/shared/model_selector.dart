@@ -6,9 +6,14 @@ import 'package:provider/provider.dart';
 
 class ModelSelector extends StatefulWidget {
   final LanguageModel initModel;
+  final String? provider;
   final Function(LanguageModel)? onSelectedModelChange;
 
-  const ModelSelector({required this.initModel, this.onSelectedModelChange});
+  const ModelSelector(
+      {super.key,
+      required this.initModel,
+      this.provider,
+      this.onSelectedModelChange});
 
   @override
   _ModelSelectorState createState() => _ModelSelectorState();
@@ -17,10 +22,12 @@ class ModelSelector extends StatefulWidget {
 class _ModelSelectorState extends State<ModelSelector> {
   late LanguageModel selectedModel;
   late ValueNotifier<DisplayConfigData> displayConfigData;
+  late String provider;
 
   @override
   void initState() {
     super.initState();
+    provider = widget.provider ?? "ollama";
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     selectedModel = widget.initModel;
@@ -29,14 +36,14 @@ class _ModelSelectorState extends State<ModelSelector> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: getModels(displayConfigData.value.apiConfig),
+      future: getModels(displayConfigData.value.apiConfig, provider),
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         return snapshot.hasData
             ? Material(
-                color: Colors.white,
+                color: const Color.fromARGB(0, 255, 255, 255),
                 child: Container(
                   decoration: const BoxDecoration(
-                    color: Colors.white,
+                    color: Color.fromARGB(0, 255, 255, 255),
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                   width: 135,
@@ -95,8 +102,8 @@ class _ModelSelectorState extends State<ModelSelector> {
                   ),
                 ),
               )
-            : const Center(
-                child: Text('Loading...'),
+            : Center(
+                child: Container(),
               );
       },
     );

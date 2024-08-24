@@ -4,9 +4,14 @@ import 'dart:io';
 import 'package:chat/chatroom/widgets/empty_home_page/install_screen.dart';
 import 'package:chat/models/deployed_config.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/models/function_services.dart';
+import 'package:chat/models/llm.dart';
 import 'package:chat/models/spacy_size.dart';
+import 'package:chat/pages/provider_model_selector/provider_model_selector.dart';
+import 'package:chat/pages/settings/widgets/api_settings_page.dart';
 import 'package:chat/services/env_installer.dart';
 import 'package:chat/services/platform_types.dart';
+import 'package:chat/services/tools.dart';
 import 'package:chat/shared/activity_icon.dart';
 import 'package:chat/shared/backend_connected_service_button.dart';
 import 'package:flutter/foundation.dart';
@@ -48,14 +53,19 @@ class _SettingsDialogState extends State<SettingsDialog>
   late ValueNotifier<InstallerService> installerService;
   late ValueNotifier<DeployedConfig> deployedConfig;
 
+  TextEditingController openaiAPIKey = TextEditingController();
+  TextEditingController groqAPIKey = TextEditingController();
+
   @override
   void initState() {
+    print("building settings dialog");
     super.initState();
     installerService =
         Provider.of<ValueNotifier<InstallerService>>(context, listen: false);
     deployedConfig =
         Provider.of<ValueNotifier<DeployedConfig>>(context, listen: false);
-    _tabController = TabController(length: 2, vsync: this);
+
+    _tabController = TabController(length: 3, vsync: this);
     Future.delayed(const Duration(milliseconds: 90), () {
       if (mounted) {
         setState(() => didInit = true);
@@ -64,6 +74,9 @@ class _SettingsDialogState extends State<SettingsDialog>
 
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
+
+    openaiAPIKey.text = displayConfigData.value.apiConfig.openAiApiKey ?? "";
+    groqAPIKey.text = displayConfigData.value.apiConfig.groqApiKey ?? "";
 
     final config = displayConfigData.value;
     showSidebarBaseAnalytics = config.showSidebarBaseAnalytics;
@@ -195,7 +208,7 @@ class _SettingsDialogState extends State<SettingsDialog>
         builder: (context, snapshot) {
           if (!snapshot.hasData) return Container();
           if (snapshot.data!) {
-            _tabController = TabController(length: 3, vsync: this);
+            _tabController = TabController(length: 4, vsync: this);
           }
           return LayoutBuilder(
             builder: (context, constraints) {
@@ -244,13 +257,15 @@ class _SettingsDialogState extends State<SettingsDialog>
                         Expanded(
                           child: Column(
                             children: [
-                              _buildVerticalTab(Icons.display_settings,
-                                  'Display Settings', 0),
                               _buildVerticalTab(
-                                  Icons.memory_sharp, 'Api Connections', 1),
+                                  Icons.display_settings, 'App Config', 0),
+                              _buildVerticalTab(
+                                  Icons.memory_sharp, 'Topos Backend', 1),
+                              _buildVerticalTab(
+                                  Icons.private_connectivity, 'Chat Server', 2),
                               if (snapshot.data!)
                                 _buildVerticalTab(
-                                    Icons.install_desktop, 'Install Steps', 2),
+                                    Icons.install_desktop, 'Install Steps', 3),
                               Expanded(
                                 child: Container(
                                   decoration: const BoxDecoration(
@@ -262,6 +277,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                                     children: [
                                       _buildDisplaySettingsPage(),
                                       _buildAPISettingsPage(),
+                                      _buildChatAPISettingsPage(),
                                       if (snapshot.data!) _buildInstallPage()
                                     ],
                                   ),
@@ -276,6 +292,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                 );
               } else {
                 // Desktop/iPad layout
+                debugPrint("\t[ building desktop/iPad layout ]");
                 return AlertDialog(
                   content: SizedBox(
                     width: constraints.maxWidth * 0.8,
@@ -324,12 +341,16 @@ class _SettingsDialogState extends State<SettingsDialog>
                                 child: Column(
                                   children: [
                                     _buildVerticalTab(Icons.display_settings,
-                                        'Display Settings', 0),
-                                    _buildVerticalTab(Icons.memory_sharp,
-                                        'Api Connections', 1),
+                                        'App Config', 0),
+                                    _buildVerticalTab(
+                                        Icons.memory_sharp, 'Topos Backend', 1),
+                                    _buildVerticalTab(
+                                        Icons.private_connectivity,
+                                        'Chat Server',
+                                        2),
                                     if (snapshot.data!)
                                       _buildVerticalTab(Icons.install_desktop,
-                                          'Install Steps', 2),
+                                          'Install Steps', 3),
                                   ],
                                 ),
                               ),
@@ -345,6 +366,7 @@ class _SettingsDialogState extends State<SettingsDialog>
                                     children: [
                                       _buildDisplaySettingsPage(),
                                       _buildAPISettingsPage(),
+                                      _buildChatAPISettingsPage(),
                                       if (snapshot.data!) _buildInstallPage()
                                     ],
                                   ),
@@ -419,81 +441,149 @@ class _SettingsDialogState extends State<SettingsDialog>
   // }
 
   Widget _buildDisplaySettingsPage() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          _buildRow(
-            icon: Icons.abc_outlined,
-            label: "In-Message (NER)",
-            value: showInMsgNER,
-            future: _toggleShowInMsgNER,
-            notifier: displayConfigData.value.showInMessageNER,
-          ),
-          _buildAnalysisRow(
-            icon: Icons.abc_outlined,
-            label1: "Calc:",
-            value1: calcInMsgNER,
-            future1: _toggleNERCalculations,
-            notifier1: displayConfigData.value.calculateInMessageNER,
-            label2: "Rerun:",
-            value2: false,
-            future2: _toggleRerunNEROnConversation,
-            notifier2: false,
-          ),
-          const Divider(),
-          _buildRow(
-            icon: Icons.block,
-            label: "Moderation Tags",
-            value: showModerationTags,
-            future: _toggleShowModerationTags,
-            notifier: displayConfigData.value.showModerationTags,
-          ),
-          _buildAnalysisRow(
-            icon: Icons.abc_outlined,
-            label1: "Calc:",
-            value1: calcModerationTags,
-            future1: _toggleModerationCalculations,
-            notifier1: displayConfigData.value.calculateModerationTags,
-            label2: "Rerun:",
-            value2: false,
-            future2: _toggleRerunNEROnConversation,
-            notifier2: false,
-          ),
-          const Divider(),
-          _buildRow(
-            icon: Icons.schema_outlined,
-            label: "Mermaid Chart (msg)",
-            value: calcMsgMermaidChart,
-            future: _toggleCalcMsgMermaidChart,
-            notifier: displayConfigData.value.calcMsgMermaidChart,
-          ),
-          const Divider(),
-          _buildRow(
-            icon: Icons.schema_outlined,
-            label: "Mermaid Chart (conv)",
-            value: calcConvMermaidChart,
-            future: _toggleCalcConvMermaidChart,
-            notifier: displayConfigData.value.calcConvMermaidChart,
-          ),
-          const Divider(),
-          _buildRow(
-            icon: Icons.image,
-            label: "ImageGen",
-            value: calcImageGen,
-            future: _togglecalcImageGen,
-            notifier: displayConfigData.value.calcImageGen,
-          ),
-          const Divider(),
-          _buildRow(
-            icon: Icons.play_lesson,
-            label: "Demo Mode",
-            value: demoMode,
-            future: _toggleDemoMode,
-            notifier: displayConfigData.value.demoMode,
-          ),
-        ],
-      ),
-    );
+    TextStyle headingStyle = const TextStyle(
+        color: Color.fromARGB(255, 122, 11, 158), fontWeight: FontWeight.bold);
+    return ValueListenableBuilder<DisplayConfigData>(
+        valueListenable: displayConfigData,
+        builder: (context, snapshot, __) {
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Row(
+                      children: [
+                        Text("Primary Services", style: headingStyle),
+                      ],
+                    ),
+                  ),
+                  // New dynamic rows based on the functions in FunctionServices
+                  ..._buildFunctionServiceRows(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Row(
+                      children: [
+                        Text("Classification Services", style: headingStyle),
+                      ],
+                    ),
+                  ),
+                  _buildRow(
+                    icon: Icons.abc_outlined,
+                    label: "In-Message (NER)",
+                    value: showInMsgNER,
+                    future: _toggleShowInMsgNER,
+                    notifier: displayConfigData.value.showInMessageNER,
+                    functionValue: null,
+                  ),
+                  _buildAnalysisRow(
+                    icon: Icons.abc_outlined,
+                    label1: "Calc:",
+                    value1: calcInMsgNER,
+                    future1: _toggleNERCalculations,
+                    notifier1: displayConfigData.value.calculateInMessageNER,
+                    label2: "Rerun:",
+                    value2: false,
+                    future2: _toggleRerunNEROnConversation,
+                    notifier2: false,
+                  ),
+                  const Divider(),
+                  _buildRow(
+                    icon: Icons.block,
+                    label: "Moderation Tags",
+                    value: showModerationTags,
+                    future: _toggleShowModerationTags,
+                    notifier: displayConfigData.value.showModerationTags,
+                  ),
+                  _buildAnalysisRow(
+                    icon: Icons.abc_outlined,
+                    label1: "Calc:",
+                    value1: calcModerationTags,
+                    future1: _toggleModerationCalculations,
+                    notifier1: displayConfigData.value.calculateModerationTags,
+                    label2: "Rerun:",
+                    value2: false,
+                    future2: _toggleRerunNEROnConversation,
+                    notifier2: false,
+                  ),
+                  const Divider(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Row(
+                      children: [
+                        Text("Advanced Services", style: headingStyle),
+                      ],
+                    ),
+                  ),
+                  _buildRow(
+                      icon: Icons.schema_outlined,
+                      label: "Mermaid Chart (msg)",
+                      value: calcMsgMermaidChart,
+                      future: _toggleCalcMsgMermaidChart,
+                      notifier: displayConfigData.value.calcMsgMermaidChart,
+                      functionValue: displayConfigData.value.apiConfig.functions
+                          .functions['generate_mermaid_chart'],
+                      key: 'generate_mermaid_chart',
+                      showModelSelector: true),
+                  const Divider(),
+                  _buildRow(
+                      icon: Icons.schema_outlined,
+                      label: "Mermaid Chart (conv)",
+                      value: calcConvMermaidChart,
+                      future: _toggleCalcConvMermaidChart,
+                      notifier: displayConfigData.value.calcConvMermaidChart,
+                      showModelSelector: false),
+                  const Divider(),
+                  _buildRow(
+                      icon: Icons.image,
+                      label: "ImageGen",
+                      value: calcImageGen,
+                      future: _togglecalcImageGen,
+                      notifier: displayConfigData.value.calcImageGen,
+                      functionValue: displayConfigData.value.apiConfig.functions
+                          .functions['chat/conv_to_image'],
+                      key: 'chat/conv_to_image',
+                      showModelSelector: true),
+                  const Divider(),
+                  _buildRow(
+                    icon: Icons.play_lesson,
+                    label: "Demo Mode",
+                    value: demoMode,
+                    future: _toggleDemoMode,
+                    notifier: displayConfigData.value.demoMode,
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  List<Widget> _buildFunctionServiceRows() {
+    return displayConfigData.value.apiConfig.functions.functions.entries
+        .map((entry) {
+      final functionName = entry.key;
+      final functionConfig = entry.value;
+      // print("Provider: ${functionConfig.provider}");
+      // print("Model: ${functionConfig.model}");
+      if (!functionConfig.name.contains("mermaid") &
+          !functionConfig.name.contains("image")) {
+        return Column(
+          children: [
+            _buildBasicFunctionsRow(
+                icon: Icons.play_lesson,
+                key: functionName,
+                label: Tools().capitalizeFirstLetters(functionConfig.name),
+                value: functionConfig,
+                showModelSelector: true),
+            const Divider(),
+          ],
+        );
+      } else {
+        return Container();
+      }
+    }).toList();
   }
 
   String responseMessageDefault = "";
@@ -633,7 +723,7 @@ class _SettingsDialogState extends State<SettingsDialog>
     );
   }
 
-  Widget _buildAPISettingsPage() {
+  Widget _buildChatAPISettingsPage() {
     InputDecoration inputDecoration = const InputDecoration(
       border: OutlineInputBorder(),
       contentPadding: EdgeInsets.symmetric(horizontal: 10),
@@ -644,58 +734,14 @@ class _SettingsDialogState extends State<SettingsDialog>
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
         child: Column(
           children: [
-            ValueListenableBuilder(
-                valueListenable: installerService,
-                builder: (context, installService, _) {
-                  return FutureBuilder(
-                      future: isDesktopPlatform(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) return Container(height: 22);
-                        return ServiceToggle(
-                            isConnected: installService.backendConnected,
-                            // Only a desktop app with a local connection can
-                            // attempt connect/disconnect
-                            onTap: snapshot.data! &&
-                                    displayConfigData.value.apiConfig
-                                        .isLocalhost()
-                                ? (isConnected) async {
-                                    if (isConnected) {
-                                      print("connect!");
-                                      // connect
-                                      var result = await installerService.value
-                                          .turnToposOn(displayConfigData
-                                              .value.apiConfig
-                                              .getDefaultLLMBackend());
-                                      print(
-                                          'Topos is running at ${result['url']}');
-                                      bool connected = result['isRunning'];
-                                      installerService.value.backendConnected =
-                                          connected;
-                                      installerService.notifyListeners();
-                                    } else {
-                                      print("disconnect!");
-                                      // // disconnect
-                                      installerService.value
-                                          .stopToposService(displayConfigData
-                                              .value.apiConfig
-                                              .getDefaultLLMBackend())
-                                          .then(
-                                        (disconnected) {
-                                          if (disconnected) {
-                                            installerService
-                                                .value.backendConnected = false;
-                                            installerService.notifyListeners();
-                                          }
-                                        },
-                                      );
-                                    }
-                                  }
-                                : null);
-                      });
-                }),
-            const SizedBox(height: 8),
-            Divider(),
-            const SizedBox(height: 8),
+            const Row(
+              children: [
+                Text(
+                  "Chat Server",
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -706,8 +752,8 @@ class _SettingsDialogState extends State<SettingsDialog>
                   child: TextField(
                     controller: TextEditingController(
                         text: kIsWeb && deployedConfig.value.cloudHosted
-                            ? "https://0.0.0.0:13341"
-                            : "http://0.0.0.0:13341"),
+                            ? deployedConfig.value.defaultChatClient
+                            : "http://127.0.0.1:13394"),
                     readOnly: true,
                     decoration: inputDecoration,
                     style: style,
@@ -720,14 +766,12 @@ class _SettingsDialogState extends State<SettingsDialog>
               children: [
                 ElevatedButton(
                   onPressed: () => pingEndpoint(true),
-                  child: Text("Test"),
+                  child: const Text("Test"),
                 ),
                 const SizedBox(width: 10),
                 Text(responseMessageDefault),
               ],
             ),
-            const SizedBox(height: 8),
-            Divider(),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -741,12 +785,12 @@ class _SettingsDialogState extends State<SettingsDialog>
                     decoration: inputDecoration.copyWith(
                         hintText: "Enter your endpoint"),
                     onSubmitted: (value) {
-                      displayConfigData.value.apiConfig.customBackendEndpoint =
+                      displayConfigData.value.apiConfig.customP2PChatEndpoint =
                           value.trim();
                       displayConfigData.notifyListeners();
                     },
                     onChanged: (value) {
-                      displayConfigData.value.apiConfig.customBackendEndpoint =
+                      displayConfigData.value.apiConfig.customP2PChatEndpoint =
                           value.trim();
                       displayConfigData.notifyListeners();
                     },
@@ -764,23 +808,30 @@ class _SettingsDialogState extends State<SettingsDialog>
                 Text(responseMessageCustom),
               ],
             ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildEmptyPage(String pageTitle) {
-    return Center(child: Text('$pageTitle content goes here.'));
+  Widget _buildAPISettingsPage() {
+    debugPrint("\t[ building api settings page ]");
+    return APISettingsPage(
+        installerService: installerService,
+        displayConfigData: displayConfigData,
+        deployedConfig: deployedConfig,
+        openaiAPIKey: openaiAPIKey,
+        groqAPIKey: groqAPIKey,
+        pingEndpoint: (bool isDefault) => pingEndpoint(isDefault));
   }
 
-  Widget _buildRow({
-    required IconData icon,
-    required String label,
-    required bool value,
-    required Future<bool> Function() future,
-    required bool notifier,
-  }) {
+  Widget _buildBasicFunctionsRow(
+      {required IconData icon,
+      required String key,
+      required String label,
+      required FunctionConfig value,
+      bool showModelSelector = false}) {
     return Row(
       children: [
         Padding(
@@ -800,6 +851,99 @@ class _SettingsDialogState extends State<SettingsDialog>
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
+            if (showModelSelector) ...[
+              ProviderModelSelectorButton(
+                initialModel: value.model,
+                initialProvider: value.provider,
+                onModelChange: (LanguageModel model) {
+                  // print("model: $model");
+                  value.model = model;
+                  displayConfigData.value.apiConfig.functions.functions[key] =
+                      value;
+                  displayConfigData.value.apiConfig.functions
+                      .saveToSharedPrefs();
+                  displayConfigData.notifyListeners();
+                },
+                onProviderChange: (String provider) {
+                  // print("provider: $provider");
+                  value.provider = provider;
+                  displayConfigData.value.apiConfig.functions.functions[key] =
+                      value;
+                  displayConfigData.value.apiConfig.functions
+                      .saveToSharedPrefs();
+                  displayConfigData.notifyListeners();
+                },
+              ),
+              const SizedBox(
+                width: 8,
+              )
+            ],
+            const SizedBox(width: 8),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRow(
+      {required IconData icon,
+      required String label,
+      required bool value,
+      required Future<bool> Function() future,
+      required bool notifier,
+      // These 3 are required for the provider/model selection
+      FunctionConfig? functionValue,
+      String? key,
+      bool showModelSelector = false}) {
+    if (showModelSelector && (functionValue == null || key == null)) {
+      throw Error();
+    }
+    return Row(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 18.0),
+          child: SizedBox(
+            height: 45,
+            child: Row(
+              children: [
+                Icon(icon),
+                const SizedBox(width: 5),
+                Text(label, style: Theme.of(context).textTheme.titleMedium),
+              ],
+            ),
+          ),
+        ),
+        Expanded(child: Container()),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            if (showModelSelector) ...[
+              ProviderModelSelectorButton(
+                initialModel: functionValue!.model,
+                initialProvider: functionValue.provider,
+                onModelChange: (LanguageModel model) {
+                  // print("model: $model");
+                  functionValue.model = model;
+                  displayConfigData.value.apiConfig.functions.functions[key!] =
+                      functionValue;
+                  displayConfigData.value.apiConfig.functions
+                      .saveToSharedPrefs();
+                  displayConfigData.notifyListeners();
+                },
+                onProviderChange: (String provider) {
+                  // print("provider: $provider");
+                  functionValue.provider = provider;
+                  displayConfigData.value.apiConfig.functions.functions[key!] =
+                      functionValue;
+                  displayConfigData.value.apiConfig.functions
+                      .saveToSharedPrefs();
+                  displayConfigData.notifyListeners();
+                },
+              ),
+              const SizedBox(
+                width: 8,
+              )
+            ],
             Text(value ? "On" : "Off"),
             const SizedBox(width: 15),
             SizedBox(

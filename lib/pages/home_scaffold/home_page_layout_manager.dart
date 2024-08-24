@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chat/model_widget/game_manager.dart';
 import 'package:chat/models/conversation.dart';
+import 'package:chat/models/deployed_config.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/games_config.dart';
 import 'package:chat/models/model_loaded_states.dart';
@@ -37,6 +38,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
 
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late ValueNotifier<InstallerService> installerService;
+  late ValueNotifier<DeployedConfig> deployedConfig;
 
   ValueNotifier<bool> startDrawerOpen = ValueNotifier(true);
   @override
@@ -49,6 +51,8 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     currentSelectedConversation =
         Provider.of<ValueNotifier<Conversation?>>(context, listen: false);
+    deployedConfig =
+        Provider.of<ValueNotifier<DeployedConfig>>(context, listen: false);
     // WidgetsBinding.instance.addPostFrameCallback((_) {
     //   if (MediaQuery.of(context).size.width < 1000) {
     //     setState(() {
@@ -532,7 +536,9 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                             ChangeNotifierProvider.value(
                                                 value: displayConfigData),
                                             ChangeNotifierProvider.value(
-                                                value: installerService)
+                                                value: installerService),
+                                            ChangeNotifierProvider.value(
+                                                value: deployedConfig),
                                           ],
                                           child: Container(
                                               padding: EdgeInsets.only(

@@ -1,0 +1,44 @@
+{
+    "websocket_chat": {
+        "type": "websocket",
+        "name": "main chat",
+        "model": "dolphin-llama3",
+        "provider": "ollama"
+    },
+    "websocket_meta_chat": {
+        "type": "websocket",
+        "name": "meta chat",
+        "model": "dolphin-llama3",
+        "provider": "ollama"
+    },
+    "websocket_chat_summary": {
+        "type": "websocket",
+        "name": "summarize",
+        "model": "dolphin-llama3",
+        "provider": "ollama"
+    },
+    "websocket_mermaid_chart": {
+        "type": "websocket",
+        "name": "mermaid chart",
+        "model": "dolphin-llama3",
+        "provider": "ollama"
+    },
+    "generate_mermaid_chart": {
+        "type": "http",
+        "name": "mermaid chart",
+        "model": "dolphin-llama3",
+        "provider": "ollama"
+    },
+    "gen_next_message_options": {
+        "type": "http",
+        "name": "next msg optns",
+        "model": "dolphin-llama3",
+        "provider": "ollama"
+    },
+    "chat/conv_to_image": {
+        "type": "http",
+        "name": "image gen",
+        "model": "llava",
+        "provider": "ollama"
+    }
+}

@@ -7,6 +7,7 @@ import 'package:chat/models/conversation_analytics.dart';
 import 'package:chat/models/conversation_settings.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/models/function_services.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/models/user.dart';
 import 'package:chat/services/tools.dart';
@@ -32,6 +33,19 @@ class LocalLLMInterface {
     } else {
       throw ArgumentError('Invalid URL format: ${baseUrl}');
     }
+  }
+
+  String _getKey(String provider) {
+    // provider
+    // add api_key
+    String api_key = "ollama";
+    if (provider == "openai") {
+      api_key = apiConfig.openAiApiKey;
+    }
+    if (provider == "groq") {
+      api_key = apiConfig.groqApiKey;
+    }
+    return api_key;
   }
 
   late String httpAddress;
@@ -128,7 +142,13 @@ class LocalLLMInterface {
       }
     }
 
+    // provider
+    // add api_key
+    String api_key = _getKey(model.provider);
+
     Map<String, dynamic> submitPkg = {
+      "provider": model.provider,
+      "api_key": api_key,
       "conversation_id": conversationId,
       "message_id": messageHistory.last.id,
       "chatbot_msg_id": chatBotMsgId,
@@ -140,7 +160,6 @@ class LocalLLMInterface {
     };
 
     webSocket!.sink.add(json.encode(submitPkg));
-    debugPrint("\t\t[ Submitted package to websocket sink ]");
 
     double toksPerSec = 0;
     List<String> toksStr = [];
@@ -289,9 +308,14 @@ class LocalLLMInterface {
       }
     }
 
+    FunctionConfig func =
+        apiConfig.functions.functions['gen_next_message_options']!;
+
     Map<String, dynamic> submitPkg = {
       "conversation_id": metaConvId,
-      "model": model.model.model,
+      "model": func.model.model,
+      "api_key": _getKey(func.provider),
+      "provider": func.provider,
       "message": message,
       "message_history": msgHistDict['conv'] ?? [],
       "meta_conv_message_history": msgHistDict['meta'] ?? [],
@@ -379,10 +403,15 @@ class LocalLLMInterface {
       print("You must init the class first to connect to the websocket.");
       return null;
     }
-
+    FunctionConfig func =
+        apiConfig.functions.functions['websocket_chat_summary']!;
+    // print(func.provider + "/" + func.model.model);
+    // print(_getKey(func.provider));
     Map<String, dynamic> submitPkg = {
+      "api_key": _getKey(func.provider),
+      "provider": func.provider,
       "conversation_id": convId,
-      "model": model.model.model,
+      "model": func.model.model,
       "subject": subjectFocus,
       "temperature": 0.06,
     };
@@ -598,7 +627,7 @@ class LocalLLMInterface {
   Future<String?> getNextMessageOptions(
       String conversationID,
       List<Message> messageHistory,
-      String model,
+      ModelConfig model,
       ConversationVoiceSettings settings) async {
     final uri = httpAddress + "/gen_next_message_options";
     final url = Uri.parse(uri);
@@ -606,6 +635,14 @@ class LocalLLMInterface {
       "accept": "application/json; charset=utf-8",
       "Content-Type": "application/json; charset=utf-8"
     };
+
+    // build this from the apiConfig
+    // getFunctionSetting
+    FunctionConfig func =
+        apiConfig.functions.functions['gen_next_message_options']!;
+    print(
+        "\t[ gen_next_message_options :: ${func.provider}/${func.model.model}/${func.model.name}]");
+
     // pull together the last three messages from the message history
     String lastThreeMessages = "";
 
@@ -619,9 +656,15 @@ class LocalLLMInterface {
     // print("LAST THREE MESSAGES ARE");
     // print(lastThreeMessages);
 
+    // print(_getKey(func.provider));
+    // print(func.provider);
+    // print(func.model.model);
+
     final body = json.encode({
+      "api_key": _getKey(func.provider),
+      "provider": func.provider,
       "conversation_id": conversationID,
-      "model": model,
+      "model": func.model.model,
       "query": lastThreeMessages,
       "voice_settings": settings.toJson()
     });
@@ -630,8 +673,6 @@ class LocalLLMInterface {
       var request = await http.post(url, headers: headers, body: body);
       if (request.statusCode == 200) {
         var data = json.decode(request.body);
-        // print("CONV_TO_IMAGE");
-        // print("_" * 42);
         String nextStepOptions = data['response'];
         return nextStepOptions;
       } else {
@@ -695,12 +736,14 @@ class LocalLLMInterface {
       "accept": "application/json; charset=utf-8",
       "Content-Type": "application/json; charset=utf-8"
     };
-
+    String api_key = _getKey(model.provider);
     // Prepare the payload
     Map<String, dynamic> submitPkg = {
       "message": message.message!.value,
       "conversation_id": convId,
       "model": model.model.model,
+      "provider": model.provider,
+      "api_key": api_key,
       "full_conversation": fullConversation ?? false,
       "temperature": 0.06,
     };
@@ -711,10 +754,8 @@ class LocalLLMInterface {
     // Make the HTTP POST request
     try {
       var request = await http.post(url, headers: headers, body: body);
-
       if (request.statusCode == 200) {
         Map<String, dynamic> decoded = json.decode(request.body);
-
         // Handle different status responses
         switch (decoded['status']) {
           case 'generating':

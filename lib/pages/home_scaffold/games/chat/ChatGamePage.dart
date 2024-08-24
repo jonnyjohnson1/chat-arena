@@ -7,6 +7,7 @@ import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/demo_controller.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/models/event_channel_model.dart';
+import 'package:chat/models/function_services.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/models/scripts.dart';
 import 'package:chat/models/user.dart';
@@ -24,6 +25,7 @@ late final dynamic
 
 class ChatGamePage extends StatefulWidget {
   Conversation? conversation;
+
   ValueNotifier<List<Conversation>> conversations;
   ChatGamePage({this.conversation, required this.conversations, super.key});
 
@@ -35,7 +37,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
   bool isLoading = true;
   late List<uiMessage.Message> messages = [];
   late ValueNotifier<DemoController> demoController;
-  ModelConfig selectedModel = ModelConfig(
+  ModelConfig llmController = ModelConfig(
       model: const LanguageModel(
           model: 'dolphin-llama3', name: "dolphin-llama3", size: 21314),
       temperature: 0.06,
@@ -177,22 +179,24 @@ class _ChatGamePageState extends State<ChatGamePage> {
         ConversationDatabase.instance.createMessage(messages[currentIdx]);
 
         // Run the individual chat message analysis here
+        print("Calc mermaid: ${displayConfigData.value.calcMsgMermaidChart}");
         if (displayConfigData.value.calcMsgMermaidChart) {
           String message = messages[currentIdx - 1].message!.value;
           if (message.split(" ").length >=
               6) // run_mermaid_check // if tokens > 6
           {
-            print("mermaid chart here");
+            // getFunctionSetting
+            FunctionConfig func = displayConfigData
+                .value.apiConfig.functions.functions['generate_mermaid_chart']!;
+            print(
+                "\t[ Mermaid chart here :: ${func.provider}/${func.model.model}/${func.model.name}]");
+            ModelConfig llmController =
+                ModelConfig(provider: func.provider, model: func.model);
+
             await LocalLLMInterface(displayConfigData.value.apiConfig)
                 .genMermaidChart(messages[currentIdx - 1],
-                    widget.conversation!.id, selectedModel,
+                    widget.conversation!.id, llmController,
                     fullConversation: false);
-
-            print("got");
-            // LocalLLMInterface(displayConfigData.value.apiConfig)
-            //     .genMermaidChartWS(messages[currentIdx - 1],
-            //         widget.conversation!.id, selectedModel,
-            //         fullConversation: false);
           }
         }
 
@@ -270,14 +274,17 @@ class _ChatGamePageState extends State<ChatGamePage> {
   }
 
   void sendMessagetoModel(String text) async {
-    debugPrint("[ Submitting: $text ]"); // General debug print
+    debugPrint(
+        "[ Submitting: $text :: ${llmController.provider}, ${llmController.model.name}]"); // General debug print
     final newChatBotMsgId = Tools().getRandomString(32);
+    llmController.provider;
+
     LocalLLMInterface(displayConfigData.value.apiConfig).newChatMessage(
         text,
         messages,
         widget.conversation!.id,
         newChatBotMsgId,
-        selectedModel,
+        llmController,
         displayConfigData.value,
         userModel.value,
         generationCallback,
@@ -407,7 +414,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
       processor.addProcess(QueueProcess(
         function: () async {
           await LocalLLMInterface(displayConfigData.value.apiConfig)
-              .genMermaidChart(message, widget.conversation!.id, selectedModel,
+              .genMermaidChart(message, widget.conversation!.id, llmController,
                   fullConversation: false);
         },
       ));
@@ -459,7 +466,7 @@ class _ChatGamePageState extends State<ChatGamePage> {
       lastMessage: text,
       gameType: gameType,
       time: DateTime.now(),
-      primaryModel: selectedModel.model.name,
+      primaryModel: llmController.model.name,
       title: "Chat",
     );
     await ConversationDatabase.instance.create(widget.conversation!);
@@ -529,9 +536,12 @@ class _ChatGamePageState extends State<ChatGamePage> {
                   conversation: widget.conversation,
                   showGeneratingText: true,
                   showModelSelectButton: true,
-                  selectedModelConfig: selectedModel,
+                  selectedModelConfig: llmController,
                   onSelectedModelChange: (LanguageModel? newValue) {
-                    selectedModel.model = newValue!;
+                    llmController.model = newValue!;
+                  },
+                  onSelectedProviderChange: (provider) {
+                    llmController.provider = provider;
                   },
                   showTopTitle: false,
                   isGenerating: isGenerating,

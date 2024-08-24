@@ -4,7 +4,12 @@ import 'package:flutter/material.dart';
 class ServiceToggle extends StatefulWidget {
   bool isConnected;
   Function? onTap;
-  ServiceToggle({required this.isConnected, required this.onTap, super.key});
+  bool showLabel;
+  ServiceToggle(
+      {required this.isConnected,
+      required this.onTap,
+      this.showLabel = true,
+      super.key});
   @override
   _ServiceToggleState createState() => _ServiceToggleState();
 }
@@ -36,7 +41,8 @@ class _ServiceToggleState extends State<ServiceToggle> {
             const SizedBox(
               width: 4,
             ),
-            Text(widget.isConnected ? "connected" : "connect"),
+            if (widget.showLabel)
+              Text(widget.isConnected ? "connected" : "connect"),
           ],
         ),
       ),

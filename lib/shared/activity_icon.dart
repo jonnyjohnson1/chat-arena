@@ -7,8 +7,8 @@ class ActivityIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 10,
-      height: 10,
+      width: 8,
+      height: 8,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: isRunning ? Colors.green : Colors.grey,

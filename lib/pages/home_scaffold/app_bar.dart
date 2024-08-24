@@ -237,6 +237,30 @@ buildAppBar(
                                   Provider.of<ValueNotifier<DeployedConfig>>(
                                       context,
                                       listen: false);
+                              print("here 1234567");
+                              Future.delayed(const Duration(seconds: 1), () {
+                                print(displayConfigData
+                                    .value
+                                    .apiConfig
+                                    .functions
+                                    .functions["websocket_chat"]!
+                                    .name);
+                                print(displayConfigData
+                                    .value
+                                    .apiConfig
+                                    .functions
+                                    .functions["websocket_chat"]!
+                                    .model);
+                                print(
+                                    "Provider going to multi provider settings dialog");
+                                print(displayConfigData
+                                    .value
+                                    .apiConfig
+                                    .functions
+                                    .functions["websocket_chat"]!
+                                    .provider);
+                                displayConfigData.notifyListeners();
+                              });
                               showDialog(
                                 context: context,
                                 builder: (context) => MultiProvider(providers: [

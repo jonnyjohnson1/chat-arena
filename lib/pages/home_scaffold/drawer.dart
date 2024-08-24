@@ -1,4 +1,5 @@
 import 'package:chat/chat_panel/chat_panel.dart';
+import 'package:chat/models/deployed_config.dart';
 import 'package:chat/p2p_chat_panel/p2p_chat_panel.dart';
 import 'package:chat/drawer/games_list_drawer.dart';
 import 'package:chat/drawer/settings_drawer.dart';
@@ -67,11 +68,11 @@ class PageViewDrawer extends StatefulWidget {
 }
 
 class _PageViewDrawerState extends State<PageViewDrawer> {
-  int bottomSelectedIndex = 1;
+  int bottomSelectedIndex = 0;
   bool drawerIsOpen = true;
 
   PageController pageController = PageController(
-    initialPage: 1,
+    initialPage: 0,
     keepPage: true,
   );
 
@@ -89,13 +90,13 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
     setState(() {
       bottomSelectedIndex = index;
     });
+    // if (index == 0) {
+    //   widget.title.value = "";
+    // }
     if (index == 0) {
       widget.title.value = "";
     }
     if (index == 1) {
-      widget.title.value = "";
-    }
-    if (index == 2) {
       widget.title.value = "";
     }
     widget.title.notifyListeners();
@@ -109,14 +110,14 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
         pageChanged(index);
       },
       children: <Widget>[
-        if (!widget.isMobile)
-          GamesListDrawer(onGameCardTap: (GamesConfig selectedGame) {
-            widget.body.value = GamesInfoPage(game: selectedGame);
-          }, onTap: (String page) {
-            if (widget.onSettingsDrawerTap != null) {
-              widget.onSettingsDrawerTap!(page);
-            }
-          }),
+        // if (!widget.isMobile)
+        //   GamesListDrawer(onGameCardTap: (GamesConfig selectedGame) {
+        //     widget.body.value = GamesInfoPage(game: selectedGame);
+        //   }, onTap: (String page) {
+        //     if (widget.onSettingsDrawerTap != null) {
+        //       widget.onSettingsDrawerTap!(page);
+        //     }
+        //   }),
         if (widget.isMobile)
           MultiProvider(providers: [
             ChangeNotifierProvider.value(value: installerService)
@@ -240,6 +241,25 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
   List<Widget> bottomNavigationBarItems() {
     final unselectedColor = Colors.grey[350];
     return [
+      // AnimatedScale(
+      //     duration: const Duration(milliseconds: 160),
+      //     scale: 0 == bottomSelectedIndex ? 1.15 : 1,
+      //     child: InkWell(
+      //         borderRadius: const BorderRadius.all(Radius.circular(5)),
+      //         onTap: () => bottomTapped(0),
+      //         child: Padding(
+      //           padding: const EdgeInsets.all(8.0),
+      //           child: Icon(
+      //             Icons.settings,
+      //             color: 0 == bottomSelectedIndex
+      //                 ? Colors.grey[800]
+      //                 : unselectedColor,
+      //             size: 21,
+      //           ),
+      //         ))),
+      // const SizedBox(
+      //   width: 7,
+      // ),
       AnimatedScale(
           duration: const Duration(milliseconds: 160),
           scale: 0 == bottomSelectedIndex ? 1.15 : 1,
@@ -248,13 +268,11 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
               onTap: () => bottomTapped(0),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Icon(
-                  Icons.settings,
-                  color: 0 == bottomSelectedIndex
-                      ? Colors.grey[800]
-                      : unselectedColor,
-                  size: 21,
-                ),
+                child: Icon(CupertinoIcons.chat_bubble_text_fill,
+                    color: 0 == bottomSelectedIndex
+                        ? chatBubbleColor
+                        : unselectedColor,
+                    size: 19),
               ))),
       const SizedBox(
         width: 7,
@@ -267,25 +285,8 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
               onTap: () => bottomTapped(1),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Icon(CupertinoIcons.chat_bubble_text_fill,
-                    color: 1 == bottomSelectedIndex
-                        ? chatBubbleColor
-                        : unselectedColor,
-                    size: 19),
-              ))),
-      const SizedBox(
-        width: 7,
-      ),
-      AnimatedScale(
-          duration: const Duration(milliseconds: 160),
-          scale: 2 == bottomSelectedIndex ? 1.15 : 1,
-          child: InkWell(
-              borderRadius: const BorderRadius.all(Radius.circular(5)),
-              onTap: () => bottomTapped(2),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
                 child: Icon(CupertinoIcons.person_2_fill,
-                    color: 2 == bottomSelectedIndex
+                    color: 1 == bottomSelectedIndex
                         ? personIconColor
                         : unselectedColor,
                     size: 19),

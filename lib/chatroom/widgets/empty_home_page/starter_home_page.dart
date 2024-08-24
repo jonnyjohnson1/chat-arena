@@ -337,7 +337,7 @@ class _StarterHomePageState extends State<StarterHomePage> {
                                                 child: Column(
                                                   children: [
                                                     Text(
-                                                      "API URL",
+                                                      "Topos Url",
                                                       style: TextStyle(
                                                           color:
                                                               Theme.of(context)

@@ -64,6 +64,7 @@ class _HomePageState extends State<HomePage> {
     getDeployedConfig();
     navigatorKey =
         Provider.of<GlobalKey<NavigatorState>>(context, listen: false);
+
     installerService = ValueNotifier(InstallerService(
         navigatorKey: navigatorKey,
         apiConfig: displayConfigData.value.apiConfig));
@@ -103,6 +104,9 @@ class _HomePageState extends State<HomePage> {
         installerService.value.apiConfig.setSecure();
       }
       initEnvironment();
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        displayConfigData.notifyListeners();
+      });
     });
   }
 

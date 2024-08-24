@@ -6,15 +6,15 @@ import 'package:chat/models/backend_connected.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/demo_controller.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/models/function_services.dart';
+import 'package:chat/pages/provider_model_selector/provider_model_selector.dart';
 import 'package:chat/services/env_installer.dart';
 import 'package:chat/models/llm.dart';
 import 'package:chat/models/scripts.dart';
 import 'package:chat/services/message_processor.dart';
 import 'package:chat/services/platform_types.dart';
-import 'package:chat/services/static_queries.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/shared/image_viewer.dart';
-import 'package:chat/shared/model_selector.dart';
 import 'package:chat/shared/toasts/simple_toast.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -40,6 +40,7 @@ class ChatRoomPage extends StatefulWidget {
   bool showTopTitle;
   ModelConfig? selectedModelConfig;
   final Function? onSelectedModelChange;
+  final Function? onSelectedProviderChange;
   final Function? onResetDemoChat;
   String topTitleHeading;
   String topTitleText;
@@ -53,6 +54,7 @@ class ChatRoomPage extends StatefulWidget {
       required this.messages,
       this.selectedModelConfig,
       this.onSelectedModelChange,
+      this.onSelectedProviderChange,
       this.onResetDemoChat,
       this.isGenerating,
       this.onNewMessage,
@@ -320,30 +322,73 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
                           // model selector button
                           if (widget.showModelSelectButton)
-                            ValueListenableBuilder<InstallerService>(
-                                valueListenable: installerService,
+                            ValueListenableBuilder<DisplayConfigData>(
+                                valueListenable: displayConfigData,
                                 builder: (context, installService, _) {
                                   return ValueListenableBuilder<
-                                          BackendService?>(
-                                      valueListenable: backendConnector,
-                                      builder: (context, backend, _) {
-                                        print(
-                                            "${installerService.value.backendConnected}");
-                                        if (installerService
-                                            .value.backendConnected) {
-                                          return ModelSelector(
-                                            initModel: selectedModel!.model,
-                                            onSelectedModelChange:
-                                                (LanguageModel model) {
-                                              setState(() {
-                                                selectedModel!.model = model;
-                                              });
-                                              widget.onSelectedModelChange!(
-                                                  model);
-                                            },
-                                          );
+                                          InstallerService>(
+                                      valueListenable: installerService,
+                                      builder: (context, installService, _) {
+                                        // get the models from this main chat function in the functions config
+                                        LanguageModel? initialModel =
+                                            const LanguageModel(
+                                                model: "dolphin-llama3",
+                                                name: "dolphine-llama3");
+                                        String initialProvider = "ollama";
+                                        FunctionConfig? function =
+                                            displayConfigData
+                                                .value
+                                                .apiConfig
+                                                .functions
+                                                .functions["websocket_chat"];
+                                        if (function != null) {
+                                          initialModel = function.model;
+                                          initialProvider = function.provider;
                                         }
-                                        return Container();
+                                        return ValueListenableBuilder<
+                                                BackendService?>(
+                                            valueListenable: backendConnector,
+                                            builder: (context, backend, _) {
+                                              print(
+                                                  "${installerService.value.backendConnected}");
+                                              if (installerService
+                                                  .value.backendConnected) {
+                                                return Row(
+                                                  children: [
+                                                    ProviderModelSelectorButton(
+                                                      initialProvider:
+                                                          initialProvider,
+                                                      initialModel:
+                                                          initialModel,
+                                                      onModelChange:
+                                                          (LanguageModel
+                                                              model) {
+                                                        setState(() {
+                                                          selectedModel!.model =
+                                                              model;
+                                                        });
+                                                        widget.onSelectedModelChange!(
+                                                            model);
+                                                      },
+                                                      onProviderChange:
+                                                          (String _provider) {
+                                                        setState(() {
+                                                          initialProvider =
+                                                              _provider;
+                                                        });
+                                                        if (widget
+                                                                .onSelectedProviderChange !=
+                                                            null) {
+                                                          widget.onSelectedProviderChange!(
+                                                              _provider);
+                                                        }
+                                                      },
+                                                    ),
+                                                  ],
+                                                );
+                                              }
+                                              return Container();
+                                            });
                                       });
                                 }),
 

@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 class ModelConfig {
+  String provider;
   LanguageModel model;
   double temperature;
   int numGenerations;
 
   ModelConfig({
+    this.provider = "ollama",
     this.model =
         const LanguageModel(model: "solar", name: "solar", size: 21314),
     this.temperature = 0.06,
@@ -58,6 +62,23 @@ class LanguageModel {
       size: json['size'] ?? 21314,
       digest: json['digest'],
       // details: json['details'],
+    );
+  }
+
+  factory LanguageModel.fromOpenAIJson(Map<String, dynamic> json) {
+    return LanguageModel(
+      name: json['id'],
+      model: json['id'],
+      modifiedAt: json['created'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['created'] * 1000)
+          : DateTime.now(),
+      size:
+          null, // Size is not provided in the JSON, so it can be null or defaulted
+      digest:
+          null, // Digest is not provided in the JSON, so it can be null or defaulted
+      details: {
+        'owned_by': json['owned_by'],
+      },
     );
   }
 

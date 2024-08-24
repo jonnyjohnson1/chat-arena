@@ -1,9 +1,16 @@
 import 'dart:convert';
 
+import 'package:chat/models/deployed_config.dart';
 import 'package:chat/models/display_configs.dart';
+import 'package:chat/models/function_services.dart';
+import 'package:chat/models/llm.dart';
+import 'package:chat/pages/provider_model_selector/provider_model_selector.dart';
+import 'package:chat/pages/settings/widgets/api_settings_page.dart';
 import 'package:chat/services/env_installer.dart';
 import 'package:chat/services/platform_types.dart';
+import 'package:chat/services/tools.dart';
 import 'package:chat/shared/backend_connected_service_button.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:load_switch/load_switch.dart';
@@ -19,7 +26,7 @@ class _SettingsPageState extends State<SettingsPage>
     with SingleTickerProviderStateMixin {
   late ValueNotifier<DisplayConfigData> displayConfigData;
   late TabController _tabController;
-
+  bool didInit = false;
   bool showSidebarBaseAnalytics = true;
   bool showInMsgNER = true;
   bool calcInMsgNER = true;
@@ -34,15 +41,30 @@ class _SettingsPageState extends State<SettingsPage>
   String responseMessageCustom = "";
 
   late ValueNotifier<InstallerService> installerService;
+  late ValueNotifier<DeployedConfig> deployedConfig;
+
+  TextEditingController openaiAPIKey = TextEditingController();
+  TextEditingController groqAPIKey = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     installerService =
         Provider.of<ValueNotifier<InstallerService>>(context, listen: false);
+    deployedConfig =
+        Provider.of<ValueNotifier<DeployedConfig>>(context, listen: false);
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
+
+    Future.delayed(const Duration(milliseconds: 90), () {
+      if (mounted) {
+        setState(() => didInit = true);
+      }
+    });
+
+    openaiAPIKey.text = displayConfigData.value.apiConfig.openAiApiKey ?? "";
+    groqAPIKey.text = displayConfigData.value.apiConfig.groqApiKey ?? "";
 
     final config = displayConfigData.value;
     showSidebarBaseAnalytics = config.showSidebarBaseAnalytics;
@@ -70,6 +92,16 @@ class _SettingsPageState extends State<SettingsPage>
   //   setState(() {});
   //   return newValue;
   // }
+
+  Future<bool> _toggleRerunNEROnConversation() async {
+    // TODO implement this process in the backend
+    return false;
+  }
+
+  Future<bool> _toggleRerunModerationOnConversation() async {
+    // TODO implement this process in the backend
+    return false;
+  }
 
   Future<bool> _toggleShowSidebarBaseAnalytics() async {
     await Future.delayed(Duration(milliseconds: futureWaitDuration));
@@ -230,8 +262,9 @@ class _SettingsPageState extends State<SettingsPage>
           TabBar(
             controller: _tabController,
             tabs: const [
-              Tab(icon: Icon(Icons.display_settings), text: 'Display Settings'),
-              Tab(icon: Icon(Icons.memory_sharp), text: 'API Endpoints'),
+              Tab(icon: Icon(Icons.display_settings), text: 'App Config'),
+              Tab(icon: Icon(Icons.memory_sharp), text: 'Topos'),
+              Tab(icon: Icon(Icons.private_connectivity), text: 'Chat'),
             ],
           ),
           Expanded(
@@ -240,6 +273,7 @@ class _SettingsPageState extends State<SettingsPage>
               children: [
                 _buildDisplaySettingsPage(),
                 _buildAPISettingsPage(),
+                _buildChatAPISettingsPage(),
               ],
             ),
           ),
@@ -248,153 +282,234 @@ class _SettingsPageState extends State<SettingsPage>
     );
   }
 
-  Widget _buildDisplaySettingsPage() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          _buildRow(
-            icon: Icons.abc_outlined,
-            label: "In-Message (NER)",
-            value: showInMsgNER,
-            future: _toggleShowInMsgNER,
-            notifier: displayConfigData.value.showInMessageNER,
+  List<Widget> _buildFunctionServiceRows() {
+    return displayConfigData.value.apiConfig.functions.functions.entries
+        .map((entry) {
+      final functionName = entry.key;
+      final functionConfig = entry.value;
+      // print("Provider: ${functionConfig.provider}");
+      // print("Model: ${functionConfig.model}");
+      if (!functionConfig.name.contains("mermaid") &
+          !functionConfig.name.contains("image")) {
+        return Column(
+          children: [
+            _buildBasicFunctionsRow(
+                icon: Icons.play_lesson,
+                key: functionName,
+                label: Tools().capitalizeFirstLetters(functionConfig.name),
+                value: functionConfig,
+                showModelSelector: true),
+            const Divider(),
+          ],
+        );
+      } else {
+        return Container();
+      }
+    }).toList();
+  }
+
+  Widget _buildBasicFunctionsRow(
+      {required IconData icon,
+      required String key,
+      required String label,
+      required FunctionConfig value,
+      bool showModelSelector = false}) {
+    return Row(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 18.0),
+          child: SizedBox(
+            height: 45,
+            child: Row(
+              children: [
+                Icon(icon),
+                const SizedBox(width: 5),
+                Text(label, style: Theme.of(context).textTheme.titleMedium),
+              ],
+            ),
           ),
-          _buildAnalysisRow(
-            icon: Icons.abc_outlined,
-            label1: "Calc:",
-            value1: calcInMsgNER,
-            future1: _toggleNERCalculations,
-            notifier1: displayConfigData.value.calculateInMessageNER,
-            label2: "Rerun:",
-            value2: false,
-            future2: () async => false,
-            notifier2: false,
+        ),
+        // Expanded(child: Container()),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (showModelSelector) ...[
+                ProviderModelSelectorButton(
+                  initialModel: value.model,
+                  initialProvider: value.provider,
+                  onModelChange: (LanguageModel model) {
+                    // print("model: $model");
+                    value.model = model;
+                    displayConfigData.value.apiConfig.functions.functions[key] =
+                        value;
+                    displayConfigData.value.apiConfig.functions
+                        .saveToSharedPrefs();
+                    displayConfigData.notifyListeners();
+                  },
+                  onProviderChange: (String provider) {
+                    // print("provider: $provider");
+                    value.provider = provider;
+                    displayConfigData.value.apiConfig.functions.functions[key] =
+                        value;
+                    displayConfigData.value.apiConfig.functions
+                        .saveToSharedPrefs();
+                    displayConfigData.notifyListeners();
+                  },
+                ),
+                const SizedBox(
+                  width: 8,
+                )
+              ],
+              const SizedBox(width: 8),
+            ],
           ),
-          const Divider(),
-          _buildRow(
-            icon: Icons.block,
-            label: "Moderation Tags",
-            value: showModerationTags,
-            future: _toggleShowModerationTags,
-            notifier: displayConfigData.value.showModerationTags,
-          ),
-          _buildAnalysisRow(
-            icon: Icons.abc_outlined,
-            label1: "Calc:",
-            value1: calcModerationTags,
-            future1: _toggleModerationCalculations,
-            notifier1: displayConfigData.value.calculateModerationTags,
-            label2: "Rerun:",
-            value2: false,
-            future2: () async => false,
-            notifier2: false,
-          ),
-          const Divider(),
-          _buildRow(
-            icon: Icons.schema_outlined,
-            label: "Mermaid Chart (msg)",
-            value: calcMsgMermaidChart,
-            future: _toggleCalcMsgMermaidChart,
-            notifier: displayConfigData.value.calcMsgMermaidChart,
-          ),
-          const Divider(),
-          _buildRow(
-            icon: Icons.schema_outlined,
-            label: "Mermaid Chart (conv)",
-            value: calcConvMermaidChart,
-            future: _toggleCalcConvMermaidChart,
-            notifier: displayConfigData.value.calcConvMermaidChart,
-          ),
-          const Divider(),
-          _buildRow(
-            icon: Icons.image,
-            label: "ImageGen",
-            value: calcImageGen,
-            future: _togglecalcImageGen,
-            notifier: displayConfigData.value.calcImageGen,
-          ),
-          const Divider(),
-          _buildRow(
-            icon: Icons.play_lesson,
-            label: "Demo Mode",
-            value: demoMode,
-            future: _toggleDemoMode,
-            notifier: displayConfigData.value.demoMode,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  TextEditingController _customBackendEndpointController =
-      TextEditingController();
-  Widget _buildAPISettingsPage() {
+  Widget _buildDisplaySettingsPage() {
+    TextStyle headingStyle = const TextStyle(
+        color: Color.fromARGB(255, 122, 11, 158), fontWeight: FontWeight.bold);
+    return ValueListenableBuilder<DisplayConfigData>(
+        valueListenable: displayConfigData,
+        builder: (context, snapshot, __) {
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Row(
+                      children: [
+                        Text("Primary Services", style: headingStyle),
+                      ],
+                    ),
+                  ),
+                  // New dynamic rows based on the functions in FunctionServices
+                  ..._buildFunctionServiceRows(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Row(
+                      children: [
+                        Text("Classification Services", style: headingStyle),
+                      ],
+                    ),
+                  ),
+                  _buildRow(
+                    icon: Icons.abc_outlined,
+                    label: "In-Message (NER)",
+                    value: showInMsgNER,
+                    future: _toggleShowInMsgNER,
+                    notifier: displayConfigData.value.showInMessageNER,
+                    functionValue: null,
+                  ),
+                  _buildAnalysisRow(
+                    icon: Icons.abc_outlined,
+                    label1: "Calc:",
+                    value1: calcInMsgNER,
+                    future1: _toggleNERCalculations,
+                    notifier1: displayConfigData.value.calculateInMessageNER,
+                    label2: "Rerun:",
+                    value2: false,
+                    future2: _toggleRerunNEROnConversation,
+                    notifier2: false,
+                  ),
+                  const Divider(),
+                  _buildRow(
+                    icon: Icons.block,
+                    label: "Moderation Tags",
+                    value: showModerationTags,
+                    future: _toggleShowModerationTags,
+                    notifier: displayConfigData.value.showModerationTags,
+                  ),
+                  _buildAnalysisRow(
+                    icon: Icons.abc_outlined,
+                    label1: "Calc:",
+                    value1: calcModerationTags,
+                    future1: _toggleModerationCalculations,
+                    notifier1: displayConfigData.value.calculateModerationTags,
+                    label2: "Rerun:",
+                    value2: false,
+                    future2: _toggleRerunNEROnConversation,
+                    notifier2: false,
+                  ),
+                  const Divider(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Row(
+                      children: [
+                        Text("Advanced Services", style: headingStyle),
+                      ],
+                    ),
+                  ),
+                  _buildRow(
+                      icon: Icons.schema_outlined,
+                      label: "Mermaid (msg)",
+                      value: calcMsgMermaidChart,
+                      future: _toggleCalcMsgMermaidChart,
+                      notifier: displayConfigData.value.calcMsgMermaidChart,
+                      functionValue: displayConfigData.value.apiConfig.functions
+                          .functions['generate_mermaid_chart'],
+                      key: 'generate_mermaid_chart',
+                      showModelSelector: true),
+                  const Divider(),
+                  _buildRow(
+                      icon: Icons.schema_outlined,
+                      label: "Mermaid (conv)",
+                      value: calcConvMermaidChart,
+                      future: _toggleCalcConvMermaidChart,
+                      notifier: displayConfigData.value.calcConvMermaidChart,
+                      showModelSelector: false),
+                  const Divider(),
+                  _buildRow(
+                      icon: Icons.image,
+                      label: "ImageGen",
+                      value: calcImageGen,
+                      future: _togglecalcImageGen,
+                      notifier: displayConfigData.value.calcImageGen,
+                      functionValue: displayConfigData.value.apiConfig.functions
+                          .functions['chat/conv_to_image'],
+                      key: 'chat/conv_to_image',
+                      showModelSelector: true),
+                  const Divider(),
+                  _buildRow(
+                    icon: Icons.play_lesson,
+                    label: "Demo Mode",
+                    value: demoMode,
+                    future: _toggleDemoMode,
+                    notifier: displayConfigData.value.demoMode,
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  Widget _buildChatAPISettingsPage() {
     InputDecoration inputDecoration = const InputDecoration(
       border: OutlineInputBorder(),
       contentPadding: EdgeInsets.symmetric(horizontal: 10),
     );
     TextStyle style = const TextStyle(fontSize: 14);
-
-    _customBackendEndpointController.text =
-        displayConfigData.value.apiConfig.customBackendEndpoint;
-
+    TextStyle headingStyle = const TextStyle(
+        color: Color.fromARGB(255, 122, 11, 158), fontWeight: FontWeight.bold);
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
         child: Column(
           children: [
-            ValueListenableBuilder(
-                valueListenable: installerService,
-                builder: (context, installService, _) {
-                  return FutureBuilder(
-                      future: isDesktopPlatform(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) return Container(height: 22);
-                        return ServiceToggle(
-                            isConnected: installService.backendConnected,
-                            // Only a desktop app with a local connection can
-                            // attempt connect/disconnect
-                            onTap: snapshot.data! &&
-                                    displayConfigData.value.apiConfig
-                                        .isLocalhost()
-                                ? (isConnected) async {
-                                    if (isConnected) {
-                                      print("connect!");
-                                      // connect
-                                      var result = await installerService.value
-                                          .turnToposOn(displayConfigData
-                                              .value.apiConfig
-                                              .getDefaultLLMBackend());
-                                      print(
-                                          'Topos is running at ${result['url']}');
-                                      bool connected = result['isRunning'];
-                                      installerService.value.backendConnected =
-                                          connected;
-                                      installerService.notifyListeners();
-                                    } else {
-                                      print("disconnect!");
-                                      // // disconnect
-                                      installerService.value
-                                          .stopToposService(displayConfigData
-                                              .value.apiConfig
-                                              .getDefaultLLMBackend())
-                                          .then(
-                                        (disconnected) {
-                                          if (disconnected) {
-                                            installerService
-                                                .value.backendConnected = false;
-                                            installerService.notifyListeners();
-                                          }
-                                        },
-                                      );
-                                    }
-                                  }
-                                : null);
-                      });
-                }),
-            const SizedBox(height: 8),
-            Divider(),
-            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  "Chat Server",
+                  style: headingStyle,
+                ),
+              ],
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -403,8 +518,10 @@ class _SettingsPageState extends State<SettingsPage>
                   width: 200,
                   height: 38,
                   child: TextField(
-                    controller:
-                        TextEditingController(text: "http://0.0.0.0:13341"),
+                    controller: TextEditingController(
+                        text: kIsWeb && deployedConfig.value.cloudHosted
+                            ? deployedConfig.value.defaultChatClient
+                            : "http://127.0.0.1:13394"),
                     readOnly: true,
                     decoration: inputDecoration,
                     style: style,
@@ -417,14 +534,12 @@ class _SettingsPageState extends State<SettingsPage>
               children: [
                 ElevatedButton(
                   onPressed: () => pingEndpoint(true),
-                  child: const Text("Test"),
+                  child: Text("Test"),
                 ),
                 const SizedBox(width: 10),
                 Text(responseMessageDefault),
               ],
             ),
-            const SizedBox(height: 8),
-            const Divider(),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -435,16 +550,15 @@ class _SettingsPageState extends State<SettingsPage>
                   height: 38,
                   child: TextField(
                     style: style,
-                    controller: _customBackendEndpointController,
                     decoration: inputDecoration.copyWith(
                         hintText: "Enter your endpoint"),
                     onSubmitted: (value) {
-                      displayConfigData.value.apiConfig.customBackendEndpoint =
+                      displayConfigData.value.apiConfig.customP2PChatEndpoint =
                           value.trim();
                       displayConfigData.notifyListeners();
                     },
                     onChanged: (value) {
-                      displayConfigData.value.apiConfig.customBackendEndpoint =
+                      displayConfigData.value.apiConfig.customP2PChatEndpoint =
                           value.trim();
                       displayConfigData.notifyListeners();
                     },
@@ -459,23 +573,39 @@ class _SettingsPageState extends State<SettingsPage>
                   onPressed: () => pingEndpoint(false),
                   child: const Text("Test"),
                 ),
-                const SizedBox(width: 10),
                 Text(responseMessageCustom),
               ],
-            )
+            ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRow({
-    required IconData icon,
-    required String label,
-    required bool value,
-    required Future<bool> Function() future,
-    required bool notifier,
-  }) {
+  Widget _buildAPISettingsPage() {
+    return APISettingsPage(
+        installerService: installerService,
+        displayConfigData: displayConfigData,
+        deployedConfig: deployedConfig,
+        openaiAPIKey: openaiAPIKey,
+        groqAPIKey: groqAPIKey,
+        pingEndpoint: (bool isDefault) => pingEndpoint(isDefault));
+  }
+
+  Widget _buildRow(
+      {required IconData icon,
+      required String label,
+      required bool value,
+      required Future<bool> Function() future,
+      required bool notifier,
+      // These 3 are required for the provider/model selection
+      FunctionConfig? functionValue,
+      String? key,
+      bool showModelSelector = false}) {
+    if (showModelSelector && (functionValue == null || key == null)) {
+      throw Error();
+    }
     return Row(
       children: [
         Padding(
@@ -495,6 +625,33 @@ class _SettingsPageState extends State<SettingsPage>
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
+            if (showModelSelector) ...[
+              ProviderModelSelectorButton(
+                initialModel: functionValue!.model,
+                initialProvider: functionValue.provider,
+                onModelChange: (LanguageModel model) {
+                  // print("model: $model");
+                  functionValue.model = model;
+                  displayConfigData.value.apiConfig.functions.functions[key!] =
+                      functionValue;
+                  displayConfigData.value.apiConfig.functions
+                      .saveToSharedPrefs();
+                  displayConfigData.notifyListeners();
+                },
+                onProviderChange: (String provider) {
+                  // print("provider: $provider");
+                  functionValue.provider = provider;
+                  displayConfigData.value.apiConfig.functions.functions[key!] =
+                      functionValue;
+                  displayConfigData.value.apiConfig.functions
+                      .saveToSharedPrefs();
+                  displayConfigData.notifyListeners();
+                },
+              ),
+              const SizedBox(
+                width: 8,
+              )
+            ],
             Text(value ? "On" : "Off"),
             const SizedBox(width: 15),
             SizedBox(

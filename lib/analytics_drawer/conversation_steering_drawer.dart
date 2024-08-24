@@ -295,7 +295,30 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                                 valueListenable: installerService,
                                 builder: (context, backend, _) {
                                   if (installerService.value.backendConnected) {
-                                    return buildModelSelector(context);
+                                    return Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        TextButton(
+                                          onPressed: () async {
+                                            if (queryController.text
+                                                .trim()
+                                                .isNotEmpty) {
+                                              sendMessagetoModel(
+                                                  queryController.text.trim(),
+                                                  messages.value);
+                                            }
+                                          },
+                                          child: const Text("Submit"),
+                                        ),
+                                        const SizedBox(width: 2),
+                                        InkWell(
+                                          onTap: () {},
+                                          child: const Icon(Icons.refresh,
+                                              color: Colors.black87, size: 20),
+                                        ),
+                                        const SizedBox(width: 15)
+                                      ],
+                                    ); //buildModelSelector(context);
                                   } else {
                                     return const Center(
                                         child: Text(
@@ -1051,7 +1074,7 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                         .getNextMessageOptions(
                             currentSelectedConversation.value!.id,
                             messages.value,
-                            selectedModel.model.model,
+                            selectedModel,
                             submitSettings);
                 if (nextStepResponse != null) {
                   if (nextStepResponse.trim().isNotEmpty) {
@@ -1136,7 +1159,6 @@ class _ConvSteeringDrawerState extends State<ConvSteeringDrawer>
                 valueListenable: selectedIndex,
                 builder: (context, value, _) {
                   if (suggestedNextStepIdeas.value.isEmpty) return Container();
-
                   List<Widget> tabs = List.generate(
                       suggestedNextStepIdeas.value.length, (index) {
                     return Padding(
