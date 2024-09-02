@@ -369,7 +369,9 @@ class _SettingsPageState extends State<SettingsPage>
 
   Widget _buildDisplaySettingsPage() {
     TextStyle headingStyle = const TextStyle(
-        color: Color.fromARGB(255, 122, 11, 158), fontWeight: FontWeight.bold);
+        fontSize: 12,
+        fontWeight:
+            FontWeight.bold); //color: Color.fromARGB(255, 122, 11, 158),
     return ValueListenableBuilder<DisplayConfigData>(
         valueListenable: displayConfigData,
         builder: (context, snapshot, __) {
@@ -494,7 +496,9 @@ class _SettingsPageState extends State<SettingsPage>
     );
     TextStyle style = const TextStyle(fontSize: 14);
     TextStyle headingStyle = const TextStyle(
-        color: Color.fromARGB(255, 122, 11, 158), fontWeight: FontWeight.bold);
+        fontSize: 12,
+        fontWeight:
+            FontWeight.bold); //color: Color.fromARGB(255, 122, 11, 158),
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),

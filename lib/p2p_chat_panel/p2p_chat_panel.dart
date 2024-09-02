@@ -156,31 +156,41 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(
-                                left: 18, right: 3, top: 10, bottom: 10),
+                                left: 18, right: 3, top: 10, bottom: 5),
                             child: SelectionContainer.disabled(
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   if (widget.isMobileLayout)
-                                    InkWell(
-                                      borderRadius: const BorderRadius.all(
-                                          Radius.circular(13)),
-                                      onTap: () {
-                                        widget.onSettingsTap();
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 4, horizontal: 8.0),
-                                        child: Center(
-                                            child: Text("Configure",
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .primary))),
-                                      ),
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 4, horizontal: 8.0),
+                                      child: Center(
+                                          child: Text("Messages",
+                                              style: TextStyle(
+                                                letterSpacing: 1.24,
+                                                fontWeight: FontWeight.w500,
+                                              ))),
                                     ),
+                                  // InkWell(
+                                  //   borderRadius: const BorderRadius.all(
+                                  //       Radius.circular(13)),
+                                  //   onTap: () {
+                                  //     widget.onSettingsTap();
+                                  //   },
+                                  //   child: Padding(
+                                  //     padding: const EdgeInsets.symmetric(
+                                  //         vertical: 4, horizontal: 8.0),
+                                  //     child: Center(
+                                  //         child: Text("Configure",
+                                  //             style: TextStyle(
+                                  //                 fontWeight: FontWeight.w500,
+                                  //                 color: Theme.of(context)
+                                  //                     .colorScheme
+                                  //                     .primary))),
+                                  //   ),
+                                  // ),
                                   Expanded(
                                     child: Material(
                                       color: const Color.fromARGB(
@@ -192,8 +202,10 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
                                         children: [
                                           Container(
                                             decoration: BoxDecoration(
+                                                color: aiChatBubbleColor
+                                                    .withOpacity(.11),
                                                 border: Border.all(
-                                                    color: Colors.black12),
+                                                    color: aiChatBubbleColor),
                                                 shape: BoxShape.circle),
                                             child: Tooltip(
                                               message: "Join Chat",
@@ -230,8 +242,10 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
                                           ),
                                           Container(
                                             decoration: BoxDecoration(
+                                                color: chatIconColor
+                                                    .withOpacity(.18),
                                                 border: Border.all(
-                                                    color: Colors.black12),
+                                                    color: chatIconColor),
                                                 shape: BoxShape.circle),
                                             child: Tooltip(
                                               message: "New Chat",

@@ -21,6 +21,7 @@ import 'package:chat/shared/slide_animation_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
 import 'package:provider/provider.dart';
 
 class HomePageLayoutManager extends StatefulWidget {
@@ -630,9 +631,13 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                       }, onSettingsTap: () async {
                                         double width =
                                             MediaQuery.of(context).size.width;
-                                        // print(
-                                        //     "Eval: ${kIsWeb && (width < 600)}");
-                                        if (isMobileLayout && (width > 600)) {
+
+                                        print(
+                                            "Eval: ${kIsWeb && (width > 600)}");
+                                        print(
+                                            "isMobileLayout: ${isMobileLayout}");
+
+                                        if (!isMobileLayout && (width > 600)) {
                                           ValueNotifier<DisplayConfigData>
                                               displayConfigData = Provider.of<
                                                       ValueNotifier<

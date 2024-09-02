@@ -153,33 +153,41 @@ class _ConversationListItemState extends State<ConversationListItem> {
                                                   .titleMedium),
                                         ),
                                         isHover
-                                            ? Tooltip(
-                                                message: "Delete",
-                                                waitDuration: const Duration(
-                                                    milliseconds: 800),
-                                                child: GestureDetector(
-                                                  onTap: () {
-                                                    widget.onDeleteTap();
-                                                  },
-                                                  child: const Padding(
-                                                    padding:
-                                                        EdgeInsets.all(3.0),
-                                                    child: Icon(
-                                                      Icons.close,
-                                                      size: 18,
-                                                      color: Color.fromARGB(
-                                                          255, 149, 146, 146),
+                                            ? Padding(
+                                                padding: const EdgeInsets.only(
+                                                    right: 6.0),
+                                                child: Tooltip(
+                                                  message: "Delete",
+                                                  waitDuration: const Duration(
+                                                      milliseconds: 800),
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      widget.onDeleteTap();
+                                                    },
+                                                    child: const Padding(
+                                                      padding:
+                                                          EdgeInsets.all(3.0),
+                                                      child: Icon(
+                                                        Icons.close,
+                                                        size: 18,
+                                                        color: Color.fromARGB(
+                                                            255, 149, 146, 146),
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
                                               )
                                             : const Padding(
-                                                padding: EdgeInsets.all(3.0),
-                                                child: Icon(
-                                                  Icons.delete,
-                                                  size: 18,
-                                                  color: Color.fromARGB(
-                                                      0, 235, 55, 55),
+                                                padding:
+                                                    EdgeInsets.only(right: 6.0),
+                                                child: Padding(
+                                                  padding: EdgeInsets.all(3.0),
+                                                  child: Icon(
+                                                    Icons.delete,
+                                                    size: 18,
+                                                    color: Color.fromARGB(
+                                                        0, 235, 55, 55),
+                                                  ),
                                                 ),
                                               ),
                                       ],
