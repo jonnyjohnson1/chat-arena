@@ -6,7 +6,6 @@ import 'package:chat/pages/settings/settings_dialog.dart';
 import 'package:chat/services/env_installer.dart';
 import 'package:chat/services/platform_types.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,10 +16,11 @@ buildAppBar(
     ValueNotifier<Conversation?> currentSelectedConversation,
     int bottomSelectedIndex,
     bool overlayIsOpen,
+    bool mobileChatPageIsShowing,
     BuildContext context,
     {required Function onMenuTap,
     required Function onAnalyticsTap,
-    required Function onChatsTap,
+    required Function onSettingsTap,
     required Function overlayPopupController}) {
   return FutureBuilder(
       future: isDesktopPlatform(includeIosAppOnMac: true),
@@ -37,9 +37,11 @@ buildAppBar(
                 backgroundColor:
                     Theme.of(context).colorScheme.secondaryContainer,
                 child: IconButton(
-                  tooltip: "Games",
+                  tooltip: "Chats",
                   icon: Icon(
-                    isDesktop.data! ? Icons.menu : Icons.grid_goldenratio,
+                    (!isDesktop.data! && mobileChatPageIsShowing)
+                        ? Icons.chevron_left
+                        : Icons.menu,
                     color: const Color.fromARGB(255, 124, 124, 124),
                     size: 24,
                   ),
@@ -202,10 +204,10 @@ buildAppBar(
                               padding: const EdgeInsets.all(5),
                               constraints: null,
                               onPressed: () {
-                                onChatsTap();
+                                onSettingsTap();
                               },
                               icon: const Icon(
-                                CupertinoIcons.chat_bubble_2,
+                                Icons.grid_goldenratio,
                                 color: Color.fromARGB(255, 124, 124, 124),
                                 size: 24,
                               )),
@@ -223,54 +225,8 @@ buildAppBar(
                             ),
                             padding: const EdgeInsets.all(5),
                             constraints: null,
-                            onPressed: () {
-                              ValueNotifier<DisplayConfigData>
-                                  displayConfigData =
-                                  Provider.of<ValueNotifier<DisplayConfigData>>(
-                                      context,
-                                      listen: false);
-                              ValueNotifier<InstallerService> installer =
-                                  Provider.of<ValueNotifier<InstallerService>>(
-                                      context,
-                                      listen: false);
-                              ValueNotifier<DeployedConfig> deployedConfig =
-                                  Provider.of<ValueNotifier<DeployedConfig>>(
-                                      context,
-                                      listen: false);
-                              print("here 1234567");
-                              Future.delayed(const Duration(seconds: 1), () {
-                                print(displayConfigData
-                                    .value
-                                    .apiConfig
-                                    .functions
-                                    .functions["websocket_chat"]!
-                                    .name);
-                                print(displayConfigData
-                                    .value
-                                    .apiConfig
-                                    .functions
-                                    .functions["websocket_chat"]!
-                                    .model);
-                                print(
-                                    "Provider going to multi provider settings dialog");
-                                print(displayConfigData
-                                    .value
-                                    .apiConfig
-                                    .functions
-                                    .functions["websocket_chat"]!
-                                    .provider);
-                                displayConfigData.notifyListeners();
-                              });
-                              showDialog(
-                                context: context,
-                                builder: (context) => MultiProvider(providers: [
-                                  ChangeNotifierProvider.value(
-                                      value: displayConfigData),
-                                  ChangeNotifierProvider.value(
-                                      value: deployedConfig),
-                                  ChangeNotifierProvider.value(value: installer)
-                                ], child: SettingsDialog(isMobile: isMobile)),
-                              );
+                            onPressed: () async {
+                              onSettingsTap();
                             },
                           ),
                         ),

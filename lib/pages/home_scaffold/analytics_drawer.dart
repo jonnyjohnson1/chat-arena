@@ -150,7 +150,7 @@ class _AnalyticsViewDrawerState extends State<AnalyticsViewDrawer> {
                 child: Icon(
                   CupertinoIcons.chat_bubble_2_fill,
                   color: 1 == bottomSelectedIndex
-                      ? chatBubbleColor
+                      ? chatIconColor
                       : unselectedColor,
                   size: 21,
                 ),

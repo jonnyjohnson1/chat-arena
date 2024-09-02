@@ -31,7 +31,8 @@ Future<List<LanguageModel>?> getModels(
   if (regExp.hasMatch(baseUrl)) {
     httpAddress = baseUrl;
   } else {
-    throw ArgumentError('Invalid URL format: ${baseUrl}');
+    print('Invalid URL format: ${baseUrl}');
+    // throw ArgumentError('Invalid URL format: ${baseUrl}');
   }
 
   final uri = "$httpAddress/list_models";

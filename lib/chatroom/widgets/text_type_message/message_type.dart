@@ -12,7 +12,7 @@ class MessageTypeBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 3),
+      padding: const EdgeInsets.only(bottom: 9),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.max,
@@ -20,11 +20,11 @@ class MessageTypeBubble extends StatelessWidget {
         children: [
           // !_isOurMessage ? UserImageWidget("winner", _deviceHeight) : Container(),
           const SizedBox(
-            width: 5,
+            width: 9,
           ),
           Expanded(child: TextMessageBubble(_isOurMessage, _message)),
           const SizedBox(
-            width: 5,
+            width: 9,
           ),
         ],
       ),

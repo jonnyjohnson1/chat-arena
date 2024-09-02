@@ -252,7 +252,8 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
   @override
   Widget build(BuildContext context) {
     Color themeColorContainer = Theme.of(context).primaryColor;
-
+    Color notOurMessageColor = const Color(0xFFF7F2FA);
+    double messageFontSize = 16;
     return Row(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: widget._isOurMessage
@@ -397,6 +398,8 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                                             : {},
                                                         caseSensitive: false,
                                                         style: TextStyle(
+                                                          fontSize:
+                                                              messageFontSize,
                                                           color: ThemeData.estimateBrightnessForColor(
                                                                       themeColorContainer) ==
                                                                   Brightness
@@ -604,8 +607,7 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                                   });
                                                   return Container(
                                                     decoration: BoxDecoration(
-                                                      color: Colors.black
-                                                          .withOpacity(.73),
+                                                      color: notOurMessageColor,
                                                       borderRadius:
                                                           const BorderRadius
                                                               .all(
@@ -631,8 +633,10 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                                             : {},
                                                         caseSensitive: false,
                                                         style: TextStyle(
+                                                          fontSize:
+                                                              messageFontSize,
                                                           color: ThemeData.estimateBrightnessForColor(
-                                                                      themeColorContainer) ==
+                                                                      notOurMessageColor) ==
                                                                   Brightness
                                                                       .light
                                                               ? Colors.black87

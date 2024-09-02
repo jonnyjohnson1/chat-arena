@@ -7,8 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:is_ios_app_on_mac/is_ios_app_on_mac.dart';
 
 class SettingsDialog extends StatelessWidget {
-  final bool isMobile;
-  const SettingsDialog({this.isMobile = false, Key? key}) : super(key: key);
+  const SettingsDialog({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

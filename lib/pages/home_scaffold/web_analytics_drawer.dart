@@ -186,7 +186,7 @@ class _WebAnalyticsViewDrawerState extends State<WebAnalyticsViewDrawer> {
                 child: Icon(
                   CupertinoIcons.chat_bubble_2_fill,
                   color: 1 == bottomSelectedIndex
-                      ? chatBubbleColor
+                      ? aiChatBubbleColor
                       : unselectedColor,
                   size: 21,
                 ),

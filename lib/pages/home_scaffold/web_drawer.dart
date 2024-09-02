@@ -60,8 +60,12 @@ class _WebViewDrawerState extends State<WebViewDrawer> {
         MultiProvider(
             providers: [ChangeNotifierProvider.value(value: installerService)],
             child: const SettingsDrawer()),
-      ConversationsList(
+      AIChatList(
         conversations: widget.conversations,
+        isMobileLayout: widget.isMobile,
+        onSettingsTap: () {
+          debugPrint("\t[ tapped settings from mobile chat list ]");
+        },
         onDelete: (bool deleted) {
           widget.body.value = ChatGamePage(
             key: UniqueKey(),
@@ -85,6 +89,13 @@ class _WebViewDrawerState extends State<WebViewDrawer> {
       ),
       P2pConversationsList(
         conversations: widget.conversations,
+        isMobileLayout: widget.isMobile,
+        onSettingsTap: () {
+          if (widget.onSettingsDrawerTap != null) {
+            debugPrint("\t[ tapped settings from mobile chat list ]");
+            widget.onSettingsDrawerTap!();
+          }
+        },
         onDelete: (bool deleted) {
           widget.body.value = ChatGamePage(
             key: UniqueKey(),
@@ -282,8 +293,9 @@ class _WebViewDrawerState extends State<WebViewDrawer> {
             padding: const EdgeInsets.all(8.0),
             child: Icon(
               CupertinoIcons.chat_bubble_text_fill,
-              color:
-                  0 == bottomSelectedIndex ? chatBubbleColor : unselectedColor,
+              color: 0 == bottomSelectedIndex
+                  ? aiChatBubbleColor
+                  : unselectedColor,
               size: 19,
             ),
           ),
@@ -300,8 +312,7 @@ class _WebViewDrawerState extends State<WebViewDrawer> {
             padding: const EdgeInsets.all(8.0),
             child: Icon(
               CupertinoIcons.person_2_fill,
-              color:
-                  1 == bottomSelectedIndex ? personIconColor : unselectedColor,
+              color: 1 == bottomSelectedIndex ? chatIconColor : unselectedColor,
               size: 19,
             ),
           ),

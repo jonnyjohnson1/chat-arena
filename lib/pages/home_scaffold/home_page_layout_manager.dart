@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chat/drawer/settings_drawer.dart';
 import 'package:chat/model_widget/game_manager.dart';
 import 'package:chat/models/conversation.dart';
 import 'package:chat/models/deployed_config.dart';
@@ -12,10 +13,14 @@ import 'package:chat/pages/home_scaffold/analytics_drawer.dart';
 import 'package:chat/pages/home_scaffold/app_bar.dart';
 import 'package:chat/pages/home_scaffold/drawer.dart';
 import 'package:chat/pages/home_scaffold/widgets/scripts_list.dart';
+import 'package:chat/pages/settings/settings_dialog.dart';
+// import 'package:chat/pages/settings/settings_alert_dialog.dart';
 import 'package:chat/services/env_installer.dart';
 import 'package:chat/services/platform_types.dart';
+import 'package:chat/shared/slide_animation_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 class HomePageLayoutManager extends StatefulWidget {
@@ -180,6 +185,8 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
     suggestionStartTimeTagoverlayEntry!.remove();
   }
 
+  ValueNotifier<bool> mobileHomePageShowChat = ValueNotifier(true);
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Size>(
@@ -202,16 +209,16 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                   );
                 }
                 double width = MediaQuery.of(context).size.width;
-                bool isMobile = !isDesktop.data!;
+                bool isMobileLayout = !isDesktop.data!;
 
-                if (isMobile && analyticsDrawerIsOpen) {
+                if (isMobileLayout && analyticsDrawerIsOpen) {
                   Future.delayed(const Duration(milliseconds: 599), () {
                     setState(() {
                       analyticsDrawerIsOpen = false;
                     });
                   });
                 }
-                if (!isMobile && endDrawerIsOpen) {
+                if (!isMobileLayout && endDrawerIsOpen) {
                   // close enddrawer if it is open on mobile -> tablet view switch
                   Future.delayed(const Duration(milliseconds: 599), () {
                     setState(() {
@@ -235,7 +242,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                         child: SafeArea(
                           bottom: false,
                           child: AnalyticsViewDrawer.create(
-                            isMobile: isMobile,
+                            isMobile: isMobileLayout,
                             onSettingsDrawerTap: (String page) {
                               if (page == "gamemanager") {
                                 widget.title.value = "Game Manager";
@@ -276,7 +283,7 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                 child: Center(
                                   child: Row(
                                     children: [
-                                      if (!isMobile)
+                                      if (!isMobileLayout)
                                         Row(
                                           children: [
                                             ValueListenableBuilder<bool>(
@@ -359,9 +366,8 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                               ),
                                           ],
                                         ),
-                                      Expanded(
-                                        child: Container(
-                                          color: Colors.white,
+                                      if (!isMobileLayout)
+                                        Expanded(
                                           child: ValueListenableBuilder(
                                             valueListenable: widget.body,
                                             builder: (context, home, _) {
@@ -369,7 +375,110 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                             },
                                           ),
                                         ),
-                                      ),
+                                      if (isMobileLayout)
+                                        Expanded(
+                                          child: Expanded(
+                                            child: SlideAnimationWidget(
+                                              isShowingChatPage:
+                                                  mobileHomePageShowChat,
+                                              onReturnToMenuCompleted: () => {
+                                                mobileHomePageShowChat.value =
+                                                    false,
+                                              },
+                                              chatPage: Container(
+                                                key: ValueKey('showChatPage'),
+                                                color: Colors.white,
+                                                child: ValueListenableBuilder(
+                                                  valueListenable: widget.body,
+                                                  builder: (context, home, _) {
+                                                    return home;
+                                                  },
+                                                ),
+                                              ),
+                                              nonChatPage: Padding(
+                                                key: ValueKey(
+                                                    'showPageViewDrawer'),
+                                                padding: EdgeInsets.only(
+                                                    top: isMobileLayout
+                                                        ? 0
+                                                        : 45.0),
+                                                child: PageViewDrawer.create(
+                                                  isMobile: isMobileLayout,
+                                                  onOpenChat: () {
+                                                    mobileHomePageShowChat
+                                                            .value =
+                                                        !mobileHomePageShowChat
+                                                            .value;
+                                                  },
+                                                  onSettingsDrawerTap: () {
+                                                    showModalBottomSheet<void>(
+                                                        context: context,
+                                                        enableDrag: true,
+                                                        barrierColor:
+                                                            const Color.fromARGB(
+                                                                57, 61, 61, 61),
+                                                        isScrollControlled:
+                                                            true,
+                                                        shape: const RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.only(
+                                                                topLeft: Radius
+                                                                    .circular(
+                                                                        10),
+                                                                topRight: Radius
+                                                                    .circular(
+                                                                        10))),
+                                                        builder: (BuildContext
+                                                            context) {
+                                                          return MultiProvider(
+                                                            providers: [
+                                                              ChangeNotifierProvider
+                                                                  .value(
+                                                                      value:
+                                                                          displayConfigData),
+                                                              ChangeNotifierProvider
+                                                                  .value(
+                                                                      value:
+                                                                          installerService),
+                                                              ChangeNotifierProvider
+                                                                  .value(
+                                                                      value:
+                                                                          deployedConfig),
+                                                            ],
+                                                            child: Container(
+                                                                padding: EdgeInsets.only(
+                                                                    bottom: MediaQuery.of(
+                                                                            context)
+                                                                        .viewInsets
+                                                                        .bottom),
+                                                                constraints:
+                                                                    const BoxConstraints(
+                                                                        maxHeight:
+                                                                            700),
+                                                                height: MediaQuery.of(
+                                                                            context)
+                                                                        .size
+                                                                        .height *
+                                                                    0.85,
+                                                                child: MultiProvider(
+                                                                    providers: [
+                                                                      ChangeNotifierProvider.value(
+                                                                          value:
+                                                                              installerService)
+                                                                    ],
+                                                                    child:
+                                                                        const SettingsDrawer())),
+                                                          );
+                                                        });
+                                                  },
+                                                  body: widget.body,
+                                                  conversations:
+                                                      widget.conversations,
+                                                  title: widget.title,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       Row(
                                         children: [
                                           if (analyticsDrawerIsOpen)
@@ -428,162 +537,198 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                               ),
                             ),
                             SafeArea(
-                              child: Container(
-                                height: 45,
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    stops: [0, 0.08, .21, .40, .45, .6],
-                                    colors: [
-                                      Colors.white,
-                                      Color.fromARGB(245, 255, 255, 255),
-                                      Color.fromARGB(235, 255, 255, 255),
-                                      Color.fromARGB(183, 255, 255, 255),
-                                      Color.fromARGB(155, 255, 255, 255),
-                                      Color.fromARGB(0, 255, 255, 255)
-                                    ],
-                                  ),
-                                ),
-                                child: buildAppBar(
-                                    isMobile,
-                                    widget.title,
-                                    displayConfigData,
-                                    currentSelectedConversation,
-                                    bottomSelectedIndex,
-                                    overlayIsOpen,
-                                    context, onMenuTap: () async {
-                                  await isDesktopPlatform(
-                                          includeIosAppOnMac: true)
-                                      ? setState(() {
-                                          if (!startDrawerOpen.value) {
-                                            startDrawerOpen.value = true;
-                                            startDrawerOpen.notifyListeners();
-                                          } else {
-                                            drawerIsOpen = !drawerIsOpen;
-                                          }
-                                        })
-                                      : showModalBottomSheet<void>(
-                                          context: context,
-                                          enableDrag: true,
-                                          barrierColor: const Color.fromARGB(
-                                              57, 61, 61, 61),
-                                          isScrollControlled: true,
-                                          shape: const RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.only(
-                                                  topLeft: Radius.circular(10),
-                                                  topRight:
-                                                      Radius.circular(10))),
-                                          builder: (BuildContext context) {
-                                            return MultiProvider(
-                                              providers: [
-                                                Provider.value(value: true)
-                                                // Provider<
-                                                //     SwiftFunctionsInterface>.value(
-                                                //   value: swiftInterface,
-                                                // ),
-                                              ],
-                                              child: Container(
-                                                  padding: EdgeInsets.only(
-                                                      bottom:
-                                                          MediaQuery.of(context)
+                              child: ValueListenableBuilder<bool>(
+                                  valueListenable: mobileHomePageShowChat,
+                                  builder:
+                                      (context, mobileChatPageIsShowing, _) {
+                                    if (!mobileChatPageIsShowing) {
+                                      return Container();
+                                      // Container(
+                                      //     height: 45,
+                                      //     decoration: const BoxDecoration(
+                                      //       gradient: LinearGradient(
+                                      //         begin: Alignment.topCenter,
+                                      //         end: Alignment.bottomCenter,
+                                      //         stops: [
+                                      //           0,
+                                      //           0.08,
+                                      //           .21,
+                                      //           .40,
+                                      //           .45,
+                                      //           .6
+                                      //         ],
+                                      //         colors: [
+                                      //           Colors.white,
+                                      //           Color.fromARGB(
+                                      //               245, 255, 255, 255),
+                                      //           Color.fromARGB(
+                                      //               235, 255, 255, 255),
+                                      //           Color.fromARGB(
+                                      //               183, 255, 255, 255),
+                                      //           Color.fromARGB(
+                                      //               155, 255, 255, 255),
+                                      //           Color.fromARGB(0, 255, 255, 255)
+                                      //         ],
+                                      //       ),
+                                      //     ),
+                                      //     child:
+                                      //         Container() // create a mobile app bar menu here
+                                      //     );
+                                    }
+                                    return Container(
+                                      height: 45,
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          stops: [0, 0.08, .21, .40, .45, .6],
+                                          colors: [
+                                            Colors.white,
+                                            Color.fromARGB(245, 255, 255, 255),
+                                            Color.fromARGB(235, 255, 255, 255),
+                                            Color.fromARGB(183, 255, 255, 255),
+                                            Color.fromARGB(155, 255, 255, 255),
+                                            Color.fromARGB(0, 255, 255, 255)
+                                          ],
+                                        ),
+                                      ),
+                                      child: buildAppBar(
+                                          isMobileLayout,
+                                          widget.title,
+                                          displayConfigData,
+                                          currentSelectedConversation,
+                                          bottomSelectedIndex,
+                                          overlayIsOpen,
+                                          mobileChatPageIsShowing,
+                                          context, onMenuTap: () async {
+                                        if (await isDesktopPlatform(
+                                            includeIosAppOnMac: true)) {
+                                          setState(() {
+                                            if (!startDrawerOpen.value) {
+                                              startDrawerOpen.value = true;
+                                              startDrawerOpen.notifyListeners();
+                                            } else {
+                                              drawerIsOpen = !drawerIsOpen;
+                                            }
+                                          });
+                                        } else {
+                                          mobileHomePageShowChat.value =
+                                              !mobileHomePageShowChat.value;
+                                        }
+                                      }, onAnalyticsTap: () async {
+                                        await isDesktopPlatform(
+                                                includeIosAppOnMac: true)
+                                            ? setState(() {
+                                                analyticsDrawerIsOpen =
+                                                    !analyticsDrawerIsOpen;
+                                              })
+                                            : endDrawerIsOpen
+                                                ? _scaffoldKey.currentState
+                                                    ?.closeEndDrawer()
+                                                : _scaffoldKey.currentState
+                                                    ?.openEndDrawer();
+                                      }, onSettingsTap: () async {
+                                        double width =
+                                            MediaQuery.of(context).size.width;
+                                        // print(
+                                        //     "Eval: ${kIsWeb && (width < 600)}");
+                                        if (isMobileLayout && (width > 600)) {
+                                          ValueNotifier<DisplayConfigData>
+                                              displayConfigData = Provider.of<
+                                                      ValueNotifier<
+                                                          DisplayConfigData>>(
+                                                  context,
+                                                  listen: false);
+                                          ValueNotifier<InstallerService>
+                                              installer = Provider.of<
+                                                      ValueNotifier<
+                                                          InstallerService>>(
+                                                  context,
+                                                  listen: false);
+                                          ValueNotifier<DeployedConfig>
+                                              deployedConfig = Provider.of<
+                                                      ValueNotifier<
+                                                          DeployedConfig>>(
+                                                  context,
+                                                  listen: false);
+                                          // Future.delayed(
+                                          //     const Duration(seconds: 1), () {
+                                          //   displayConfigData.notifyListeners();
+                                          // });
+                                          await showDialog(
+                                            context: context,
+                                            builder: (context) =>
+                                                MultiProvider(providers: [
+                                              ChangeNotifierProvider.value(
+                                                  value: displayConfigData),
+                                              ChangeNotifierProvider.value(
+                                                  value: deployedConfig),
+                                              ChangeNotifierProvider.value(
+                                                  value: installer)
+                                            ], child: SettingsDialog()),
+                                          );
+                                        } else {
+                                          showModalBottomSheet<void>(
+                                              context: context,
+                                              enableDrag: true,
+                                              barrierColor:
+                                                  const Color.fromARGB(
+                                                      57, 61, 61, 61),
+                                              isScrollControlled: true,
+                                              shape:
+                                                  const RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.only(
+                                                              topLeft: Radius
+                                                                  .circular(10),
+                                                              topRight: Radius
+                                                                  .circular(
+                                                                      10))),
+                                              builder: (BuildContext context) {
+                                                return MultiProvider(
+                                                  providers: [
+                                                    ChangeNotifierProvider.value(
+                                                        value:
+                                                            displayConfigData),
+                                                    ChangeNotifierProvider.value(
+                                                        value:
+                                                            installerService),
+                                                    ChangeNotifierProvider
+                                                        .value(
+                                                            value:
+                                                                deployedConfig),
+                                                  ],
+                                                  child: Container(
+                                                      padding: EdgeInsets.only(
+                                                          bottom: MediaQuery.of(
+                                                                  context)
                                                               .viewInsets
                                                               .bottom),
-                                                  constraints:
-                                                      const BoxConstraints(
-                                                          maxHeight: 700),
-                                                  height: MediaQuery.of(context)
-                                                          .size
-                                                          .height -
-                                                      85,
-                                                  child: GamesListPage(
-                                                    duration: 90,
-                                                    isIphone: isMobile,
-                                                    selectedGame:
-                                                        (GamesConfig selected) {
-                                                      // TODO Update hoem page to game viewer page
-                                                    },
-                                                  )),
-                                            );
-                                          });
-                                }, onAnalyticsTap: () async {
-                                  await isDesktopPlatform(
-                                          includeIosAppOnMac: true)
-                                      ? setState(() {
-                                          analyticsDrawerIsOpen =
-                                              !analyticsDrawerIsOpen;
-                                        })
-                                      : endDrawerIsOpen
-                                          ? _scaffoldKey.currentState
-                                              ?.closeEndDrawer()
-                                          : _scaffoldKey.currentState
-                                              ?.openEndDrawer();
-                                }, onChatsTap: () {
-                                  debugPrint("Chats");
-                                  showModalBottomSheet<void>(
-                                      context: context,
-                                      enableDrag: true,
-                                      barrierColor:
-                                          const Color.fromARGB(57, 61, 61, 61),
-                                      isScrollControlled: true,
-                                      shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.only(
-                                              topLeft: Radius.circular(10),
-                                              topRight: Radius.circular(10))),
-                                      builder: (BuildContext context) {
-                                        return MultiProvider(
-                                          providers: [
-                                            ChangeNotifierProvider.value(
-                                                value: displayConfigData),
-                                            ChangeNotifierProvider.value(
-                                                value: installerService),
-                                            ChangeNotifierProvider.value(
-                                                value: deployedConfig),
-                                          ],
-                                          child: Container(
-                                              padding: EdgeInsets.only(
-                                                  bottom: MediaQuery.of(context)
-                                                      .viewInsets
-                                                      .bottom),
-                                              constraints: const BoxConstraints(
-                                                  maxHeight: 700),
-                                              height: MediaQuery.of(context)
-                                                      .size
-                                                      .height -
-                                                  85,
-                                              child: PageViewDrawer.create(
-                                                isMobile: isMobile,
-                                                onSettingsDrawerTap:
-                                                    (String page) {
-                                                  if (page == "gamemanager") {
-                                                    widget.title.value =
-                                                        "Game Manager";
-                                                    widget.title
-                                                        .notifyListeners();
-                                                    widget.body.value =
-                                                        GamesListPage(
-                                                      duration: 90,
-                                                      selectedGame: (GamesConfig
-                                                          selected) {
-                                                        // TODO Update home page to game viewer page
-                                                      },
-                                                      // homePage: widget.body,
-                                                    );
-                                                    widget.body
-                                                        .notifyListeners();
-                                                  }
-                                                },
-                                                body: widget.body,
-                                                conversations:
-                                                    widget.conversations,
-                                                title: widget.title,
-                                              )),
-                                        );
-                                      });
-                                }, overlayPopupController: () {
-                                  _overlayPopupController(context);
-                                }),
-                              ),
+                                                      constraints:
+                                                          const BoxConstraints(
+                                                              maxHeight: 700),
+                                                      height:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .height *
+                                                              0.85,
+                                                      child: MultiProvider(
+                                                          providers: [
+                                                            ChangeNotifierProvider
+                                                                .value(
+                                                                    value:
+                                                                        installerService)
+                                                          ],
+                                                          child:
+                                                              const SettingsDrawer())),
+                                                );
+                                              });
+                                        }
+                                      }, overlayPopupController: () {
+                                        _overlayPopupController(context);
+                                      }),
+                                    );
+                                  }),
                             )
                           ],
                         ),
