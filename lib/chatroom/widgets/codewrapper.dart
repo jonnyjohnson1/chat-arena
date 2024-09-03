@@ -26,7 +26,7 @@ class _PreWrapperState extends State<CodeWrapperWidget> {
   @override
   Widget build(BuildContext context) {
     // final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Expanded(
+    return IntrinsicWidth(
       child: Stack(
         children: [
           widget.child,
@@ -49,26 +49,23 @@ class _PreWrapperState extends State<CodeWrapperWidget> {
                   //             color: isDark ? Colors.white : Colors.black)),
                   //     child: Text(widget.language),
                   //   )),
-                  Expanded(
-                    child: InkWell(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        child: _switchWidget,
-                      ),
-                      onTap: () async {
-                        if (hasCopied) return;
-                        await Clipboard.setData(
-                            ClipboardData(text: widget.text));
-                        _switchWidget = Icon(Icons.check, key: UniqueKey());
-                        refresh();
-                        Future.delayed(const Duration(seconds: 2), () {
-                          hasCopied = false;
-                          _switchWidget =
-                              Icon(Icons.copy_rounded, key: UniqueKey());
-                          refresh();
-                        });
-                      },
+                  InkWell(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: _switchWidget,
                     ),
+                    onTap: () async {
+                      if (hasCopied) return;
+                      await Clipboard.setData(ClipboardData(text: widget.text));
+                      _switchWidget = Icon(Icons.check, key: UniqueKey());
+                      refresh();
+                      Future.delayed(const Duration(seconds: 2), () {
+                        hasCopied = false;
+                        _switchWidget =
+                            Icon(Icons.copy_rounded, key: UniqueKey());
+                        refresh();
+                      });
+                    },
                   ),
                 ],
               ),

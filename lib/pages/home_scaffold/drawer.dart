@@ -203,7 +203,7 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
             }
           },
         ),
-        SettingsPage()
+        if (widget.isMobile) SettingsPage()
       ],
     );
   }
@@ -339,32 +339,33 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
                           ))),
                 ),
               ),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(11)),
-                    color: 2 == bottomSelectedIndex
-                        ? Colors.black87.withOpacity(.09)
-                        : const Color.fromARGB(0, 255, 255, 255),
+              if (widget.isMobile)
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.all(Radius.circular(11)),
+                      color: 2 == bottomSelectedIndex
+                          ? Colors.black87.withOpacity(.09)
+                          : const Color.fromARGB(0, 255, 255, 255),
+                    ),
+                    child: AnimatedScale(
+                        duration:
+                            Duration(milliseconds: widget.isMobile ? 1 : 160),
+                        scale: 2 == bottomSelectedIndex ? 1.15 : 1,
+                        child: InkWell(
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(5)),
+                            onTap: () => bottomTapped(2),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Icon(CupertinoIcons.settings,
+                                  color: 2 == bottomSelectedIndex
+                                      ? Colors.black87
+                                      : unselectedColor,
+                                  size: iconSize),
+                            ))),
                   ),
-                  child: AnimatedScale(
-                      duration:
-                          Duration(milliseconds: widget.isMobile ? 1 : 160),
-                      scale: 2 == bottomSelectedIndex ? 1.15 : 1,
-                      child: InkWell(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(5)),
-                          onTap: () => bottomTapped(2),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Icon(CupertinoIcons.settings,
-                                color: 2 == bottomSelectedIndex
-                                    ? Colors.black87
-                                    : unselectedColor,
-                                size: iconSize),
-                          ))),
                 ),
-              ),
             ]),
       );
     } else {
@@ -407,24 +408,26 @@ class _PageViewDrawerState extends State<PageViewDrawer> {
                                 : unselectedColor,
                             size: iconSize),
                       ))),
-              if (!isMobile)
+              if (isMobile)
                 SizedBox(
                   width: spacing,
                 ),
-              AnimatedScale(
-                  duration: Duration(milliseconds: 160),
-                  scale: 2 == bottomSelectedIndex ? 1.15 : 1,
-                  child: InkWell(
-                      borderRadius: const BorderRadius.all(Radius.circular(5)),
-                      onTap: () => bottomTapped(2),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(CupertinoIcons.settings,
-                            color: 2 == bottomSelectedIndex
-                                ? Colors.black87
-                                : unselectedColor,
-                            size: iconSize),
-                      ))),
+              if (isMobile)
+                AnimatedScale(
+                    duration: const Duration(milliseconds: 160),
+                    scale: 2 == bottomSelectedIndex ? 1.15 : 1,
+                    child: InkWell(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(5)),
+                        onTap: () => bottomTapped(2),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Icon(CupertinoIcons.settings,
+                              color: 2 == bottomSelectedIndex
+                                  ? Colors.black87
+                                  : unselectedColor,
+                              size: iconSize),
+                        ))),
             ]),
       );
     }

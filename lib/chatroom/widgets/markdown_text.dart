@@ -5,9 +5,8 @@ import 'package:markdown_widget/widget/all.dart';
 
 class MarkdownText extends StatefulWidget {
   final String text;
-  final BuildContext context;
   final TextStyle? style;
-  const MarkdownText(this.text, this.context, {this.style, super.key});
+  const MarkdownText(this.text, {this.style, super.key});
 
   @override
   State<MarkdownText> createState() => _MarkdownTextState();
@@ -16,7 +15,8 @@ class MarkdownText extends StatefulWidget {
 class _MarkdownTextState extends State<MarkdownText> {
   Widget buildMarkdown(BuildContext context, String string) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final config = MarkdownConfig.defaultConfig;
+    final config =
+        isDark ? MarkdownConfig.darkConfig : MarkdownConfig.defaultConfig;
     final codeWrapper =
         (child, text, language) => CodeWrapperWidget(child, text, language);
     return IntrinsicHeight(
@@ -38,6 +38,6 @@ class _MarkdownTextState extends State<MarkdownText> {
 
   @override
   Widget build(BuildContext context) {
-    return buildMarkdown(widget.context, widget.text);
+    return buildMarkdown(context, widget.text);
   }
 }
