@@ -5,8 +5,11 @@ import 'package:chat/chatroom/widgets/text_type_message/text_message_bubble.dart
 class MessageTypeBubble extends StatelessWidget {
   final _isOurMessage;
   final Message _message;
+  final bool alignMessagesCenter;
 
-  const MessageTypeBubble(this._isOurMessage, this._message, {Key? key})
+  const MessageTypeBubble(
+      this._isOurMessage, this._message, this.alignMessagesCenter,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -22,7 +25,9 @@ class MessageTypeBubble extends StatelessWidget {
           const SizedBox(
             width: 9,
           ),
-          Expanded(child: TextMessageBubble(_isOurMessage, _message)),
+          Expanded(
+              child: TextMessageBubble(
+                  _isOurMessage, _message, alignMessagesCenter)),
           const SizedBox(
             width: 9,
           ),

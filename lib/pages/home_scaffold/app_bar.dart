@@ -1,13 +1,9 @@
 import 'package:chat/models/conversation.dart';
-import 'package:chat/models/deployed_config.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/pages/home_scaffold/widgets/demo_mode_title.dart';
-import 'package:chat/pages/settings/settings_dialog.dart';
-import 'package:chat/services/env_installer.dart';
 import 'package:chat/services/platform_types.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 buildAppBar(
     bool isMobile,

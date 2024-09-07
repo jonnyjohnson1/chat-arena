@@ -5,14 +5,17 @@ import '../../../../models/messages.dart';
 class MessageListViewChild extends StatelessWidget {
   final _isOurMessage;
   final Message _message;
+  final bool alignMessagesCenter;
 
-  const MessageListViewChild(this._isOurMessage, this._message, {super.key});
+  const MessageListViewChild(
+      this._isOurMessage, this._message, this.alignMessagesCenter,
+      {super.key});
 
   @override
   Widget build(BuildContext context) {
     switch (_message.type) {
       case MessageType.text:
-        return MessageTypeBubble(_isOurMessage, _message);
+        return MessageTypeBubble(_isOurMessage, _message, alignMessagesCenter);
 
       case MessageType.server:
         return Row(

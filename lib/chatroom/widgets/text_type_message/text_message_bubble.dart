@@ -17,12 +17,16 @@ import 'package:chat/models/messages.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:syntax_highlight/syntax_highlight.dart';
 
 class TextMessageBubble extends StatefulWidget {
   final _isOurMessage;
   final Message _message;
+  final bool alignMessagesCenter;
 
-  const TextMessageBubble(this._isOurMessage, this._message, {Key? key})
+  const TextMessageBubble(
+      this._isOurMessage, this._message, this.alignMessagesCenter,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -43,7 +47,9 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
   @override
   void initState() {
     super.initState();
+    print("Alignment building!: ${widget.alignMessagesCenter}");
     // load images from database on build
+    // Initialize the highlighter.
     images = widget._message.images ?? [];
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
@@ -254,13 +260,16 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
   @override
   Widget build(BuildContext context) {
     Color themeColorContainer = Theme.of(context).primaryColor;
-    Color notOurMessageColor = const Color(0xFFF7F2FA);
+    Color notOurMessageColor =
+        widget.alignMessagesCenter ? Colors.white : const Color(0xFFF7F2FA);
     double messageFontSize = 16;
     return Row(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: widget._isOurMessage
           ? MainAxisAlignment.end
-          : MainAxisAlignment.start,
+          : widget.alignMessagesCenter
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.end,
       children: [
         Expanded(
           child: Row(
@@ -474,8 +483,10 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                               mainAxisSize: MainAxisSize.min,
                                               mainAxisAlignment:
                                                   MainAxisAlignment.spaceAround,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                              crossAxisAlignment: widget
+                                                      .alignMessagesCenter
+                                                  ? CrossAxisAlignment.center
+                                                  : CrossAxisAlignment.start,
                                               children: <Widget>[
                                                 ValueListenableBuilder<double?>(
                                                     valueListenable: textWidth,

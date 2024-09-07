@@ -9,9 +9,10 @@ class MessageListView extends StatefulWidget {
   final parent;
   final _listViewController;
   final List<Message> messages;
+  final bool alignMessagesCenter;
 
   MessageListView(this.parent, this._listViewController, this.messages,
-      {Key? key})
+      {this.alignMessagesCenter = false, Key? key})
       : super(key: key);
 
   @override
@@ -76,6 +77,7 @@ class _MessageListViewState extends State<MessageListView> {
                     child: MessageListViewChild(
                       isOurMessage,
                       message,
+                      widget.alignMessagesCenter,
                       key: Key(message.id),
                     ),
                   ),

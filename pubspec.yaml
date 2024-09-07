@@ -17,7 +17,7 @@ dependencies:
 
   # extra packages
   flutter_spinkit: ^5.1.0
-  google_fonts: ^6.1.0
+  google_fonts: ^4.0.3
   provider: ^6.0.2
   intl: ^0.18.1
   simple_progress_indicators: ^0.2.0
@@ -39,8 +39,10 @@ dependencies:
   universal_html: ^2.0.5  # For web download
   markdown_widget: ^2.3.2+6
   flutter_markdown: ^0.6.10
-  flutter_highlight: ^0.7.0
+  # flutter_highlight: ^0.7.0
+  flutter_highlighter: ^0.1.1
   syntax_highlight: ^0.4.0
+  any_syntax_highlighter: ^0.0.13
   flutter_markdown_selectionarea: ^0.6.17+1
   visibility_detector: ^0.4.0+2
   webview_flutter: ^4.8.0
