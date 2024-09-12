@@ -47,14 +47,13 @@ class _P2pConversationListItemState extends State<P2pConversationListItem> {
   Widget getGameIcon(GameType type) {
     switch (type) {
       case GameType.chat:
-        return Icon(CupertinoIcons.chat_bubble_fill,
-            color: chatBubbleColor, size: 26);
+        return Icon(Icons.graphic_eq, color: aiChatBubbleColor, size: 26);
       case GameType.debate:
         return const Icon(CupertinoIcons.group_solid,
             color: Color.fromARGB(255, 188, 144, 249), size: 26);
       case GameType.p2pchat:
-        return Icon(CupertinoIcons.person_2_fill,
-            color: personIconColor, size: 26);
+        return Icon(CupertinoIcons.chat_bubble_fill,
+            color: chatIconColor, size: 26);
       default:
         return Icon(CupertinoIcons.chat_bubble_fill,
             color: Colors.blue[200], size: 26);

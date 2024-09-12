@@ -17,10 +17,17 @@ import 'package:provider/provider.dart';
 
 class P2pConversationsList extends StatefulWidget {
   final ValueNotifier<List<Conversation>> conversations;
+  final bool isMobileLayout;
   final onTap;
+  final onSettingsTap;
   final onDelete;
   const P2pConversationsList(
-      {required this.conversations, this.onDelete, this.onTap, super.key});
+      {required this.conversations,
+      required this.isMobileLayout,
+      required this.onSettingsTap,
+      this.onDelete,
+      this.onTap,
+      super.key});
 
   @override
   State<P2pConversationsList> createState() => _P2pConversationsListState();
@@ -32,12 +39,15 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
   final chatALertDialogLink = LayerLink();
   late ValueNotifier<DisplayConfigData> displayConfigData;
 
+  ValueNotifier<bool> hasScrolledNotifier = ValueNotifier<bool>(false);
   @override
   void initState() {
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
     Future.delayed(const Duration(milliseconds: 90),
         () => mounted ? setState((() => didInit = true)) : null);
+
+    controller.addListener(_onScroll);
     super.initState();
   }
 
@@ -106,85 +116,175 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
     }
   }
 
+  void _onScroll() {
+    if (controller.offset > 0 && !hasScrolledNotifier.value) {
+      hasScrolledNotifier.value = true;
+    } else if (controller.offset <= 0 && hasScrolledNotifier.value) {
+      hasScrolledNotifier.value = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    controller.removeListener(_onScroll);
+    controller.dispose();
+    hasScrolledNotifier.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return !didInit
         ? Container()
         : Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 9, left: 8.0, right: 5),
-                child: Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        hostChat();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(
-                            255, 255, 196, 196), // Background color
+              ValueListenableBuilder<bool>(
+                  valueListenable: hasScrolledNotifier,
+                  builder: (context, hasScrolled, child) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Color.fromARGB(0, 255, 255, 255),
+                        boxShadow: hasScrolled
+                            ? [
+                                BoxShadow(
+                                    color: Colors.grey.withOpacity(0.5),
+                                    blurRadius: 4.0)
+                              ]
+                            : [],
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                      child: Column(
                         children: [
-                          Text(
-                            "Host Chat",
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          Image.asset(
-                            'assets/images/new_msg.png',
-                            width: 20,
-                            height: 20,
-                          ),
-                          const SizedBox(
-                            width: 2,
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 18, right: 3, top: 10, bottom: 5),
+                            child: SelectionContainer.disabled(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  if (widget.isMobileLayout)
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 4, horizontal: 8.0),
+                                      child: Center(
+                                          child: Text("Messages",
+                                              style: TextStyle(
+                                                letterSpacing: 1.24,
+                                                fontWeight: FontWeight.w500,
+                                              ))),
+                                    ),
+                                  // InkWell(
+                                  //   borderRadius: const BorderRadius.all(
+                                  //       Radius.circular(13)),
+                                  //   onTap: () {
+                                  //     widget.onSettingsTap();
+                                  //   },
+                                  //   child: Padding(
+                                  //     padding: const EdgeInsets.symmetric(
+                                  //         vertical: 4, horizontal: 8.0),
+                                  //     child: Center(
+                                  //         child: Text("Configure",
+                                  //             style: TextStyle(
+                                  //                 fontWeight: FontWeight.w500,
+                                  //                 color: Theme.of(context)
+                                  //                     .colorScheme
+                                  //                     .primary))),
+                                  //   ),
+                                  // ),
+                                  Expanded(
+                                    child: Material(
+                                      color: const Color.fromARGB(
+                                          0, 255, 255, 255),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                                color: aiChatBubbleColor
+                                                    .withOpacity(.11),
+                                                border: Border.all(
+                                                    color: aiChatBubbleColor),
+                                                shape: BoxShape.circle),
+                                            child: Tooltip(
+                                              message: "Join Chat",
+                                              child: InkWell(
+                                                borderRadius:
+                                                    const BorderRadius.all(
+                                                        Radius.circular(13)),
+                                                onTap: () async {
+                                                  P2PChatGame? gameSettings =
+                                                      await joinP2PChat(
+                                                          context);
+                                                  if (gameSettings != null) {
+                                                    // switch to the game page and start as
+                                                    gameSettings.initState =
+                                                        P2PServerInitState
+                                                            .join; // sets init state so GamePage knows to join another chat
+                                                    await joinChat(
+                                                        gameSettings, context);
+                                                  }
+                                                },
+                                                child: const Padding(
+                                                  padding: EdgeInsets.all(6.0),
+                                                  child: Icon(
+                                                    Icons.call_merge_rounded,
+                                                    size: 24,
+                                                    color: Colors.black87,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 8,
+                                          ),
+                                          Container(
+                                            decoration: BoxDecoration(
+                                                color: chatIconColor
+                                                    .withOpacity(.18),
+                                                border: Border.all(
+                                                    color: chatIconColor),
+                                                shape: BoxShape.circle),
+                                            child: Tooltip(
+                                              message: "New Chat",
+                                              child: InkWell(
+                                                borderRadius:
+                                                    const BorderRadius.all(
+                                                        Radius.circular(13)),
+                                                onTap: () {
+                                                  hostChat();
+                                                  // addConversation('chat');
+                                                },
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(9.0),
+                                                  child: Image.asset(
+                                                    'assets/images/new_msg.png',
+                                                    width: 20,
+                                                    height: 20,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 25,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    ElevatedButton(
-                      onPressed: () async {
-                        P2PChatGame? gameSettings = await joinP2PChat(context);
-
-                        if (gameSettings != null) {
-                          // switch to the game page and start as
-                          gameSettings.initState = P2PServerInitState
-                              .join; // sets init state so GamePage knows to join another chat
-                          await joinChat(gameSettings, context);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: personIconColor, // Color.fromARGB(
-                        //255, 149, 207, 151), // Background color
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            "Join Chat",
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          const Icon(
-                            Icons.call_merge_rounded,
-                            size: 20,
-                            color: Colors.black87,
-                          ),
-                          const SizedBox(
-                            width: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                    );
+                  }),
               Expanded(
                 child: ValueListenableBuilder(
                     valueListenable: widget.conversations,

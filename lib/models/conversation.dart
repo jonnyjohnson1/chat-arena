@@ -142,16 +142,15 @@ class Conversation {
   Icon gameTypeToIcon(GameType? gameType, {double? size}) {
     switch (gameType) {
       case GameType.chat:
-        return Icon(CupertinoIcons.chat_bubble_text_fill,
-            size: size, color: debateIconColor);
+        return Icon(Icons.graphic_eq, size: size, color: debateIconColor);
       case GameType.debate:
         return Icon(CupertinoIcons.group_solid,
-            size: size, color: chatBubbleColor);
+            size: size, color: chatIconColor);
       case GameType.p2pchat:
-        return Icon(CupertinoIcons.person_2_fill,
-            size: size, color: personIconColor);
+        return Icon(CupertinoIcons.chat_bubble_text_fill,
+            size: size, color: chatIconColor);
       default:
-        return Icon(Icons.help_outline);
+        return const Icon(Icons.help_outline);
     }
   }
 

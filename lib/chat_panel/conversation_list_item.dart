@@ -46,14 +46,13 @@ class _ConversationListItemState extends State<ConversationListItem> {
   Widget getGameIcon(GameType type) {
     switch (type) {
       case GameType.chat:
-        return Icon(CupertinoIcons.chat_bubble_fill,
-            color: chatBubbleColor, size: 26);
+        return Icon(Icons.graphic_eq, color: aiChatBubbleColor, size: 26);
       case GameType.debate:
         return const Icon(CupertinoIcons.group_solid,
             color: Color.fromARGB(255, 188, 144, 249), size: 26);
       case GameType.p2pchat:
-        return Icon(CupertinoIcons.person_2_fill,
-            color: personIconColor, size: 26);
+        return Icon(CupertinoIcons.chat_bubble_2,
+            color: chatIconColor, size: 26);
       default:
         return Icon(CupertinoIcons.chat_bubble_fill,
             color: Colors.blue[200], size: 26);
@@ -94,112 +93,131 @@ class _ConversationListItemState extends State<ConversationListItem> {
     return MouseRegion(
       onEnter: _updateLocation,
       onExit: _updateLocation,
-      child: InkWell(
-        onTap: () {
-          widget.onSelected();
-        },
-        child: Container(
-          height: 85,
-          padding:
-              const EdgeInsets.only(left: 6, right: 6, top: 10, bottom: 10),
-          child: Row(
-            children: <Widget>[
-              SizedBox(
-                width: 12,
-                child: widget.isMessageRead
-                    ? Container()
-                    : Icon(
-                        Icons.circle,
-                        color: Colors.blue[600],
-                        size: 12,
-                      ),
-              ),
-              const SizedBox(
-                width: 6,
-              ),
-              Expanded(
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Container(
-                        color: Colors.transparent,
-                        child: Row(
-                          children: [
-                            Padding(
-                                padding: const EdgeInsets.only(right: 10.0),
-                                child:
-                                    getGameIcon(widget.conversation.gameType!)),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                            getTitle(
-                                                widget.conversation.gameType!),
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium),
-                                      ),
-                                      isHover
-                                          ? Tooltip(
-                                              message: "Delete",
-                                              waitDuration: const Duration(
-                                                  milliseconds: 800),
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  widget.onDeleteTap();
-                                                },
-                                                child: const Padding(
+      child: Padding(
+        padding: const EdgeInsets.only(left: 6, right: 6, top: 0, bottom: 0),
+        child: InkWell(
+          borderRadius: const BorderRadius.all(Radius.circular(18)),
+          onTap: () {
+            widget.onSelected();
+          },
+          child: Container(
+            height: 36,
+            padding:
+                const EdgeInsets.only(left: 0, right: 0, top: 6, bottom: 6),
+            child: Row(
+              children: <Widget>[
+                SizedBox(
+                  width: 12,
+                  child: widget.isMessageRead
+                      ? Container()
+                      : Icon(
+                          Icons.circle,
+                          color: Colors.blue[600],
+                          size: 12,
+                        ),
+                ),
+                const SizedBox(
+                  width: 6,
+                ),
+                Expanded(
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Container(
+                          color: Colors.transparent,
+                          child: Row(
+                            children: [
+                              // Padding(
+                              //     padding: const EdgeInsets.only(right: 10.0),
+                              //     child:
+                              //         getGameIcon(widget.conversation.gameType!)),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                              widget.conversation.lastMessage!
+                                                      .isEmpty
+                                                  ? "New Chat"
+                                                  : widget.conversation
+                                                      .lastMessage!,
+                                              // getTitle(widget
+                                              //     .conversation.gameType!),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleMedium),
+                                        ),
+                                        isHover
+                                            ? Padding(
+                                                padding: const EdgeInsets.only(
+                                                    right: 6.0),
+                                                child: Tooltip(
+                                                  message: "Delete",
+                                                  waitDuration: const Duration(
+                                                      milliseconds: 800),
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      widget.onDeleteTap();
+                                                    },
+                                                    child: const Padding(
+                                                      padding:
+                                                          EdgeInsets.all(3.0),
+                                                      child: Icon(
+                                                        Icons.close,
+                                                        size: 18,
+                                                        color: Color.fromARGB(
+                                                            255, 149, 146, 146),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                            : const Padding(
+                                                padding:
+                                                    EdgeInsets.only(right: 6.0),
+                                                child: Padding(
                                                   padding: EdgeInsets.all(3.0),
                                                   child: Icon(
-                                                    Icons.close,
+                                                    Icons.delete,
                                                     size: 18,
                                                     color: Color.fromARGB(
-                                                        255, 149, 146, 146),
+                                                        0, 235, 55, 55),
                                                   ),
                                                 ),
                                               ),
-                                            )
-                                          : const Padding(
-                                              padding: EdgeInsets.all(3.0),
-                                              child: Icon(
-                                                Icons.delete,
-                                                size: 18,
-                                                color: Color.fromARGB(
-                                                    0, 235, 55, 55),
-                                              ),
-                                            ),
-                                    ],
-                                  ),
-                                  const SizedBox(
-                                    height: 0,
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      widget.conversation.lastMessage ?? "",
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey.shade600,
-                                          fontWeight: FontWeight.normal),
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                    // const SizedBox(
+                                    //   height: 0,
+                                    // ),
+                                    // Expanded(
+                                    //   child: Text(
+                                    //     widget.conversation.lastMessage ?? "",
+                                    //     maxLines: 2,
+                                    //     overflow: TextOverflow.ellipsis,
+                                    //     style: TextStyle(
+                                    //         fontSize: 13,
+                                    //         color: Colors.grey.shade600,
+                                    //         fontWeight: FontWeight.normal),
+                                    //   ),
+                                    // ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

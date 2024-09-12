@@ -9,6 +9,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.7"
+  any_syntax_highlighter:
+    dependency: "direct main"
+    description:
+      name: any_syntax_highlighter
+      sha256: "9afce8a45ae6eaf2a64ce6a93f0d4b3730cb9ff80506aefec30efb17f332a7f1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.13"
   archive:
     dependency: transitive
     description:
@@ -246,6 +254,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.0"
+  flutter_highlighter:
+    dependency: "direct main"
+    description:
+      name: flutter_highlighter
+      sha256: "93173afd47a9ada53f3176371755e7ea4a1065362763976d06d6adfb4d946e10"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.1"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -262,6 +278,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.3"
+  flutter_markdown:
+    dependency: "direct main"
+    description:
+      name: flutter_markdown
+      sha256: "04c4722cc36ec5af38acc38ece70d22d3c2123c61305d555750a091517bbe504"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.23"
+  flutter_markdown_selectionarea:
+    dependency: "direct main"
+    description:
+      name: flutter_markdown_selectionarea
+      sha256: d4bc27e70a5c40ebdab23a4b81f75d53696a214d4d1f13c12045b38a0ddc58a2
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.17+1"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -300,10 +332,10 @@ packages:
     dependency: "direct main"
     description:
       name: google_fonts
-      sha256: b1ac0fe2832c9cc95e5e88b57d627c5e68c223b9657f4b96e1487aa9098c7b82
+      sha256: "2776c66b3e97c6cdd58d1bd3281548b074b64f1fd5c8f82391f7456e38849567"
       url: "https://pub.dev"
     source: hosted
-    version: "6.2.1"
+    version: "4.0.5"
   highlight:
     dependency: transitive
     description:
@@ -312,6 +344,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.0"
+  highlighter:
+    dependency: transitive
+    description:
+      name: highlighter
+      sha256: "92180c72b9da8758e1acf39a45aa305a97dcfe2fdc8f3d1d2947c23f2772bfbc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.1"
   html:
     dependency: transitive
     description:
@@ -837,6 +877,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.0+1"
+  syntax_highlight:
+    dependency: "direct main"
+    description:
+      name: syntax_highlight
+      sha256: ee33b6aa82cc722bb9b40152a792181dee222353b486c0255fde666a3e3a4997
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.0"
   term_glyph:
     dependency: transitive
     description:
@@ -1071,4 +1119,4 @@ packages:
     version: "3.1.2"
 sdks:
   dart: ">=3.3.0 <4.0.0"
-  flutter: ">=3.19.2"
+  flutter: ">=3.19.0"

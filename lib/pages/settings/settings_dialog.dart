@@ -442,7 +442,11 @@ class _SettingsDialogState extends State<SettingsDialog>
 
   Widget _buildDisplaySettingsPage() {
     TextStyle headingStyle = const TextStyle(
-        color: Color.fromARGB(255, 122, 11, 158), fontWeight: FontWeight.bold);
+        fontSize: 12,
+        fontWeight:
+            FontWeight.bold); //color: Color.fromARGB(255, 122, 11, 158),
+    // const TextStyle(
+    //     color: Color.fromARGB(255, 122, 11, 158), fontWeight: FontWeight.bold);
     return ValueListenableBuilder<DisplayConfigData>(
         valueListenable: displayConfigData,
         builder: (context, snapshot, __) {

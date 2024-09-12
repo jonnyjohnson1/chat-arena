@@ -6,6 +6,8 @@ import 'package:chat/custom_pkgs/custom_dynamic_text_highlighting.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/shared/image_viewer.dart';
+import 'package:chat/shared/markdown_display.dart/markdown_text.dart';
+import 'package:chat/shared/markdown_display.dart/markdown_widget.dart';
 import 'package:chat/shared/pos_service_config_dicts.dart';
 import 'package:chat/shared/string_extension.dart';
 import 'package:flutter/cupertino.dart';
@@ -15,12 +17,16 @@ import 'package:chat/models/messages.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:syntax_highlight/syntax_highlight.dart';
 
 class TextMessageBubble extends StatefulWidget {
   final _isOurMessage;
   final Message _message;
+  final bool alignMessagesCenter;
 
-  const TextMessageBubble(this._isOurMessage, this._message, {Key? key})
+  const TextMessageBubble(
+      this._isOurMessage, this._message, this.alignMessagesCenter,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -42,6 +48,7 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
   void initState() {
     super.initState();
     // load images from database on build
+    // Initialize the highlighter.
     images = widget._message.images ?? [];
     displayConfigData =
         Provider.of<ValueNotifier<DisplayConfigData>>(context, listen: false);
@@ -248,16 +255,20 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
       const TextStyle(fontSize: 12, fontWeight: FontWeight.w300);
 
   ValueNotifier<double?> textWidth = ValueNotifier(null);
-
+  bool isCodeBlock = true;
   @override
   Widget build(BuildContext context) {
     Color themeColorContainer = Theme.of(context).primaryColor;
-
+    Color notOurMessageColor =
+        widget.alignMessagesCenter ? Colors.white : const Color(0xFFF7F2FA);
+    double messageFontSize = 16;
     return Row(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: widget._isOurMessage
           ? MainAxisAlignment.end
-          : MainAxisAlignment.start,
+          : widget.alignMessagesCenter
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.end,
       children: [
         Expanded(
           child: Row(
@@ -384,32 +395,71 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                                       padding:
                                                           const EdgeInsets.all(
                                                               8.0),
-                                                      child:
-                                                          DynamicTextHighlighting(
-                                                        key: Key(displayConfig
-                                                            .showInMessageNER
-                                                            .toString()),
-                                                        text: message,
-                                                        softWrap: true,
-                                                        highlights: displayConfig
-                                                                .showInMessageNER
-                                                            ? highlights
-                                                            : {},
-                                                        caseSensitive: false,
-                                                        style: TextStyle(
-                                                          color: ThemeData.estimateBrightnessForColor(
-                                                                      themeColorContainer) ==
-                                                                  Brightness
-                                                                      .light
-                                                              ? Colors.black87
-                                                              : Colors.white,
-                                                        ),
-                                                        textAlign:
-                                                            TextAlign.left,
-                                                        textWidthBasis:
-                                                            TextWidthBasis
-                                                                .parent,
-                                                      ),
+                                                      child: isCodeBlock
+                                                          ? MarkdownWidget(
+                                                              data: message,
+                                                              style: TextStyle(
+                                                                fontSize:
+                                                                    messageFontSize,
+                                                                color: ThemeData.estimateBrightnessForColor(
+                                                                            themeColorContainer) ==
+                                                                        Brightness
+                                                                            .light
+                                                                    ? Colors
+                                                                        .black87
+                                                                    : Colors
+                                                                        .white,
+                                                              ),
+                                                            )
+
+                                                          // MarkdownText(
+                                                          //     message,
+                                                          //     context,
+                                                          //     style: TextStyle(
+                                                          //       fontSize:
+                                                          //           messageFontSize,
+                                                          //       color: ThemeData.estimateBrightnessForColor(
+                                                          //                   themeColorContainer) ==
+                                                          //               Brightness
+                                                          //                   .light
+                                                          //           ? Colors
+                                                          //               .black87
+                                                          //           : Colors
+                                                          //               .white,
+                                                          //     ),
+                                                          //   )
+                                                          : DynamicTextHighlighting(
+                                                              key: Key(displayConfig
+                                                                  .showInMessageNER
+                                                                  .toString()),
+                                                              text: message,
+                                                              softWrap: true,
+                                                              highlights:
+                                                                  displayConfig
+                                                                          .showInMessageNER
+                                                                      ? highlights
+                                                                      : {},
+                                                              caseSensitive:
+                                                                  false,
+                                                              style: TextStyle(
+                                                                fontSize:
+                                                                    messageFontSize,
+                                                                color: ThemeData.estimateBrightnessForColor(
+                                                                            themeColorContainer) ==
+                                                                        Brightness
+                                                                            .light
+                                                                    ? Colors
+                                                                        .black87
+                                                                    : Colors
+                                                                        .white,
+                                                              ),
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .left,
+                                                              textWidthBasis:
+                                                                  TextWidthBasis
+                                                                      .parent,
+                                                            ),
                                                     ),
                                                   ),
                                                   Container(
@@ -432,8 +482,10 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                               mainAxisSize: MainAxisSize.min,
                                               mainAxisAlignment:
                                                   MainAxisAlignment.spaceAround,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                              crossAxisAlignment: widget
+                                                      .alignMessagesCenter
+                                                  ? CrossAxisAlignment.center
+                                                  : CrossAxisAlignment.start,
                                               children: <Widget>[
                                                 ValueListenableBuilder<double?>(
                                                     valueListenable: textWidth,
@@ -604,8 +656,7 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                                   });
                                                   return Container(
                                                     decoration: BoxDecoration(
-                                                      color: Colors.black
-                                                          .withOpacity(.73),
+                                                      color: notOurMessageColor,
                                                       borderRadius:
                                                           const BorderRadius
                                                               .all(
@@ -619,31 +670,70 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                                       padding:
                                                           const EdgeInsets.all(
                                                               8.0),
-                                                      child:
-                                                          DynamicTextHighlighting(
-                                                        key: Key(displayConfig
-                                                            .showInMessageNER
-                                                            .toString()),
-                                                        text: message,
-                                                        highlights: displayConfig
-                                                                .showInMessageNER
-                                                            ? highlights
-                                                            : {},
-                                                        caseSensitive: false,
-                                                        style: TextStyle(
-                                                          color: ThemeData.estimateBrightnessForColor(
-                                                                      themeColorContainer) ==
-                                                                  Brightness
-                                                                      .light
-                                                              ? Colors.black87
-                                                              : Colors.white,
-                                                        ),
-                                                        textAlign:
-                                                            TextAlign.left,
-                                                        textWidthBasis:
-                                                            TextWidthBasis
-                                                                .parent,
-                                                      ),
+                                                      child: isCodeBlock
+                                                          ? MarkdownWidget(
+                                                              data: message,
+                                                              style: TextStyle(
+                                                                fontSize:
+                                                                    messageFontSize,
+                                                                color: ThemeData.estimateBrightnessForColor(
+                                                                            notOurMessageColor) ==
+                                                                        Brightness
+                                                                            .light
+                                                                    ? Colors
+                                                                        .black87
+                                                                    : Colors
+                                                                        .white,
+                                                              ),
+                                                            )
+
+                                                          // MarkdownText(
+                                                          //     message,
+                                                          //     context,
+                                                          //     style: TextStyle(
+                                                          //       fontSize:
+                                                          //           messageFontSize,
+                                                          //       color: ThemeData.estimateBrightnessForColor(
+                                                          //                   themeColorContainer) ==
+                                                          //               Brightness
+                                                          //                   .light
+                                                          //           ? Colors
+                                                          //               .black87
+                                                          //           : Colors
+                                                          //               .white,
+                                                          //     ),
+                                                          //   )
+                                                          : DynamicTextHighlighting(
+                                                              key: Key(displayConfig
+                                                                  .showInMessageNER
+                                                                  .toString()),
+                                                              text: message,
+                                                              highlights:
+                                                                  displayConfig
+                                                                          .showInMessageNER
+                                                                      ? highlights
+                                                                      : {},
+                                                              caseSensitive:
+                                                                  false,
+                                                              style: TextStyle(
+                                                                fontSize:
+                                                                    messageFontSize,
+                                                                color: ThemeData.estimateBrightnessForColor(
+                                                                            notOurMessageColor) ==
+                                                                        Brightness
+                                                                            .light
+                                                                    ? Colors
+                                                                        .black87
+                                                                    : Colors
+                                                                        .white,
+                                                              ),
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .left,
+                                                              textWidthBasis:
+                                                                  TextWidthBasis
+                                                                      .parent,
+                                                            ),
                                                     ),
                                                   );
                                                 }),

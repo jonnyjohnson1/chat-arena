@@ -16,6 +16,7 @@ import 'package:chat/services/platform_types.dart';
 import 'package:chat/services/tools.dart';
 import 'package:chat/shared/image_viewer.dart';
 import 'package:chat/shared/toasts/simple_toast.dart';
+import 'package:chat/theming/colors.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -131,6 +132,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     });
   }
 
+  ValueNotifier<bool> toggleCenter = ValueNotifier(false);
+
   @override
   Widget build(BuildContext context) {
     return _chatroomPageUI(context);
@@ -208,17 +211,23 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 ),
               Expanded(
                   child: Stack(
+                alignment: Alignment.bottomCenter,
                 children: [
                   MultiProvider(
                     providers: [
                       Provider.value(value: widget.showGeneratingText)
                     ],
                     child: widget.messages.isNotEmpty
-                        ? MessageListView(
-                            this,
-                            _listViewController,
-                            widget.messages,
-                          )
+                        ? ValueListenableBuilder<bool>(
+                            valueListenable: toggleCenter,
+                            builder: (context, _alignCenter, _) {
+                              return MessageListView(
+                                  key: Key("Align: $_alignCenter"),
+                                  this,
+                                  _listViewController,
+                                  widget.messages,
+                                  alignMessagesCenter: _alignCenter);
+                            })
                         : const StarterHomePage(),
                   ),
                   // reset chat button
@@ -261,426 +270,521 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                   //       },
                   //       child: const Text("Reset Chat")),
                   // )
-                ],
-              )),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3),
-                child: Container(
-                  height: 1,
-                  color: selectedImages.isNotEmpty
-                      ? Colors.grey
-                      : const Color.fromARGB(0, 238, 238, 238),
-                ),
-              ),
-              Column(
-                children: [
-                  // messagefield attachments
-                  Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          //white space for desktop
-                          if (isDesktop.data!)
-                            const SizedBox(
-                              width: 20,
-                            ),
-                          if (widget.sessionId.isNotEmpty)
-                            InkWell(
-                              onTap: () {
-                                Clipboard.setData(
-                                    ClipboardData(text: widget.sessionId));
-                                Widget toast = const ToastWidget(
-                                  message: "Session ID copied to clipboard",
-                                );
-                                // Custom Toast Position
-                                fToast.showToast(
-                                    child: toast,
-                                    toastDuration: const Duration(seconds: 2),
-                                    positionedToastBuilder: (context, child) {
-                                      return Positioned(
-                                        top: 16.0 +
-                                            MediaQuery.paddingOf(context).top,
-                                        right: 16.0,
-                                        child: child,
-                                      );
-                                    });
-                              },
-                              child: Row(
-                                children: [
-                                  const Text("ID: "),
-                                  Text(
-                                    widget.sessionId,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
+
+                  if (selectedImages.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 3),
+                      child: Container(
+                        height: 1,
+                        color: selectedImages.isNotEmpty
+                            ? Colors.grey
+                            : const Color.fromARGB(0, 238, 238, 238),
+                      ),
+                    ),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 750),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        // messagefield attachments
+                        Stack(
+                          alignment: Alignment.bottomCenter,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                //white space for desktop
+                                if (isDesktop.data!)
+                                  const SizedBox(
+                                    width: 20,
                                   ),
-                                ],
-                              ),
-                            ),
-
-                          // model selector button
-                          if (widget.showModelSelectButton)
-                            ValueListenableBuilder<DisplayConfigData>(
-                                valueListenable: displayConfigData,
-                                builder: (context, installService, _) {
-                                  return ValueListenableBuilder<
-                                          InstallerService>(
-                                      valueListenable: installerService,
-                                      builder: (context, installService, _) {
-                                        // get the models from this main chat function in the functions config
-                                        LanguageModel? initialModel =
-                                            const LanguageModel(
-                                                model: "dolphin-llama3",
-                                                name: "dolphine-llama3");
-                                        String initialProvider = "ollama";
-                                        FunctionConfig? function =
-                                            displayConfigData
-                                                .value
-                                                .apiConfig
-                                                .functions
-                                                .functions["websocket_chat"];
-                                        if (function != null) {
-                                          initialModel = function.model;
-                                          initialProvider = function.provider;
-                                        }
-                                        return ValueListenableBuilder<
-                                                BackendService?>(
-                                            valueListenable: backendConnector,
-                                            builder: (context, backend, _) {
-                                              print(
-                                                  "${installerService.value.backendConnected}");
-                                              if (installerService
-                                                  .value.backendConnected) {
-                                                return Row(
-                                                  children: [
-                                                    ProviderModelSelectorButton(
-                                                      initialProvider:
-                                                          initialProvider,
-                                                      initialModel:
-                                                          initialModel,
-                                                      onModelChange:
-                                                          (LanguageModel
-                                                              model) {
-                                                        setState(() {
-                                                          selectedModel!.model =
-                                                              model;
-                                                        });
-                                                        widget.onSelectedModelChange!(
-                                                            model);
-                                                      },
-                                                      onProviderChange:
-                                                          (String _provider) {
-                                                        setState(() {
-                                                          initialProvider =
-                                                              _provider;
-                                                        });
-                                                        if (widget
-                                                                .onSelectedProviderChange !=
-                                                            null) {
-                                                          widget.onSelectedProviderChange!(
-                                                              _provider);
-                                                        }
-                                                      },
-                                                    ),
-                                                  ],
-                                                );
-                                              }
-                                              return Container();
-                                            });
-                                      });
-                                }),
-
-                          Expanded(
-                            child: ValueListenableBuilder(
-                                valueListenable: displayConfigData,
-                                builder: (context, displayConfig, _) {
-                                  if (displayConfig.demoMode) {
-                                    return Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        // Play and Pause buttons
-                                        ValueListenableBuilder(
-                                            valueListenable: selectedScript,
-                                            builder: (context, script, _) {
-                                              return ValueListenableBuilder(
-                                                  valueListenable:
-                                                      demoController,
-                                                  builder:
-                                                      (context, demoCont, _) {
-                                                    print(
-                                                        "Auto-play: ${demoCont.autoPlay} :: State: ${demoCont.state} :: Num Procs: ${messageProcessor!.numberOfProcesses.value}");
-                                                    return Row(
-                                                      children: [
-                                                        if (script != null)
-                                                          if ((demoCont
-                                                                      .autoPlay &&
-                                                                  (demoCont
-                                                                          .index !=
-                                                                      0) &&
-                                                                  demoCont.index <
-                                                                      script
-                                                                          .script
-                                                                          .length) ||
-                                                              demoCont.state ==
-                                                                  DemoState
-                                                                      .generating)
-                                                            const CupertinoActivityIndicator(),
-                                                        if (script != null)
-                                                          Text(
-                                                              "${demoCont.index}/${script.script.length}",
-                                                              style: TextStyle(
-                                                                  color: Theme.of(
-                                                                          context)
-                                                                      .colorScheme
-                                                                      .primary)),
-                                                        const SizedBox(
-                                                            width: 4),
-                                                        TextButton(
-                                                            onPressed: () {
-                                                              demoCont.autoPlay =
-                                                                  !demoCont
-                                                                      .autoPlay;
-                                                              demoController
-                                                                  .notifyListeners();
-                                                            },
-                                                            child: Text(
-                                                                "Auto-Play",
-                                                                style: TextStyle(
-                                                                    decoration: !demoCont
-                                                                            .autoPlay
-                                                                        ? TextDecoration
-                                                                            .lineThrough
-                                                                        : null,
-                                                                    color: demoCont
-                                                                            .autoPlay
-                                                                        ? Theme.of(context)
-                                                                            .colorScheme
-                                                                            .primary
-                                                                        : Colors
-                                                                            .grey))),
-                                                        IconButton(
-                                                          tooltip: script ==
-                                                                  null
-                                                              ? "select script"
-                                                              : null,
-                                                          icon: Icon(
-                                                            script != null
-                                                                ? demoCont.index >=
-                                                                        script
-                                                                            .script
-                                                                            .length
-                                                                    ? Icons
-                                                                        .refresh
-                                                                    : demoCont.state ==
-                                                                            DemoState
-                                                                                .pause
-                                                                        ? Icons
-                                                                            .play_arrow
-                                                                        : Icons
-                                                                            .pause
-                                                                : Icons
-                                                                    .play_arrow,
-                                                            color: script ==
-                                                                    null
-                                                                ? Colors.grey
-                                                                : demoCont.index ==
-                                                                        script
-                                                                            .script
-                                                                            .length
-                                                                    ? Colors
-                                                                        .grey
-                                                                    : Theme.of(
-                                                                            context)
-                                                                        .colorScheme
-                                                                        .primary,
-                                                          ),
-                                                          onPressed: () async {
-                                                            if (script !=
-                                                                null) {
-                                                              print(
-                                                                  "${demoCont.index} < ${script.script.length} = ${demoCont.index + 1 < script.script.length}");
-
-                                                              if (demoCont
-                                                                      .index <
-                                                                  script.script
-                                                                      .length) {
-                                                                demoCont
-                                                                    .state = demoCont
-                                                                            .state ==
-                                                                        DemoState
-                                                                            .pause
-                                                                    ? DemoState
-                                                                        .next
-                                                                    : DemoState
-                                                                        .pause;
-                                                                demoController
-                                                                    .notifyListeners();
-                                                                // simulate looping through the messages here
-                                                                await Future.delayed(Duration(
-                                                                    milliseconds: demoCont
-                                                                            .autoPlay
-                                                                        ? demoCont
-                                                                            .durBetweenMessages
-                                                                        : 80));
-                                                                demoCont
-                                                                    .index += 1;
-                                                                demoCont.state =
-                                                                    DemoState
-                                                                        .pause;
-
-                                                                demoController
-                                                                    .notifyListeners();
-                                                              } else {
-                                                                print(
-                                                                    "\t[ resetting demo chat ]");
-                                                                if (widget
-                                                                        .onResetDemoChat !=
-                                                                    null) {
-                                                                  widget
-                                                                      .onResetDemoChat!();
-                                                                }
-                                                              }
-                                                            } else {
-                                                              ScaffoldMessenger
-                                                                      .of(context)
-                                                                  .showSnackBar(
-                                                                const SnackBar(
-                                                                  content: Center(
-                                                                      child: Text(
-                                                                          '[ select a script ]')),
-                                                                ),
-                                                              );
-                                                            }
-                                                          },
-                                                        ),
-                                                      ],
-                                                    );
-                                                  });
-                                            }),
-                                      ],
-                                    );
-                                  } else {
-                                    return Container();
-                                  }
-                                }),
-                          ),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          if (selectedImages.isNotEmpty)
-                            Container(
-                              height: 75,
-                              constraints: const BoxConstraints(maxWidth: 800),
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.all(0),
-                                itemCount: selectedImages.length,
-                                shrinkWrap: true,
-                                itemBuilder: (BuildContext context, int index) {
-                                  // TO show selected file
-                                  return InkWell(
-                                    onTap: () async {
-                                      await launchImageViewer(
-                                          context,
-                                          kIsWeb
-                                              ? selectedImages[index].webFile
-                                              : selectedImages[index]
-                                                  .localFile);
+                                if (widget.sessionId.isNotEmpty)
+                                  InkWell(
+                                    onTap: () {
+                                      Clipboard.setData(ClipboardData(
+                                          text: widget.sessionId));
+                                      Widget toast = const ToastWidget(
+                                        message:
+                                            "Session ID copied to clipboard",
+                                      );
+                                      // Custom Toast Position
+                                      fToast.showToast(
+                                          child: toast,
+                                          toastDuration:
+                                              const Duration(seconds: 2),
+                                          positionedToastBuilder:
+                                              (context, child) {
+                                            return Positioned(
+                                              top: 16.0 +
+                                                  MediaQuery.paddingOf(context)
+                                                      .top,
+                                              right: 16.0,
+                                              child: child,
+                                            );
+                                          });
                                     },
-                                    child: Stack(
-                                      alignment: Alignment.topRight,
+                                    child: Row(
                                       children: [
-                                        Container(
-                                          padding: const EdgeInsets.only(
-                                              top: 15, right: 12),
-                                          child: Center(
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(8.0),
-                                              child: kIsWeb
-                                                  ? Image.network(
-                                                      selectedImages[index]
-                                                          .webFile!
-                                                          .path)
-                                                  : Image.file(
-                                                      selectedImages[index]
-                                                          .localFile!),
-                                            ),
-                                          ),
-                                        ),
-                                        IconButton(
-                                          splashRadius: 11,
-                                          constraints: const BoxConstraints(),
-                                          padding: const EdgeInsets.all(0),
-                                          icon: const Icon(Icons.close),
-                                          iconSize: 21,
-                                          onPressed: () async {
-                                            await removeImage(index);
-                                          },
+                                        const Text("ID: "),
+                                        Text(
+                                          widget.sessionId,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold),
                                         ),
                                       ],
                                     ),
-                                  );
-                                  // If you are making the web app then you have to
-                                  // use image provider as network image or in
-                                  // android or iOS it will as file only
-                                },
-                              ),
+                                  ),
+
+                                // model selector button
+                                if (widget.showModelSelectButton)
+                                  ValueListenableBuilder<DisplayConfigData>(
+                                      valueListenable: displayConfigData,
+                                      builder: (context, installService, _) {
+                                        return ValueListenableBuilder<
+                                                InstallerService>(
+                                            valueListenable: installerService,
+                                            builder:
+                                                (context, installService, _) {
+                                              // get the models from this main chat function in the functions config
+                                              LanguageModel? initialModel =
+                                                  const LanguageModel(
+                                                      model: "dolphin-llama3",
+                                                      name: "dolphine-llama3");
+                                              String initialProvider = "ollama";
+                                              FunctionConfig? function =
+                                                  displayConfigData
+                                                          .value
+                                                          .apiConfig
+                                                          .functions
+                                                          .functions[
+                                                      "websocket_chat"];
+                                              if (function != null) {
+                                                initialModel = function.model;
+                                                initialProvider =
+                                                    function.provider;
+                                              }
+                                              return ValueListenableBuilder<
+                                                      BackendService?>(
+                                                  valueListenable:
+                                                      backendConnector,
+                                                  builder:
+                                                      (context, backend, _) {
+                                                    print(
+                                                        "${installerService.value.backendConnected}");
+                                                    if (installerService.value
+                                                        .backendConnected) {
+                                                      return Row(
+                                                        children: [
+                                                          Container(
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              border: Border.all(
+                                                                  color:
+                                                                      primaryContainer),
+                                                              borderRadius:
+                                                                  const BorderRadius
+                                                                      .all(
+                                                                      Radius.circular(
+                                                                          16)),
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                            child:
+                                                                ProviderModelSelectorButton(
+                                                              initialProvider:
+                                                                  initialProvider,
+                                                              initialModel:
+                                                                  initialModel,
+                                                              onModelChange:
+                                                                  (LanguageModel
+                                                                      model) {
+                                                                setState(() {
+                                                                  selectedModel!
+                                                                          .model =
+                                                                      model;
+                                                                });
+                                                                widget.onSelectedModelChange!(
+                                                                    model);
+                                                              },
+                                                              onProviderChange:
+                                                                  (String
+                                                                      _provider) {
+                                                                setState(() {
+                                                                  initialProvider =
+                                                                      _provider;
+                                                                });
+                                                                if (widget
+                                                                        .onSelectedProviderChange !=
+                                                                    null) {
+                                                                  widget.onSelectedProviderChange!(
+                                                                      _provider);
+                                                                }
+                                                              },
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 3,
+                                                          ),
+                                                          ValueListenableBuilder<
+                                                                  bool>(
+                                                              valueListenable:
+                                                                  toggleCenter,
+                                                              builder: (context,
+                                                                  _alignCenter,
+                                                                  _) {
+                                                                return CircleAvatar(
+                                                                  radius: 18,
+                                                                  backgroundColor: Theme.of(
+                                                                          context)
+                                                                      .colorScheme
+                                                                      .secondaryContainer,
+                                                                  child: IconButton(
+                                                                      padding: const EdgeInsets.all(5),
+                                                                      constraints: null,
+                                                                      onPressed: () {
+                                                                        toggleCenter.value =
+                                                                            !toggleCenter.value;
+                                                                        toggleCenter
+                                                                            .notifyListeners();
+                                                                      },
+                                                                      icon: Icon(
+                                                                        _alignCenter
+                                                                            ? Icons.format_align_left
+                                                                            : Icons.format_align_center,
+                                                                        color: const Color
+                                                                            .fromARGB(
+                                                                            255,
+                                                                            124,
+                                                                            124,
+                                                                            124),
+                                                                        size:
+                                                                            24,
+                                                                      )),
+                                                                );
+                                                              })
+                                                        ],
+                                                      );
+                                                    }
+                                                    return Container();
+                                                  });
+                                            });
+                                      }),
+
+                                Expanded(
+                                  child: ValueListenableBuilder(
+                                      valueListenable: displayConfigData,
+                                      builder: (context, displayConfig, _) {
+                                        if (displayConfig.demoMode) {
+                                          return Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              // Play and Pause buttons
+                                              ValueListenableBuilder(
+                                                  valueListenable:
+                                                      selectedScript,
+                                                  builder:
+                                                      (context, script, _) {
+                                                    return ValueListenableBuilder(
+                                                        valueListenable:
+                                                            demoController,
+                                                        builder: (context,
+                                                            demoCont, _) {
+                                                          print(
+                                                              "Auto-play: ${demoCont.autoPlay} :: State: ${demoCont.state} :: Num Procs: ${messageProcessor!.numberOfProcesses.value}");
+                                                          return Container(
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              borderRadius: BorderRadius
+                                                                  .all(Radius
+                                                                      .circular(
+                                                                          12)),
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                            child: Row(
+                                                              children: [
+                                                                if (script !=
+                                                                    null)
+                                                                  if ((demoCont
+                                                                              .autoPlay &&
+                                                                          (demoCont.index !=
+                                                                              0) &&
+                                                                          demoCont.index <
+                                                                              script
+                                                                                  .script.length) ||
+                                                                      demoCont.state ==
+                                                                          DemoState
+                                                                              .generating)
+                                                                    const CupertinoActivityIndicator(),
+                                                                if (script !=
+                                                                    null)
+                                                                  Text(
+                                                                      "${demoCont.index}/${script.script.length}",
+                                                                      style: TextStyle(
+                                                                          color: Theme.of(context)
+                                                                              .colorScheme
+                                                                              .primary)),
+                                                                const SizedBox(
+                                                                    width: 4),
+                                                                TextButton(
+                                                                    onPressed:
+                                                                        () {
+                                                                      demoCont.autoPlay =
+                                                                          !demoCont
+                                                                              .autoPlay;
+                                                                      demoController
+                                                                          .notifyListeners();
+                                                                    },
+                                                                    child: Text(
+                                                                        "Auto-Play",
+                                                                        style: TextStyle(
+                                                                            decoration: !demoCont.autoPlay
+                                                                                ? TextDecoration.lineThrough
+                                                                                : null,
+                                                                            color: demoCont.autoPlay ? Theme.of(context).colorScheme.primary : Colors.grey))),
+                                                                IconButton(
+                                                                  tooltip: script ==
+                                                                          null
+                                                                      ? "select script"
+                                                                      : null,
+                                                                  icon: Icon(
+                                                                    script !=
+                                                                            null
+                                                                        ? demoCont.index >=
+                                                                                script.script.length
+                                                                            ? Icons.refresh
+                                                                            : demoCont.state == DemoState.pause
+                                                                                ? Icons.play_arrow
+                                                                                : Icons.pause
+                                                                        : Icons.play_arrow,
+                                                                    color: script ==
+                                                                            null
+                                                                        ? Colors
+                                                                            .grey
+                                                                        : demoCont.index ==
+                                                                                script.script.length
+                                                                            ? Colors.grey
+                                                                            : Theme.of(context).colorScheme.primary,
+                                                                  ),
+                                                                  onPressed:
+                                                                      () async {
+                                                                    if (script !=
+                                                                        null) {
+                                                                      print(
+                                                                          "${demoCont.index} < ${script.script.length} = ${demoCont.index + 1 < script.script.length}");
+
+                                                                      if (demoCont
+                                                                              .index <
+                                                                          script
+                                                                              .script
+                                                                              .length) {
+                                                                        demoCont
+                                                                            .state = demoCont.state ==
+                                                                                DemoState.pause
+                                                                            ? DemoState.next
+                                                                            : DemoState.pause;
+                                                                        demoController
+                                                                            .notifyListeners();
+                                                                        // simulate looping through the messages here
+                                                                        await Future.delayed(Duration(
+                                                                            milliseconds: demoCont.autoPlay
+                                                                                ? demoCont.durBetweenMessages
+                                                                                : 80));
+                                                                        demoCont
+                                                                            .index += 1;
+                                                                        demoCont.state =
+                                                                            DemoState.pause;
+
+                                                                        demoController
+                                                                            .notifyListeners();
+                                                                      } else {
+                                                                        print(
+                                                                            "\t[ resetting demo chat ]");
+                                                                        if (widget.onResetDemoChat !=
+                                                                            null) {
+                                                                          widget
+                                                                              .onResetDemoChat!();
+                                                                        }
+                                                                      }
+                                                                    } else {
+                                                                      ScaffoldMessenger.of(
+                                                                              context)
+                                                                          .showSnackBar(
+                                                                        const SnackBar(
+                                                                          content:
+                                                                              Center(child: Text('[ select a script ]')),
+                                                                        ),
+                                                                      );
+                                                                    }
+                                                                  },
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        });
+                                                  }),
+                                            ],
+                                          );
+                                        } else {
+                                          return Container();
+                                        }
+                                      }),
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                if (selectedImages.isNotEmpty)
+                                  Container(
+                                    height: 75,
+                                    constraints:
+                                        const BoxConstraints(maxWidth: 800),
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      padding: const EdgeInsets.all(0),
+                                      itemCount: selectedImages.length,
+                                      shrinkWrap: true,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        // TO show selected file
+                                        return InkWell(
+                                          onTap: () async {
+                                            await launchImageViewer(
+                                                context,
+                                                kIsWeb
+                                                    ? selectedImages[index]
+                                                        .webFile
+                                                    : selectedImages[index]
+                                                        .localFile);
+                                          },
+                                          child: Stack(
+                                            alignment: Alignment.topRight,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.only(
+                                                    top: 15, right: 12),
+                                                child: Center(
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8.0),
+                                                    child: kIsWeb
+                                                        ? Image.network(
+                                                            selectedImages[
+                                                                    index]
+                                                                .webFile!
+                                                                .path)
+                                                        : Image.file(
+                                                            selectedImages[
+                                                                    index]
+                                                                .localFile!),
+                                                  ),
+                                                ),
+                                              ),
+                                              IconButton(
+                                                splashRadius: 11,
+                                                constraints:
+                                                    const BoxConstraints(),
+                                                padding:
+                                                    const EdgeInsets.all(0),
+                                                icon: const Icon(Icons.close),
+                                                iconSize: 21,
+                                                onPressed: () async {
+                                                  await removeImage(index);
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        // If you are making the web app then you have to
+                                        // use image provider as network image or in
+                                        // android or iOS it will as file only
+                                      },
+                                    ),
+                                  ),
+                              ],
                             ),
-                        ],
-                      ),
-                    ],
-                  ),
+                          ],
+                        ),
 
-                  Container(
-                    color: Colors.white,
-                    child: MessageField(
-                      isDesktop: isDesktop.data!,
-                      isGenerating: widget.isGenerating,
-                      onPause: () async {
-                        // the pause doesn't work in the current way it is implemented
-                        // swiftFunctions.stopStream();
-                        widget.isGenerating!.value = false;
-                      },
-                      onSubmit: (String text) async {
-                        List<ImageFile> submittedImages = List.from(
-                            selectedImages); // pass images list to the function
-                        selectedImages =
-                            []; // clear the selected Images from the current view
-                        if (widget.onNewMessage != null) {
-                          await widget.onNewMessage!(widget.conversation, text,
-                              submittedImages); // pass back to main to update states
-                        }
-                      },
-                      onLoadImage: () async {
-                        if (kIsWeb) {
-                          await getImageWeb();
-                        } else {
-                          FilePickerResult? result = await FilePicker.platform
-                              .pickFiles(
-                                  type: FileType.image, allowMultiple: true);
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(40)),
+                            color: primaryContainer,
+                            boxShadow: [
+                              BoxShadow(
+                                offset: const Offset(0, -8),
+                                color: primaryContainer.withOpacity(
+                                    0.38), // Adjust the color for the glow effect
+                                blurRadius:
+                                    50, // Adjust the blur radius for more or less glow
+                                spreadRadius:
+                                    20, // Adjust the spread radius to make the glow bigger or smaller
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(10),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(40)),
+                              color: Colors.white,
+                            ),
+                            padding: const EdgeInsets.all(3),
+                            child: MessageField(
+                              isDesktop: isDesktop.data!,
+                              isGenerating: widget.isGenerating,
+                              onPause: () async {
+                                // the pause doesn't work in the current way it is implemented
+                                // swiftFunctions.stopStream();
+                                widget.isGenerating!.value = false;
+                              },
+                              onSubmit: (String text) async {
+                                List<ImageFile> submittedImages = List.from(
+                                    selectedImages); // pass images list to the function
+                                selectedImages =
+                                    []; // clear the selected Images from the current view
+                                if (widget.onNewMessage != null) {
+                                  await widget.onNewMessage!(
+                                      widget.conversation,
+                                      text,
+                                      submittedImages); // pass back to main to update states
+                                }
+                              },
+                              onLoadImage: () async {
+                                if (kIsWeb) {
+                                  await getImageWeb();
+                                } else {
+                                  FilePickerResult? result =
+                                      await FilePicker.platform.pickFiles(
+                                          type: FileType.image,
+                                          allowMultiple: true);
 
-                          if (result != null) {
-                            result.files.forEach((PlatformFile element) {
-                              File file = File(element.path!);
-                              selectedImages.add(ImageFile(
-                                  id: Tools().getRandomString(32),
-                                  bytes: file.readAsBytesSync(),
-                                  isWeb: false,
-                                  localFile: file));
-                            });
-                            setState(() {});
-                          } else {
-                            // User canceled the picker
-                          }
-                        }
-                      },
+                                  if (result != null) {
+                                    result.files
+                                        .forEach((PlatformFile element) {
+                                      File file = File(element.path!);
+                                      selectedImages.add(ImageFile(
+                                          id: Tools().getRandomString(32),
+                                          bytes: file.readAsBytesSync(),
+                                          isWeb: false,
+                                          localFile: file));
+                                    });
+                                    setState(() {});
+                                  } else {
+                                    // User canceled the picker
+                                  }
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-              ),
+              )),
               // bottom padding
               const SizedBox(
                 height: 9,

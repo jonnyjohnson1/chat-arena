@@ -7,9 +7,7 @@ import 'package:chat/models/llm.dart';
 import 'package:chat/pages/provider_model_selector/provider_model_selector.dart';
 import 'package:chat/pages/settings/widgets/api_settings_page.dart';
 import 'package:chat/services/env_installer.dart';
-import 'package:chat/services/platform_types.dart';
 import 'package:chat/services/tools.dart';
-import 'package:chat/shared/backend_connected_service_button.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -262,18 +260,18 @@ class _SettingsPageState extends State<SettingsPage>
           TabBar(
             controller: _tabController,
             tabs: const [
-              Tab(icon: Icon(Icons.display_settings), text: 'App Config'),
               Tab(icon: Icon(Icons.memory_sharp), text: 'Topos'),
               Tab(icon: Icon(Icons.private_connectivity), text: 'Chat'),
+              Tab(icon: Icon(Icons.display_settings), text: 'Configure'),
             ],
           ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildDisplaySettingsPage(),
                 _buildAPISettingsPage(),
                 _buildChatAPISettingsPage(),
+                _buildDisplaySettingsPage(),
               ],
             ),
           ),
@@ -371,7 +369,9 @@ class _SettingsPageState extends State<SettingsPage>
 
   Widget _buildDisplaySettingsPage() {
     TextStyle headingStyle = const TextStyle(
-        color: Color.fromARGB(255, 122, 11, 158), fontWeight: FontWeight.bold);
+        fontSize: 12,
+        fontWeight:
+            FontWeight.bold); //color: Color.fromARGB(255, 122, 11, 158),
     return ValueListenableBuilder<DisplayConfigData>(
         valueListenable: displayConfigData,
         builder: (context, snapshot, __) {
@@ -496,7 +496,9 @@ class _SettingsPageState extends State<SettingsPage>
     );
     TextStyle style = const TextStyle(fontSize: 14);
     TextStyle headingStyle = const TextStyle(
-        color: Color.fromARGB(255, 122, 11, 158), fontWeight: FontWeight.bold);
+        fontSize: 12,
+        fontWeight:
+            FontWeight.bold); //color: Color.fromARGB(255, 122, 11, 158),
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),

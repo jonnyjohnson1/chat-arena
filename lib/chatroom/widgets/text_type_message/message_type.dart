@@ -5,14 +5,17 @@ import 'package:chat/chatroom/widgets/text_type_message/text_message_bubble.dart
 class MessageTypeBubble extends StatelessWidget {
   final _isOurMessage;
   final Message _message;
+  final bool alignMessagesCenter;
 
-  const MessageTypeBubble(this._isOurMessage, this._message, {Key? key})
+  const MessageTypeBubble(
+      this._isOurMessage, this._message, this.alignMessagesCenter,
+      {Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 3),
+      padding: const EdgeInsets.only(bottom: 9),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.max,
@@ -20,11 +23,13 @@ class MessageTypeBubble extends StatelessWidget {
         children: [
           // !_isOurMessage ? UserImageWidget("winner", _deviceHeight) : Container(),
           const SizedBox(
-            width: 5,
+            width: 9,
           ),
-          Expanded(child: TextMessageBubble(_isOurMessage, _message)),
+          Expanded(
+              child: TextMessageBubble(
+                  _isOurMessage, _message, alignMessagesCenter)),
           const SizedBox(
-            width: 5,
+            width: 9,
           ),
         ],
       ),
