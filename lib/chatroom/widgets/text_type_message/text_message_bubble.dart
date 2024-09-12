@@ -47,7 +47,6 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
   @override
   void initState() {
     super.initState();
-    print("Alignment building!: ${widget.alignMessagesCenter}");
     // load images from database on build
     // Initialize the highlighter.
     images = widget._message.images ?? [];

@@ -14,7 +14,7 @@ class SlideAnimationWidget extends StatefulWidget {
     required this.nonChatPage,
     required this.isShowingChatPage,
     required this.onReturnToMenuCompleted,
-    this.duration = const Duration(milliseconds: 280),
+    this.duration = const Duration(milliseconds: 235),
   }) : super(key: key);
 
   @override
@@ -47,14 +47,7 @@ class _SlideAnimationWidgetState extends State<SlideAnimationWidget>
     // Listen for animation completion
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed ||
-          status == AnimationStatus.dismissed) {
-        // if (widget.onSlideAnimationCompleted != null) {
-        //   if (!widget.isShowingChatPage.value) {
-        //     print("completed");
-        //     widget.onSlideAnimationCompleted!();
-        //   }
-        // }
-      }
+          status == AnimationStatus.dismissed) {}
     });
   }
 
@@ -80,20 +73,44 @@ class _SlideAnimationWidgetState extends State<SlideAnimationWidget>
     );
   }
 
+  double _horizontalDragStart = 0.0;
+  double _dragDistance = 0.0;
+  bool _hasCrossedThreshold = false;
+
+  void _onHorizontalDragStart(DragStartDetails details) {
+    // Initialize the start position of the drag
+    _horizontalDragStart = details.localPosition.dx;
+    _dragDistance = 0.0;
+    _hasCrossedThreshold = false;
+  }
+
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
     if (widget.isShowingChatPage.value) {
-      // Adjust the controller value directly during the drag
-      _controller.value -= details.primaryDelta! / context.size!.width;
+      // Calculate the horizontal drag distance
+      _dragDistance = details.localPosition.dx - _horizontalDragStart;
+
+      // Check if the drag is to the right and has crossed the threshold
+      if (!_hasCrossedThreshold && _dragDistance > 20.0) {
+        _hasCrossedThreshold = true;
+      }
+
+      // Update the controller only if the threshold is crossed
+      if (_hasCrossedThreshold) {
+        _controller.value -= details.primaryDelta! / context.size!.width;
+      }
     }
   }
 
   void _onHorizontalDragEnd(DragEndDetails details) {
     if (widget.isShowingChatPage.value) {
-      // Continue the animation based on the drag velocity
-      if (details.primaryVelocity! > 0) {
+      double screenWidth = context.size!.width;
+
+      // Only trigger the animation if the swipe was to the right (positive drag distance)
+      if (_dragDistance > 0 &&
+          (details.primaryVelocity! > 950 ||
+              _dragDistance > screenWidth / 1.8)) {
         _controller.reverse();
 
-        // widget.isShowingChatPage.value = false;
         if (widget.onReturnToMenuCompleted != null) {
           widget.onReturnToMenuCompleted!();
         }
@@ -110,8 +127,12 @@ class _SlideAnimationWidgetState extends State<SlideAnimationWidget>
       builder: (context, isShowingChatPage, child) {
         // Trigger the animation based on the value change
         if (isShowingChatPage) {
+          _controller.duration = widget.duration; // Set the original duration
           _controller.forward();
         } else {
+          _controller.duration = const Duration(
+              milliseconds:
+                  160); // widget.duration; // Set the original duration
           _controller.reverse();
         }
 

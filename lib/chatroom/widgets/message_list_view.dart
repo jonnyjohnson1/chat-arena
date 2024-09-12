@@ -33,6 +33,7 @@ class _MessageListViewState extends State<MessageListView> {
   void _handleVisibilityChanged(VisibilityInfo visibilityInfo, int index) {
     var visiblePercentage = visibilityInfo.visibleFraction * 100;
     if (visiblePercentage == 0) {
+      index = index - 1; // subtract one because of the leading white space
       // Detect when server message loses visibility to control topic and title display
       Message message = reversedList[index];
       if (message.type == MessageType.server) {
@@ -59,9 +60,17 @@ class _MessageListViewState extends State<MessageListView> {
               shrinkWrap: true,
               reverse: true,
               padding: const EdgeInsets.fromLTRB(1, 2, 7, 2),
-              itemCount: widget.messages.length, //_conversationData.length,
+              itemCount: widget.messages.length + 1, //_conversationData.length,
               itemBuilder: (BuildContext context, int index) {
-                var message = reversedList[index]; //_conversationData[_index];
+                // because of the use of the stack with the floating message field, we need to create white space so
+                // the first message scrolling down behaves correctly
+                if (index == 0) {
+                  return const SizedBox(
+                    height: 95,
+                  );
+                }
+                var message =
+                    reversedList[index - 1]; //_conversationData[_index];
                 bool isOurMessage =
                     message.senderID == userModel.value.uid; //_uid;
                 return VisibilityDetector(
@@ -73,7 +82,9 @@ class _MessageListViewState extends State<MessageListView> {
                   },
                   child: Padding(
                     padding: EdgeInsets.only(
-                        top: index == widget.messages.length - 1 ? 45 : 0),
+                        top: (index - 1) == (widget.messages.length - 1)
+                            ? 45
+                            : 0),
                     child: MessageListViewChild(
                       isOurMessage,
                       message,

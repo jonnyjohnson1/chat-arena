@@ -221,7 +221,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         ? ValueListenableBuilder<bool>(
                             valueListenable: toggleCenter,
                             builder: (context, _alignCenter, _) {
-                              print("Align: $_alignCenter");
                               return MessageListView(
                                   key: Key("Align: $_alignCenter"),
                                   this,
@@ -717,7 +716,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                               BoxShadow(
                                 offset: const Offset(0, -8),
                                 color: primaryContainer.withOpacity(
-                                    0.4), // Adjust the color for the glow effect
+                                    0.38), // Adjust the color for the glow effect
                                 blurRadius:
                                     50, // Adjust the blur radius for more or less glow
                                 spreadRadius:
