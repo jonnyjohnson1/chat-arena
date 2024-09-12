@@ -56,16 +56,27 @@ Future<List<LanguageModel>?> getModels(
   }
 }
 
+filterTextGenModels(var modelData) {
+  final id = modelData['id'] as String;
+  // Regular expression to match any ID containing date, -latest, -preview, or -mini
+  final regex = RegExp(
+      r'\d{4}-\d{2}-\d{2}|[-]latest|[-]preview|[-]mini|dall-e|tts|embedding|whisper|babbage|davinci');
+  return !regex.hasMatch(id);
+}
+
 List<LanguageModel>? formatOpenAIModelsJson(Map<String, dynamic> jsonData) {
   try {
     List<LanguageModel> models = [];
     // Iterate over the list of models in the JSON data
     if (jsonData['data'] != null) {
       for (var modelData in jsonData['data']) {
-        // Create a LanguageModel using the fromOpenAIJson factory method
-        LanguageModel model = LanguageModel.fromOpenAIJson(modelData);
-        // Add the model to the list
-        models.add(model);
+        if (filterTextGenModels(modelData)) {
+          print(modelData);
+          // Create a LanguageModel using the fromOpenAIJson factory method
+          LanguageModel model = LanguageModel.fromOpenAIJson(modelData);
+          // Add the model to the list
+          models.add(model);
+        }
       }
     }
     // Return the list of LanguageModel objects
