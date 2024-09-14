@@ -1,6 +1,5 @@
 import 'package:chat/models/messages.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 
 class SendStateIcon extends StatefulWidget {
   final ValueNotifier<SendState?> initialSendState;
