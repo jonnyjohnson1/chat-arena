@@ -85,6 +85,10 @@ class CodeElementBuilder extends MarkdownElementBuilder {
       theme['root'] = TextStyle(
           backgroundColor: background,
           color: Color.fromARGB(255, 234, 234, 234));
+
+      // Splitting the code content into lines
+      final codeLines = codeContent.split('\n');
+
       return Container(
         width: double.infinity, // Expands to full width
         margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -120,18 +124,21 @@ class CodeElementBuilder extends MarkdownElementBuilder {
               ),
             ),
             Container(
-                padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: Colors.black87,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(8),
-                    bottomRight: Radius.circular(8),
-                  ),
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Colors.black87,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
                 ),
-                child: Padding(
-                    padding: const EdgeInsets.all(3.0),
-                    child: HighlightView(
-                      codeContent,
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: codeLines.map((line) {
+                    return HighlightView(
+                      line,
                       padding: const EdgeInsets.all(3),
                       language: codeLanguage ??
                           'dart', // Default to Dart if no language is specified
@@ -141,31 +148,34 @@ class CodeElementBuilder extends MarkdownElementBuilder {
                         fontFamily: 'Courier', // Use a monospaced font
                         fontSize: 16.0,
                       ),
-                    )))
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
           ],
         ),
       );
     } else {
       Color background = const Color.fromARGB(0, 255, 255, 255);
-
       return Container(
-          // padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey[300], // surfaceTint,
-            borderRadius: const BorderRadius.all(Radius.circular(4)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3),
-            child: Text(
-              codeContent,
-              style: TextStyle(
-                height: 1.16,
-                color: Colors.black.withOpacity(0.9),
-                fontFamily: 'Courier', // Use a monospaced font
-                fontSize: 16.0,
-              ),
+        decoration: BoxDecoration(
+          color: Colors.grey[300], // surfaceTint,
+          borderRadius: const BorderRadius.all(Radius.circular(4)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3),
+          child: Text(
+            codeContent,
+            style: TextStyle(
+              height: 1.16,
+              color: Colors.black.withOpacity(0.9),
+              fontFamily: 'Courier', // Use a monospaced font
+              fontSize: 16.0,
             ),
-          ));
+          ),
+        ),
+      );
     }
   }
 }

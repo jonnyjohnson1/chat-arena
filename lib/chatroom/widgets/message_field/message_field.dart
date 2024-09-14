@@ -80,7 +80,6 @@ class _MessageFieldState extends State<MessageField> {
       textDirection: TextDirection.ltr,
       maxLines: null,
     )..layout(maxWidth: maxWidth);
-
     return (textPainter.size.height / lineHeight).ceil();
   }
 
