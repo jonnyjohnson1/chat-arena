@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class MessageField extends StatefulWidget {
   ValueNotifier<bool>? isGenerating;
@@ -30,6 +31,65 @@ class _MessageFieldState extends State<MessageField> {
 
   final FocusNode _focusNode = FocusNode();
   TextEditingController controller = TextEditingController();
+  final ScrollController scrollController = ScrollController();
+  final lineHeight = 16.0; // Approximate line height in pixels
+  final int maxLines = 5;
+
+  KeyEventResult _handleKeyEvent(FocusNode focus, KeyEvent keyEvent) {
+    if (HardwareKeyboard.instance.isShiftPressed &&
+        keyEvent.logicalKey == LogicalKeyboardKey.enter &&
+        keyEvent is KeyDownEvent) {
+      // Insert a single newline character at the current cursor position
+      final text = controller.text;
+      final selection = controller.selection;
+      final newText = text.replaceRange(selection.start, selection.end, '\n');
+      controller.value = TextEditingValue(
+        text: newText,
+        selection: TextSelection.collapsed(offset: selection.start + 1),
+      );
+
+      // Scroll down by 20 pixels to keep the cursor in view
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_getNumberOfLines() > maxLines) {
+          _scrollDown();
+        }
+      });
+
+      // Return handled to indicate that the event was processed
+      return KeyEventResult.handled;
+    } else if (keyEvent.logicalKey == LogicalKeyboardKey.enter &&
+        keyEvent is KeyDownEvent) {
+      // Trigger the submit logic
+      if (controller.text != "") {
+        widget.onSubmit(controller.text);
+        controller.clear();
+        // Explicitly request focus on the next frame to avoid losing focus
+        Future.microtask(() => _focusNode.requestFocus());
+      }
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  int _getNumberOfLines() {
+    final text = controller.text;
+
+    final maxWidth = context.size?.width ?? 0;
+    final textPainter = TextPainter(
+      text: TextSpan(text: text, style: const TextStyle(fontSize: 14.0)),
+      textDirection: TextDirection.ltr,
+      maxLines: null,
+    )..layout(maxWidth: maxWidth);
+
+    return (textPainter.size.height / lineHeight).ceil();
+  }
+
+  void _scrollDown() {
+    if (scrollController.hasClients) {
+      // Scroll down by 20 pixels
+      scrollController.jumpTo(scrollController.offset + 20);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,23 +119,21 @@ class _MessageFieldState extends State<MessageField> {
               child: Padding(
                 padding:
                     EdgeInsets.fromLTRB(widget.isDesktop ? 8.0 : 0, 2, 8, 2),
-                child: CupertinoTextField(
-                  controller: controller,
-                  keyboardType: TextInputType.text,
-                  minLines: 1,
-                  maxLines: 5,
+                child: Focus(
                   focusNode: _focusNode,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (String text) {
-                    if (text.trim() != "") {
-                      widget.onSubmit(text);
-                      controller.clear();
-                      _focusNode.requestFocus();
-                    }
-                  },
-                  cursorColor: Colors.black38,
-                  style: const TextStyle(color: Colors.black87),
-                  autocorrect: true,
+                  onKeyEvent: _handleKeyEvent,
+                  child: CupertinoTextField(
+                    controller: controller,
+                    keyboardType: TextInputType.text,
+                    minLines: 1,
+                    maxLines: 5,
+                    scrollController: scrollController,
+                    // focusNode: _focusNode,
+                    textInputAction: TextInputAction.send,
+                    cursorColor: Colors.black38,
+                    style: const TextStyle(color: Colors.black87),
+                    autocorrect: true,
+                  ),
                 ),
               ),
             ),
