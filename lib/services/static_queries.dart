@@ -71,7 +71,7 @@ List<LanguageModel>? formatOpenAIModelsJson(Map<String, dynamic> jsonData) {
     if (jsonData['data'] != null) {
       for (var modelData in jsonData['data']) {
         if (filterTextGenModels(modelData)) {
-          print(modelData);
+          // print(modelData);
           // Create a LanguageModel using the fromOpenAIJson factory method
           LanguageModel model = LanguageModel.fromOpenAIJson(modelData);
           // Add the model to the list

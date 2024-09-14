@@ -4,69 +4,61 @@ import 'package:chat/shared/markdown_display.dart/copy_code_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
-import 'package:syntax_highlight/syntax_highlight.dart';
 
 class MarkdownWidget extends StatelessWidget {
   final String data;
   final TextStyle? style;
 
-  MarkdownWidget({
+  const MarkdownWidget({
     Key? key,
     required this.data,
     this.style,
   }) : super(key: key);
 
-  HighlighterTheme? theme;
-  Highlighter? highlighter;
-  initHighligher() async {
-    await Highlighter.initialize(['dart', 'yaml', 'sql', 'nix']);
-    theme = await HighlighterTheme.loadLightTheme();
-    highlighter = Highlighter(
-      language: 'nix',
-      theme: theme!,
-    );
-  }
+  // HighlighterTheme? theme;
+  // Highlighter? highlighter;
+  // initHighligher() async {
+  //   await Highlighter.initialize(['dart', 'yaml', 'sql', 'nix']);
+  //   theme = await HighlighterTheme.loadLightTheme();
+  //   highlighter = Highlighter(
+  //     language: 'nix',
+  //     theme: theme!,
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: initHighligher(),
-        builder: (context, snapshot) {
-          return MarkdownBody(
-            data: data,
-            builders: {
-              'code': CodeElementBuilder(), // Use the custom builder
-            },
-            styleSheet:
-                MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
-              p: style,
-              h1: style!.copyWith(fontSize: 26, fontWeight: FontWeight.bold),
-              h2: style!.copyWith(fontSize: 22, fontWeight: FontWeight.bold),
-              h3: style!.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
-              codeblockPadding: const EdgeInsets.all(
-                  0), // Remove padding to handle it in the custom widget
-              codeblockDecoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                color: Colors
-                    .transparent, // No background color; handled by highlight
-              ),
-              listBullet: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-              tableHead:
-                  style!.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
-              tableBody:
-                  style!.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
-              tableCellsDecoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.grey[300]!,
-                  width: 1,
-                ),
-              ),
-            ),
-          );
-        });
+    return MarkdownBody(
+      data: data,
+      builders: {
+        'code': CodeElementBuilder(), // Use the custom builder
+      },
+      styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+        p: style,
+        h1: style!.copyWith(fontSize: 26, fontWeight: FontWeight.bold),
+        h2: style!.copyWith(fontSize: 22, fontWeight: FontWeight.bold),
+        h3: style!.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
+        codeblockPadding: const EdgeInsets.all(
+            0), // Remove padding to handle it in the custom widget
+        codeblockDecoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          color:
+              Colors.transparent, // No background color; handled by highlight
+        ),
+        listBullet: const TextStyle(
+          fontSize: 16,
+          color: Colors.black87,
+        ),
+        tableHead: style!.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
+        tableBody: style!.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
+        tableCellsDecoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.grey[300]!,
+            width: 1,
+          ),
+        ),
+      ),
+    );
   }
 }
 

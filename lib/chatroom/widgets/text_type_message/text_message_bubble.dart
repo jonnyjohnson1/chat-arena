@@ -1,12 +1,12 @@
 import 'package:chat/analytics_drawer/mermaid_widget.dart';
 import 'package:chat/chatroom/widgets/text_type_message/emotion_icon.dart';
 import 'package:chat/chatroom/widgets/text_type_message/mod_icon_widget.dart';
+import 'package:chat/chatroom/widgets/text_type_message/send_state_icon.dart';
 import 'package:chat/chatroom/widgets/text_type_message/sentiment_widget.dart';
 import 'package:chat/custom_pkgs/custom_dynamic_text_highlighting.dart';
 import 'package:chat/models/custom_file.dart';
 import 'package:chat/models/display_configs.dart';
 import 'package:chat/shared/image_viewer.dart';
-import 'package:chat/shared/markdown_display.dart/markdown_text.dart';
 import 'package:chat/shared/markdown_display.dart/markdown_widget.dart';
 import 'package:chat/shared/pos_service_config_dicts.dart';
 import 'package:chat/shared/string_extension.dart';
@@ -17,7 +17,6 @@ import 'package:chat/models/messages.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:syntax_highlight/syntax_highlight.dart';
 
 class TextMessageBubble extends StatefulWidget {
   final _isOurMessage;
@@ -378,89 +377,133 @@ class _TextMessageBubbleState extends State<TextMessageBubble> {
                                                     ]),
                                                   ),
                                                   Container(height: 2),
-                                                  Container(
-                                                    decoration: BoxDecoration(
-                                                      color:
-                                                          themeColorContainer, //Color(0xFF1B97F3),
-                                                      borderRadius:
-                                                          BorderRadius.all(
-                                                        Radius.circular(
-                                                            msgContainerBorderRadius),
-                                                      ),
-                                                    ),
-                                                    constraints: BoxConstraints(
-                                                        maxWidth:
-                                                            maxMesageWidth),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
-                                                      child: isCodeBlock
-                                                          ? MarkdownWidget(
-                                                              data: message,
-                                                              style: TextStyle(
-                                                                fontSize:
-                                                                    messageFontSize,
-                                                                color: ThemeData.estimateBrightnessForColor(
-                                                                            themeColorContainer) ==
-                                                                        Brightness
-                                                                            .light
-                                                                    ? Colors
-                                                                        .black87
-                                                                    : Colors
-                                                                        .white,
-                                                              ),
-                                                            )
+                                                  Stack(
+                                                    alignment: Alignment.center,
+                                                    clipBehavior: Clip.none,
+                                                    children: [
+                                                      Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color:
+                                                              themeColorContainer, //Color(0xFF1B97F3),
+                                                          borderRadius:
+                                                              BorderRadius.all(
+                                                            Radius.circular(
+                                                                msgContainerBorderRadius),
+                                                          ),
+                                                        ),
+                                                        constraints: BoxConstraints(
+                                                            maxWidth:
+                                                                maxMesageWidth),
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: isCodeBlock
+                                                              ? MarkdownWidget(
+                                                                  data: message,
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        messageFontSize,
+                                                                    color: ThemeData.estimateBrightnessForColor(themeColorContainer) ==
+                                                                            Brightness
+                                                                                .light
+                                                                        ? Colors
+                                                                            .black87
+                                                                        : Colors
+                                                                            .white,
+                                                                  ),
+                                                                )
 
-                                                          // MarkdownText(
-                                                          //     message,
-                                                          //     context,
-                                                          //     style: TextStyle(
-                                                          //       fontSize:
-                                                          //           messageFontSize,
-                                                          //       color: ThemeData.estimateBrightnessForColor(
-                                                          //                   themeColorContainer) ==
-                                                          //               Brightness
-                                                          //                   .light
-                                                          //           ? Colors
-                                                          //               .black87
-                                                          //           : Colors
-                                                          //               .white,
-                                                          //     ),
-                                                          //   )
-                                                          : DynamicTextHighlighting(
-                                                              key: Key(displayConfig
-                                                                  .showInMessageNER
-                                                                  .toString()),
-                                                              text: message,
-                                                              softWrap: true,
-                                                              highlights:
-                                                                  displayConfig
+                                                              // MarkdownText(
+                                                              //     message,
+                                                              //     context,
+                                                              //     style: TextStyle(
+                                                              //       fontSize:
+                                                              //           messageFontSize,
+                                                              //       color: ThemeData.estimateBrightnessForColor(
+                                                              //                   themeColorContainer) ==
+                                                              //               Brightness
+                                                              //                   .light
+                                                              //           ? Colors
+                                                              //               .black87
+                                                              //           : Colors
+                                                              //               .white,
+                                                              //     ),
+                                                              //   )
+                                                              : DynamicTextHighlighting(
+                                                                  key: Key(displayConfig
+                                                                      .showInMessageNER
+                                                                      .toString()),
+                                                                  text: message,
+                                                                  softWrap:
+                                                                      true,
+                                                                  highlights: displayConfig
                                                                           .showInMessageNER
                                                                       ? highlights
                                                                       : {},
-                                                              caseSensitive:
-                                                                  false,
-                                                              style: TextStyle(
-                                                                fontSize:
-                                                                    messageFontSize,
-                                                                color: ThemeData.estimateBrightnessForColor(
-                                                                            themeColorContainer) ==
-                                                                        Brightness
-                                                                            .light
-                                                                    ? Colors
-                                                                        .black87
-                                                                    : Colors
-                                                                        .white,
-                                                              ),
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .left,
-                                                              textWidthBasis:
-                                                                  TextWidthBasis
-                                                                      .parent,
-                                                            ),
-                                                    ),
+                                                                  caseSensitive:
+                                                                      false,
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        messageFontSize,
+                                                                    color: ThemeData.estimateBrightnessForColor(themeColorContainer) ==
+                                                                            Brightness
+                                                                                .light
+                                                                        ? Colors
+                                                                            .black87
+                                                                        : Colors
+                                                                            .white,
+                                                                  ),
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .left,
+                                                                  textWidthBasis:
+                                                                      TextWidthBasis
+                                                                          .parent,
+                                                                ),
+                                                        ),
+                                                      ),
+                                                      Positioned(
+                                                          right: -12,
+                                                          child: SendStateIcon(
+                                                              initialSendState:
+                                                                  widget
+                                                                      ._message
+                                                                      .sendState)
+
+                                                          // ValueListenableBuilder<
+                                                          //         SendState?>(
+                                                          //     valueListenable:
+                                                          //         widget._message
+                                                          //             .sendState,
+                                                          //     builder: (context,
+                                                          //         sendState,
+                                                          //         idx) {
+                                                          //       print(sendState);
+                                                          //       if (sendState ==
+                                                          //           Null) {
+                                                          //         return Container();
+                                                          //       } else if (sendState ==
+                                                          //           SendState
+                                                          //               .sending) {
+                                                          //         return const CupertinoActivityIndicator(
+                                                          //           radius: 7,
+                                                          //         );
+                                                          //       } else if (sendState ==
+                                                          //           SendState
+                                                          //               .sent) {
+                                                          //         return const Icon(
+                                                          //           Icons.check,
+                                                          //           size: 11,
+                                                          //         );
+                                                          //       }
+                                                          //       return Container();
+                                                          //     }),
+                                                          )
+                                                    ],
                                                   ),
                                                   Container(
                                                     height: 2,

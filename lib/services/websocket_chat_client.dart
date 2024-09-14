@@ -13,7 +13,7 @@ class WebSocketChatClient {
 
   void connect(Map<String, dynamic> initData, Function listenerCallback,
       Function websocketDone, Function websocketError) {
-    String path = "/ws/chat";
+    String path = "/ws";
     print("\t[ attempting to connect to ${url + path}]");
     channel = WebSocketChannel.connect(Uri.parse(url + path));
     if (channel == null) {

@@ -1,7 +1,7 @@
 {
-    "cloud-hosted": true,
-    "use_preloaded_llm_backend": true,
-    "use_preloaded_messenger_backend": true,
+    "cloud-hosted": false,
+    "use_preloaded_llm_backend": false,
+    "use_preloaded_messenger_backend": false,
     "default-backend": "https://topos.hypernym.ai",
     "default-chat-client": "https://p2pchatserver.hypernym.ai",
     "default-provider": "ollama"
