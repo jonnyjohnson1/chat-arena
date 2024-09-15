@@ -1,5 +1,6 @@
 import 'package:chat/custom_pkgs/flutter_highlighter/flutter_highlighter.dart';
 import 'package:chat/shared/markdown_display.dart/atom-one-dark.dart';
+import 'package:chat/shared/markdown_display.dart/codeblock_w_floating_button.dart';
 import 'package:chat/shared/markdown_display.dart/copy_code_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -84,83 +85,95 @@ class CodeElementBuilder extends MarkdownElementBuilder {
       Color background = Colors.black87;
       theme['root'] = TextStyle(
           backgroundColor: background,
-          color: Color.fromARGB(255, 234, 234, 234));
+          color: const Color.fromARGB(255, 234, 234, 234));
 
-      // Splitting the code content into lines
-      final codeLines = codeContent.split('\n');
-
-      return Container(
-        width: double.infinity, // Expands to full width
-        margin: const EdgeInsets.symmetric(vertical: 8.0),
-        decoration: BoxDecoration(
-          color: Colors.black87,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  topRight: Radius.circular(8),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    codeLanguage ?? 'code',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  CopyCodeButton(codeContent: codeContent),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
-                ),
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: codeLines.map((line) {
-                    return HighlightView(
-                      line,
-                      padding: const EdgeInsets.all(3),
-                      language: codeLanguage ??
-                          'dart', // Default to Dart if no language is specified
-                      theme: theme, // Apply the theme
-                      textStyle: const TextStyle(
-                        height: 1.16,
-                        fontFamily: 'Courier', // Use a monospaced font
-                        fontSize: 16.0,
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ],
-        ),
+      return CodeBlockWithFloatingButton(
+        theme: theme,
+        codeContent: codeContent,
+        codeLanguage: codeLanguage,
       );
+
+      // Container(
+      //   width: double.infinity, // Expands to full width
+      //   margin: const EdgeInsets.symmetric(vertical: 8.0),
+      //   decoration: BoxDecoration(
+      //     color: Colors.black87,
+      //     borderRadius: BorderRadius.circular(8),
+      //   ),
+      //   child: Stack(
+      //     children: [
+      //       Column(
+      //         crossAxisAlignment: CrossAxisAlignment.stretch,
+      //         children: [
+      //           Container(
+      //             padding:
+      //                 const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      //             decoration: BoxDecoration(
+      //               color: Colors.grey[900],
+      //               borderRadius: const BorderRadius.only(
+      //                 topLeft: Radius.circular(8),
+      //                 topRight: Radius.circular(8),
+      //               ),
+      //             ),
+      //             child: Row(
+      //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //               children: [
+      //                 Text(
+      //                   codeLanguage ?? 'code',
+      //                   style: const TextStyle(
+      //                     color: Colors.white70,
+      //                     fontSize: 12,
+      //                     fontWeight: FontWeight.w400,
+      //                   ),
+      //                 ),
+      //                 SizedBox(width: 48), // Placeholder for the Copy button
+      //               ],
+      //             ),
+      //           ),
+      //           Container(
+      //             padding: const EdgeInsets.all(12),
+      //             decoration: const BoxDecoration(
+      //               color: Colors.black87,
+      //               borderRadius: BorderRadius.only(
+      //                 bottomLeft: Radius.circular(8),
+      //                 bottomRight: Radius.circular(8),
+      //               ),
+      //             ),
+      //             child: SingleChildScrollView(
+      //               scrollDirection: Axis.horizontal,
+      //               child: Column(
+      //                 crossAxisAlignment: CrossAxisAlignment.start,
+      //                 children: codeLines.map((line) {
+      //                   return HighlightView(
+      //                     line,
+      //                     padding: const EdgeInsets.all(3),
+      //                     language: codeLanguage ?? 'dart',
+      //                     theme: theme,
+      //                     textStyle: const TextStyle(
+      //                       height: 1.16,
+      //                       fontFamily: 'Courier',
+      //                       fontSize: 16.0,
+      //                     ),
+      //                   );
+      //                 }).toList(),
+      //               ),
+      //             ),
+      //           ),
+      //         ],
+      //       ),
+      // Positioned(
+      //   top: 8, // Align it with the padding of the top container
+      //   right: 12, // Align it with the padding of the top container
+      //   child: CopyCodeButton(codeContent: codeContent),
+      // ),
+      // ],
+      //   ),
+      // );
     } else {
       Color background = const Color.fromARGB(0, 255, 255, 255);
       return Container(
         decoration: BoxDecoration(
-          color: Colors.grey[300], // surfaceTint,
+          color: Colors.grey[300],
           borderRadius: const BorderRadius.all(Radius.circular(4)),
         ),
         child: Padding(
@@ -170,7 +183,7 @@ class CodeElementBuilder extends MarkdownElementBuilder {
             style: TextStyle(
               height: 1.16,
               color: Colors.black.withOpacity(0.9),
-              fontFamily: 'Courier', // Use a monospaced font
+              fontFamily: 'Courier',
               fontSize: 16.0,
             ),
           ),

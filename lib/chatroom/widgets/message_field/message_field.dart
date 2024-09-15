@@ -63,9 +63,9 @@ class _MessageFieldState extends State<MessageField> {
       if (controller.text != "") {
         widget.onSubmit(controller.text);
         controller.clear();
-        // Explicitly request focus on the next frame to avoid losing focus
-        Future.microtask(() => _focusNode.requestFocus());
       }
+      // Explicitly request focus on the next frame to avoid losing focus
+      Future.microtask(() => _focusNode.requestFocus());
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
