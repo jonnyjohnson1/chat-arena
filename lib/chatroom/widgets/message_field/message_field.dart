@@ -62,10 +62,9 @@ class _MessageFieldState extends State<MessageField> {
       // Trigger the submit logic
       if (controller.text != "") {
         widget.onSubmit(controller.text);
-        controller.clear();
+        // Explicitly request focus on the next frame to avoid losing focus
+        controller.value = const TextEditingValue(text: "");
       }
-      // Explicitly request focus on the next frame to avoid losing focus
-      Future.microtask(() => _focusNode.requestFocus());
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
