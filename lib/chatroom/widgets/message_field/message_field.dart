@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:universal_html/html.dart' as universal_html;
 
 class MessageField extends StatefulWidget {
   ValueNotifier<bool>? isGenerating;
@@ -36,56 +38,78 @@ class _MessageFieldState extends State<MessageField> {
   final int maxLines = 5;
 
   KeyEventResult _handleKeyEvent(FocusNode focus, KeyEvent keyEvent) {
-    if (HardwareKeyboard.instance.isShiftPressed &&
-        keyEvent.logicalKey == LogicalKeyboardKey.enter &&
-        keyEvent is KeyDownEvent) {
-      // Insert a single newline character at the current cursor position
-      final text = controller.text;
-      final selection = controller.selection;
-      final newText = text.replaceRange(selection.start, selection.end, '\n');
-      controller.value = TextEditingValue(
-        text: newText,
-        selection: TextSelection.collapsed(offset: selection.start + 1),
-      );
-
-      // Scroll down by 20 pixels to keep the cursor in view
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_getNumberOfLines() > maxLines) {
-          _scrollDown();
+    if (kIsWeb) {
+      // Web-specific logic
+      // The handler for the web seems to work different than the macOS version
+      // This path had to be set to anormal submit option.
+      if (keyEvent.logicalKey == LogicalKeyboardKey.enter &&
+          keyEvent is KeyDownEvent) {
+        if (controller.text.isNotEmpty) {
+          widget.onSubmit(controller.text);
+          controller.value = const TextEditingValue(text: "");
         }
-      });
-
-      // Return handled to indicate that the event was processed
-      return KeyEventResult.handled;
-    } else if (keyEvent.logicalKey == LogicalKeyboardKey.enter &&
-        keyEvent is KeyDownEvent) {
-      // Trigger the submit logic
-      if (controller.text != "") {
-        widget.onSubmit(controller.text);
-        // Explicitly request focus on the next frame to avoid losing focus
-        controller.value = const TextEditingValue(text: "");
+        return KeyEventResult.handled;
       }
-      return KeyEventResult.handled;
+      return KeyEventResult.ignored;
+    } else {
+      if (HardwareKeyboard.instance.isShiftPressed &&
+          keyEvent.logicalKey == LogicalKeyboardKey.enter &&
+          keyEvent is KeyDownEvent) {
+        // Insert a single newline character at the current cursor position
+        final text = controller.text;
+        final selection = controller.selection;
+        final newText = text.replaceRange(selection.start, selection.end, '\n');
+        controller.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection.collapsed(offset: selection.start + 1),
+        );
+        // Scroll down by 20 pixels to keep the cursor in view
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_getNumberOfLines() > maxLines) {
+            _scrollDown();
+          }
+        });
+
+        // Return handled to indicate that the event was processed
+        return KeyEventResult.handled;
+      } else if (keyEvent.logicalKey == LogicalKeyboardKey.enter &&
+          keyEvent is KeyDownEvent) {
+        // Trigger the submit logic
+        if (controller.text != "") {
+          widget.onSubmit(controller.text);
+          // Explicitly request focus on the next frame to avoid losing focus
+          controller.value = const TextEditingValue(text: "");
+        }
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
     }
-    return KeyEventResult.ignored;
   }
 
   int _getNumberOfLines() {
     final text = controller.text;
 
     final maxWidth = context.size?.width ?? 0;
+    if (maxWidth == 0) {
+      // Handle the case where the width is not yet determined
+      return 0;
+    }
+
     final textPainter = TextPainter(
       text: TextSpan(text: text, style: const TextStyle(fontSize: 14.0)),
       textDirection: TextDirection.ltr,
       maxLines: null,
     )..layout(maxWidth: maxWidth);
+
     return (textPainter.size.height / lineHeight).ceil();
   }
 
   void _scrollDown() {
     if (scrollController.hasClients) {
-      // Scroll down by 20 pixels
-      scrollController.jumpTo(scrollController.offset + 20);
+      // Add a slight delay to ensure the scroll view is ready
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        scrollController.jumpTo(scrollController.offset + 20);
+      });
     }
   }
 

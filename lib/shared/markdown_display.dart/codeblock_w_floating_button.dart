@@ -31,8 +31,13 @@ class _CodeBlockWithFloatingButtonState
     if (renderBox != null) {
       final position = renderBox.localToGlobal(Offset.zero);
       // Calculate the new button position based on the container's position
-      double newButtonTopPosition =
-          position.dy < 0 ? -1 * (position.dy - 32) : 16.0;
+      double safePadding = MediaQuery.paddingOf(context).top;
+      double newButtonTopPosition = position.dy < 0
+          ? -1 *
+              (MediaQuery.of(context).size.width < 600
+                  ? position.dy - safePadding - 112
+                  : position.dy - 32)
+          : 13.0;
       setState(() {
         _buttonTopPosition = newButtonTopPosition; //.clamp(16.0, 105.0);
       });
@@ -124,7 +129,16 @@ class _CodeBlockWithFloatingButtonState
             Positioned(
               top: _buttonTopPosition,
               right: 8,
-              child: CopyCodeButton(codeContent: widget.codeContent),
+              child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[900],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0, vertical: 4),
+                    child: CopyCodeButton(codeContent: widget.codeContent),
+                  )),
             ),
           ],
         );
