@@ -1,17 +1,3 @@
-<pre align="center">
-'     ____   ___                                      _                                           
-'    6MMMMb/ `MM                                     dM.                                          
-'   8P    YM  MM                   /                ,MMb                                          
-'  6M      Y  MM  __      ___     /M                d'YM.    ___  __   ____   ___  __      ___    
-'  MM         MM 6MMb   6MMMMb   /MMMMM            ,P `Mb    `MM 6MM  6MMMMb  `MM 6MMb   6MMMMb   
-'  MM         MMM9 `Mb 8M'  `Mb   MM               d'  YM.    MM69 " 6M'  `Mb  MMM9 `Mb 8M'  `Mb  
-'  MM         MM'   MM     ,oMM   MM              ,P   `Mb    MM'    MM    MM  MM'   MM     ,oMM  
-'  MM         MM    MM ,6MM9'MM   MM              d'    YM.   MM     MMMMMMMM  MM    MM ,6MM9'MM  
-'  YM      6  MM    MM MM'   MM   MM             ,MMMMMMMMb   MM     MM        MM    MM MM'   MM  
-'   8b    d9  MM    MM MM.  ,MM   YM.  ,         d'      YM.  MM     YM    d9  MM    MM MM.  ,MM  
-'    YMMMM9  _MM_  _MM_`YMMM9'Yb.  YMMM9       _dM_     _dMM__MM_     YMMMM9  _MM_  _MM_`YMMM9'Yb.
-</pre>
----
 <p align="center">
   <img src="https://github.com/jonnyjohnson1/chat-arena/blob/main/ui_screenshot.png" style="max-width: 100%; height: auto; max-height: 350px;" alt="UI Chat Debates" />
 </p>
