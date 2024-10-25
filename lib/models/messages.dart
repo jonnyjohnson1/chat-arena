@@ -7,6 +7,8 @@ const String tableMessages = 'messages';
 
 enum MessageType { text, image, poll, deleted, server }
 
+enum SendState { sending, sent }
+
 class MessageFields {
   static const List<String> values = [
     id,
@@ -20,6 +22,7 @@ class MessageFields {
     type,
     status,
     name,
+    sendState,
     isGenerating,
     images
   ];
@@ -37,11 +40,13 @@ class MessageFields {
   static const String name = 'name';
   static const String isGenerating = 'isGenerating';
   static const String images = 'images';
+  static const String sendState = 'sendState';
 }
 
 class Message {
   String id;
   final String? documentID;
+  final ValueNotifier<SendState?> sendState;
   final String? senderID;
   final String? conversationID;
   final bool isDemo;
@@ -74,8 +79,10 @@ class Message {
     this.images,
     ValueNotifier<Map<String, dynamic>>? baseAnalytics,
     ValueNotifier<String>? mermaidChart,
+    ValueNotifier<SendState?>? sendState,
   })  : baseAnalytics =
             baseAnalytics ?? ValueNotifier<Map<String, dynamic>>({}),
+        sendState = sendState ?? ValueNotifier<SendState?>(null),
         mermaidChart = mermaidChart ?? ValueNotifier<String>("");
 
   // Convert the Message instance to a Map
@@ -153,6 +160,7 @@ class Message {
       senderID: map[MessageFields.senderID],
       conversationID: map[MessageFields.conversationID],
       message: ValueNotifier(map[MessageFields.message]),
+      sendState: ValueNotifier(map[MessageFields.sendState]),
       timestamp: map[MessageFields.timestamp] != null
           ? DateTime.parse(map[MessageFields.timestamp])
           : null,

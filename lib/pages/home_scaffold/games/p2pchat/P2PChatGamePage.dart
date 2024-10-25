@@ -254,7 +254,7 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
         timestamp: DateTime.parse(listenerMessage["timestamp"]),
         type: uiMessage.MessageType.server);
     messages.add(message);
-    print("[ added server message to messages ]");
+    // print("[ added server message to messages ]");
     sessionId = listenerMessage['session_id'];
     if (mounted) {
       setState(() {});
@@ -262,33 +262,63 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
   }
 
   void _processUserMessage(Map<String, dynamic> listenerMessage) {
-    String messageId = listenerMessage['message_id'];
-    String username = listenerMessage["content"]["username"];
-    String text = listenerMessage["content"]["text"];
-    String senderID = listenerMessage["content"]["user_id"];
+    String messageId =
+        listenerMessage['message_id'] ?? Tools().getRandomString(16);
+    String username = listenerMessage["username"];
+    String text = listenerMessage["message"];
+    String senderID = listenerMessage["from_user_id"];
     DateTime timestamp = DateTime.parse(listenerMessage["timestamp"]);
-    uiMessage.Message message = uiMessage.Message(
-        id: messageId,
-        conversationID: widget.conversation!.id,
-        message: ValueNotifier(text),
-        documentID: '',
-        name: username,
-        senderID: senderID,
-        status: '',
-        timestamp: timestamp,
-        type: uiMessage.MessageType.text);
-    messages.add(message);
-    print("added user message to messages");
-    if (mounted) {
-      setState(() {});
+    if (userModel.value.uid == senderID) {
+      // check if this is the user message
+      // the user message is broadcast back to the user. We can use this
+      // to confirm the message was sent and broadcast to people
+      int idxOfMsg = messages.indexWhere((element) => element.id == messageId);
+      if (idxOfMsg > -1) {
+        // mark the message has been sent
+        messages[idxOfMsg].sendState.value = uiMessage.SendState.sent;
+        messages[idxOfMsg].sendState.notifyListeners();
+      } else {
+        uiMessage.Message message = uiMessage.Message(
+            id: messageId,
+            conversationID: widget.conversation!.id,
+            message: ValueNotifier(text),
+            documentID: '',
+            name: username,
+            senderID: senderID,
+            status: '',
+            timestamp: timestamp,
+            type: uiMessage.MessageType.text);
+        messages.add(message);
+        if (mounted) {
+          setState(() {});
+        }
+        // send received user's message for processing
+        sendMessageForProcessing(
+            messageProcessor, message, widget.conversation!);
+      }
+    } else {
+      uiMessage.Message message = uiMessage.Message(
+          id: messageId,
+          conversationID: widget.conversation!.id,
+          message: ValueNotifier(text),
+          documentID: '',
+          name: username,
+          senderID: senderID,
+          status: '',
+          timestamp: timestamp,
+          type: uiMessage.MessageType.text);
+      messages.add(message);
+      if (mounted) {
+        setState(() {});
+      }
+      // send received user's message for processing
+      sendMessageForProcessing(messageProcessor, message, widget.conversation!);
     }
-    // send received user's message for processing
-    sendMessageForProcessing(messageProcessor, message, widget.conversation!);
   }
 
   listenerCallback(Map<String, dynamic> listenerMessage) {
     // message received over broadcast
-    print('[ ChatGamePage :: Received: $listenerMessage ]');
+    // print('[ ChatGamePage :: Received: $listenerMessage ]');
     String messageType = listenerMessage["message_type"];
     if (messageType == "server") {
       _processServerMessage(listenerMessage);
@@ -304,23 +334,26 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
     Map<String, dynamic> data = {
       "message_id": message.id,
       "message_type": "user", // OPTIONS: user, ai, server
-      "num_participants": 1,
+      "user_id": message.senderID,
+      "username": gameModel.username,
+      "session_id": sessionId,
       "content": {
-        "user_id": message.senderID,
-        "session_id": sessionId,
-        "username": gameModel.username,
+        "metadata": {
+          "priority": "", // e.g., normal, high
+          "tags": []
+        },
+        "attachments": [
+          {"file_name": null, "file_type": null, "url": null}
+        ],
         "text": message.message!.value
       },
-      "timestamp": DateTime.now().toIso8601String(),
-      "metadata": {
-        "priority": "", // e.g., normal, high
-        "tags": []
-      },
-      "attachments": [
-        {"file_name": null, "file_type": null, "url": null}
-      ]
+      "timestamp": DateTime.now().toIso8601String()
     };
+    print("sending message");
     client.sendMessage(data);
+    message.sendState.value = uiMessage.SendState.sending;
+    message.sendState.notifyListeners();
+    print("send for proc");
     // send user message for processing
     sendMessageForProcessing(messageProcessor, message, widget.conversation!);
   }
@@ -473,8 +506,10 @@ class _P2PChatGamePageState extends State<P2PChatGamePage> {
                   onNewMessage: (Conversation? conv, String text,
                       List<ImageFile> images) async {
                     if (text.trim() != "") {
+                      String messageID =
+                          "${Tools().getRandomString(12)}-${Tools().getRandomString(8)}";
                       uiMessage.Message message = uiMessage.Message(
-                          id: Tools().getRandomString(12),
+                          id: messageID,
                           conversationID: widget.conversation!.id,
                           message: ValueNotifier(text),
                           images: images,

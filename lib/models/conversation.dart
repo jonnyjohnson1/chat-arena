@@ -44,6 +44,9 @@ class Conversation {
   ValueNotifier<List<Message>> metaConvMessages;
   ValueNotifier<List<ConversationSummary>> convSummaryMessages;
   Map<String, dynamic>? gameAnalytics;
+  // Conversation settings
+  //       store ChatModelSettings per conversation
+  //       store p2pChatSettings
 
   Conversation(
       {this.title,

@@ -210,6 +210,7 @@ CREATE TABLE $tableMessages (
       // add message to the database
       final id = await db.insert(tableMessages, message.toMap());
     } catch (e) {
+      print("Error creating message in local sqlDB: ${e.toString()}");
       // if table doesn't exist, make the table and try again
       await makeMessagesTable(db);
       // add images to the images table

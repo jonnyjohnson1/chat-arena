@@ -390,7 +390,16 @@ class _HomePageLayoutManagerState extends State<HomePageLayoutManager> {
                                               child: ValueListenableBuilder(
                                                 valueListenable: widget.body,
                                                 builder: (context, home, _) {
-                                                  return home;
+                                                  return GestureDetector(
+                                                      behavior: HitTestBehavior
+                                                          .opaque,
+                                                      onTapDown: (_) {
+                                                        // add any close menu items here
+                                                        FocusScope.of(context)
+                                                            .requestFocus(
+                                                                FocusNode());
+                                                      },
+                                                      child: home);
                                                 },
                                               ),
                                             ),

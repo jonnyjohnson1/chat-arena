@@ -81,17 +81,8 @@ class _P2pConversationsListState extends State<P2pConversationsList> {
     }
 
     print("\t[ using host address $httpsUrl to check server ]");
-    WebSocketChatClient testClient = WebSocketChatClient(url: httpsUrl);
-    bool serverIsUp = await testClient.testEndpoint();
-    if (!serverIsUp) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('\t[ could not connect :: URL{$httpsUrl} ]'),
-        ),
-      );
-    }
 
-    if (serverIsUp) {
+    if (true) {
       String wssUrl = makeWebSocketAddress(httpsUrl);
       var host = Uri.parse(wssUrl).host;
       debugPrint("\t[ server check good :: connecting to $host ]");
