@@ -2,7 +2,7 @@
   <img src="https://github.com/jonnyjohnson1/chat-arena/blob/main/ui_screenshot.png" style="max-width: 100%; height: auto; max-height: 350px;" alt="UI Chat Debates" />
 </p>
 <p align="center">
-  <em>An App to Host Dialogues' Games</em>
+  <em>A private messenger for all your conversations with People & AIs</em>
 </p>
 
 If you are using this project, we want to hear from you!
@@ -17,7 +17,11 @@ Backend Here: [github](https://github.com/jonnyjohnson1/topos-cli).
 
 # Chat Arena
 
-An application to host all your conversations with friends, family, coworkers, with an AI copilot.  
+An application to host all your conversations with people & AI:
+1. Talk to friends, family, & coworkers.  
+2. Gain confidence with an AI wingman.  
+3. Use local Language Models & OpenAI, Groq services.  
+
 Runs on all language models on your machine without sending information anywhere.  
 Integrates with ollama and huggingface.  
 All personal and private data.  
